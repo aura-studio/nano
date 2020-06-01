@@ -25,9 +25,9 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/lonng/nano/internal/env"
-	"github.com/lonng/nano/internal/log"
-	"github.com/lonng/nano/internal/message"
+	"github.com/lonng/nano/env"
+	"github.com/lonng/nano/message"
+	"github.com/lonng/nano/log"
 	"github.com/lonng/nano/session"
 )
 

@@ -21,7 +21,7 @@ func TestProtobufSerialezer_Serialize(t *testing.T) {
 		t.Fatalf("unmarshal failed: %v", err)
 	}
 
-	if !reflect.DeepEqual(m, m1) {
+	if !reflect.DeepEqual(m.Content, m1.Content) {
 		t.Fail()
 	}
 }

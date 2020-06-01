@@ -18,49 +18,17 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package component
+package message
 
-import (
-	"github.com/lonng/nano/scheduler"
-)
+import "github.com/lonng/nano/env"
 
-type (
-	options struct {
-		name          string                 // component name
-		renameHandler func(string) string    // rename handler name
-		schedule      scheduler.SchedFunc    // schedule service task
-		dictionary    map[uint16]interface{} // Dictionary info slice
+func Serialize(v interface{}) ([]byte, error) {
+	if data, ok := v.([]byte); ok {
+		return data, nil
 	}
-
-	// Option used to customize handler
-	Option func(options *options)
-)
-
-// WithName used to rename component name
-func WithName(name string) Option {
-	return func(opt *options) {
-		opt.name = name
+	data, err := env.Serializer.Marshal(v)
+	if err != nil {
+		return nil, err
 	}
-}
-
-// WithRenameHandlerFunc override handler name by specific function
-// such as: strings.ToUpper/strings.ToLower
-func WithRenameHandlerFunc(fn func(string) string) Option {
-	return func(opt *options) {
-		opt.renameHandler = fn
-	}
-}
-
-// WithScheduleFunc set the func of the service schedule
-func WithScheduleFunc(fn scheduler.SchedFunc) Option {
-	return func(opt *options) {
-		opt.schedule = fn
-	}
-}
-
-// WithDictionary set dictionary for compressed route
-func WithDictionary(dict map[uint16]interface{}) Option {
-	return func(opt *options) {
-		opt.dictionary = dict
-	}
+	return data, nil
 }

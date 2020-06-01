@@ -18,49 +18,24 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package component
+package packet
 
 import (
-	"github.com/lonng/nano/scheduler"
+	"fmt"
 )
 
-type (
-	options struct {
-		name          string                 // component name
-		renameHandler func(string) string    // rename handler name
-		schedule      scheduler.SchedFunc    // schedule service task
-		dictionary    map[uint16]interface{} // Dictionary info slice
-	}
-
-	// Option used to customize handler
-	Option func(options *options)
-)
-
-// WithName used to rename component name
-func WithName(name string) Option {
-	return func(opt *options) {
-		opt.name = name
-	}
+// Packet represents a network packet.
+type Packet struct {
+	Length int
+	Data   []byte
 }
 
-// WithRenameHandlerFunc override handler name by specific function
-// such as: strings.ToUpper/strings.ToLower
-func WithRenameHandlerFunc(fn func(string) string) Option {
-	return func(opt *options) {
-		opt.renameHandler = fn
-	}
+//New create a Packet instance.
+func New() *Packet {
+	return &Packet{}
 }
 
-// WithScheduleFunc set the func of the service schedule
-func WithScheduleFunc(fn scheduler.SchedFunc) Option {
-	return func(opt *options) {
-		opt.schedule = fn
-	}
-}
-
-// WithDictionary set dictionary for compressed route
-func WithDictionary(dict map[uint16]interface{}) Option {
-	return func(opt *options) {
-		opt.dictionary = dict
-	}
+//String represents the Packet's in text mode.
+func (p *Packet) String() string {
+	return fmt.Sprintf("Length: %d, Data: %s", p.Length, string(p.Data))
 }

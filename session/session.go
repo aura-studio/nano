@@ -35,11 +35,14 @@ type NetworkEntity interface {
 	Push(route string, v interface{}) error
 	RPC(route string, v interface{}) error
 	LastMid() uint64
-	Response(v interface{}) error
-	ResponseMid(mid uint64, v interface{}) error
+	Response(route string, v interface{}) error
+	ResponseMid(mid uint64, route string, v interface{}) error
 	Close() error
 	RemoteAddr() net.Addr
 }
+
+// EventCallback is the func called after event trigged
+type EventCallback func()
 
 var (
 	//ErrIllegalUID represents a invalid uid
@@ -51,13 +54,14 @@ var (
 // Session instance related to the client will be passed to Handler method as the first
 // parameter.
 type Session struct {
-	sync.RWMutex                        // protect data
-	id           int64                  // session global unique id
-	uid          int64                  // binding user id
-	lastTime     int64                  // last heartbeat time
-	entity       NetworkEntity          // low-level network entity
-	data         map[string]interface{} // session data store
-	router       *Router
+	sync.RWMutex                          // protect data
+	id           int64                    // session global unique id
+	uid          int64                    // binding user id
+	lastTime     int64                    // last heartbeat time
+	entity       NetworkEntity            // low-level network entity
+	data         map[string]interface{}   // session data store
+	router       *Router                  // store remote addr
+	onEvents     map[interface{}][]func() // call EventCallback after event trigged
 }
 
 // New returns a new session instance
@@ -69,6 +73,7 @@ func New(entity NetworkEntity) *Session {
 		data:     make(map[string]interface{}),
 		lastTime: time.Now().Unix(),
 		router:   newRouter(),
+		onEvents: make(map[interface{}][]func()),
 	}
 }
 
@@ -77,7 +82,7 @@ func (s *Session) NetworkEntity() NetworkEntity {
 	return s.entity
 }
 
-// NetworkEntity returns the service router
+// Router returns the service router
 func (s *Session) Router() *Router {
 	return s.router
 }
@@ -93,14 +98,14 @@ func (s *Session) Push(route string, v interface{}) error {
 }
 
 // Response message to client
-func (s *Session) Response(v interface{}) error {
-	return s.entity.Response(v)
+func (s *Session) Response(route string, v interface{}) error {
+	return s.entity.Response(route, v)
 }
 
-// ResponseMID responses message to client, mid is
+// ResponseMid responses message to client, mid is
 // request message ID
-func (s *Session) ResponseMID(mid uint64, v interface{}) error {
-	return s.entity.ResponseMid(mid, v)
+func (s *Session) ResponseMid(mid uint64, route string, v interface{}) error {
+	return s.entity.ResponseMid(mid, route, v)
 }
 
 // ID returns the session id
@@ -416,4 +421,16 @@ func (s *Session) Clear() {
 
 	s.uid = 0
 	s.data = map[string]interface{}{}
+}
+
+// On is to register callback on events
+func (s *Session) On(ev string, f func()) {
+	s.onEvents[ev] = append(s.onEvents[ev], f)
+}
+
+// Event is to trigger an event with args
+func (s *Session) Event(ev string) {
+	for _, f := range s.onEvents[ev] {
+		f()
+	}
 }

@@ -73,13 +73,13 @@ func (n *NetworkEntity) LastMid() uint64 {
 }
 
 // Response implements the session.NetworkEntity interface
-func (n *NetworkEntity) Response(v interface{}) error {
+func (n *NetworkEntity) Response(route string, v interface{}) error {
 	n.responses = append(n.responses, v)
 	return nil
 }
 
 // ResponseMid implements the session.NetworkEntity interface
-func (n *NetworkEntity) ResponseMid(mid uint64, v interface{}) error {
+func (n *NetworkEntity) ResponseMid(mid uint64, route string, v interface{}) error {
 	_, found := n.msgmap[mid]
 	if found {
 		return fmt.Errorf("duplicated message id: %v", mid)

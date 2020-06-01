@@ -23,30 +23,36 @@ package component
 import (
 	"errors"
 	"reflect"
+
+	"github.com/lonng/nano/env"
+	"github.com/lonng/nano/log"
+
+	"github.com/lonng/nano/scheduler"
 )
 
 type (
-	//Handler represents a message.Message's handler's meta information.
 	//Handler represents a message.Message's handler's meta information.
 	Handler struct {
 		Receiver reflect.Value  // receiver of method
 		Method   reflect.Method // method stub
 		Type     reflect.Type   // low-level type of method
 		IsRawArg bool           // whether the data need to serialize
+		Code     uint16         // Route compressed code
 	}
 
 	// Service implements a specific service, some of it's methods will be
 	// called when the correspond events is occurred.
 	Service struct {
-		Name      string              // name of service
-		Type      reflect.Type        // type of the receiver
-		Receiver  reflect.Value       // receiver of methods for the service
-		Handlers  map[string]*Handler // registered methods
-		SchedName string              // name of scheduler variable in session data
-		Options   options             // options
+		Name     string              // name of service
+		Type     reflect.Type        // type of the receiver
+		Receiver reflect.Value       // receiver of methods for the service
+		Handlers map[string]*Handler // registered methods
+		Schedule scheduler.SchedFunc // tasks are pushed in and wait to be handled
+		Options  options             // options
 	}
 )
 
+// NewService create a new Service from component
 func NewService(comp Component, opts []Option) *Service {
 	s := &Service{
 		Type:     reflect.TypeOf(comp),
@@ -63,7 +69,11 @@ func NewService(comp Component, opts []Option) *Service {
 	} else {
 		s.Name = reflect.Indirect(s.Receiver).Type().Name()
 	}
-	s.SchedName = s.Options.schedName
+	if s.Options.schedule != nil {
+		s.Schedule = s.Options.schedule
+	} else {
+		s.Schedule = scheduler.Schedule
+	}
 
 	return s
 }
@@ -81,10 +91,24 @@ func (s *Service) suitableHandlerMethods(typ reflect.Type) map[string]*Handler {
 				raw = true
 			}
 			// rewrite handler name
-			if s.Options.nameFunc != nil {
-				mn = s.Options.nameFunc(mn)
+			if s.Options.renameHandler != nil {
+				mn = s.Options.renameHandler(mn)
 			}
-			methods[mn] = &Handler{Method: method, Type: mt.In(2), IsRawArg: raw}
+			// find commpressed code
+			var code uint16
+			for c, fn := range s.Options.dictionary {
+				if reflect.ValueOf(fn).Pointer() == method.Func.Pointer() {
+					code = c
+					break
+				}
+			}
+
+			methods[mn] = &Handler{
+				Method:   method,
+				Type:     mt.In(2),
+				IsRawArg: raw,
+				Code:     code,
+			}
 		}
 	}
 	return methods
@@ -112,12 +136,16 @@ func (s *Service) ExtractHandler() error {
 		str := ""
 		// To help the user, see if a pointer receiver would work.
 		method := s.suitableHandlerMethods(reflect.PtrTo(s.Type))
+
 		if len(method) != 0 {
 			str = "type " + s.Name + " has no exported methods of suitable type (hint: pass a pointer to value of that type)"
 		} else {
 			str = "type " + s.Name + " has no exported methods of suitable type"
 		}
-		return errors.New(str)
+		if env.Debug {
+			log.Println(str)
+		}
+		return nil
 	}
 
 	for i := range s.Handlers {

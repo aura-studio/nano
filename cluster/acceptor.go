@@ -5,7 +5,7 @@ import (
 	"net"
 
 	"github.com/lonng/nano/cluster/clusterpb"
-	"github.com/lonng/nano/internal/message"
+	"github.com/lonng/nano/message"
 	"github.com/lonng/nano/mock"
 	"github.com/lonng/nano/session"
 )
@@ -57,12 +57,12 @@ func (a *acceptor) LastMid() uint64 {
 }
 
 // Response implements the session.NetworkEntity interface
-func (a *acceptor) Response(v interface{}) error {
-	return a.ResponseMid(a.lastMid, v)
+func (a *acceptor) Response(route string, v interface{}) error {
+	return a.ResponseMid(a.lastMid, route, v)
 }
 
 // ResponseMid implements the session.NetworkEntity interface
-func (a *acceptor) ResponseMid(mid uint64, v interface{}) error {
+func (a *acceptor) ResponseMid(mid uint64, route string, v interface{}) error {
 	// TODO: buffer
 	data, err := message.Serialize(v)
 	if err != nil {
@@ -71,6 +71,7 @@ func (a *acceptor) ResponseMid(mid uint64, v interface{}) error {
 	request := &clusterpb.ResponseMessage{
 		SessionId: a.sid,
 		Id:        mid,
+		Route:     route,
 		Data:      data,
 	}
 	_, err = a.gateClient.HandleResponse(context.Background(), request)

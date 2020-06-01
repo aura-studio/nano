@@ -33,9 +33,9 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/lonng/nano/cluster/clusterpb"
 	"github.com/lonng/nano/component"
-	"github.com/lonng/nano/internal/env"
-	"github.com/lonng/nano/internal/log"
-	"github.com/lonng/nano/internal/message"
+	"github.com/lonng/nano/env"
+	"github.com/lonng/nano/log"
+	"github.com/lonng/nano/message"
 	"github.com/lonng/nano/pipeline"
 	"github.com/lonng/nano/scheduler"
 	"github.com/lonng/nano/session"
@@ -54,6 +54,7 @@ type Options struct {
 	IsWebsocket    bool
 	TSLCertificate string
 	TSLKey         string
+	Logger         log.Logger
 }
 
 // Node represents a node in nano cluster, which will contains a group of services.
@@ -72,7 +73,13 @@ type Node struct {
 	sessions map[int64]*session.Session
 }
 
+// CurrentNode is the running node.
+var CurrentNode *Node
+
+// Startup bootstraps a start up.
 func (n *Node) Startup() error {
+	CurrentNode = n
+
 	if n.ServiceAddr == "" {
 		return errors.New("service address cannot be empty in master node")
 	}
@@ -81,13 +88,12 @@ func (n *Node) Startup() error {
 	n.handler = NewHandler(n, n.Pipeline)
 	components := n.Components.List()
 	for _, c := range components {
-		err := n.handler.register(c.Comp, c.Opts)
+		err := n.handler.Register(c.Comp, c.Opts)
 		if err != nil {
 			return err
 		}
 	}
 
-	cache()
 	if err := n.initNode(); err != nil {
 		return err
 	}
@@ -117,6 +123,7 @@ func (n *Node) Startup() error {
 	return nil
 }
 
+// Handler returns localhandler for this node.
 func (n *Node) Handler() *LocalHandler {
 	return n.handler
 }
@@ -153,6 +160,7 @@ func (n *Node) initNode() error {
 				Label:       n.Label,
 				ServiceAddr: n.ServiceAddr,
 				Services:    n.handler.LocalService(),
+				Dictionary:  n.handler.LocalDictionary(),
 			},
 		}
 		n.cluster.members = append(n.cluster.members, member)
@@ -168,12 +176,14 @@ func (n *Node) initNode() error {
 				Label:       n.Label,
 				ServiceAddr: n.ServiceAddr,
 				Services:    n.handler.LocalService(),
+				Dictionary:  n.handler.LocalDictionary(),
 			},
 		}
 		for {
 			resp, err := client.Register(context.Background(), request)
 			if err == nil {
 				n.handler.initRemoteService(resp.Members)
+				n.handler.initRemoteDictionary(resp.Members)
 				n.cluster.initMembers(resp.Members)
 				break
 			}
@@ -186,7 +196,7 @@ func (n *Node) initNode() error {
 	return nil
 }
 
-// Shutdowns all components registered by application, that
+// Shutdown all components registered by application, that
 // call by reverse order against register
 func (n *Node) Shutdown() {
 	// reverse call `BeforeShutdown` hooks
@@ -222,6 +232,8 @@ EXIT:
 	if n.server != nil {
 		n.server.GracefulStop()
 	}
+
+	CurrentNode = nil
 }
 
 // Enable current server accept connection
@@ -312,7 +324,7 @@ func (n *Node) findOrCreateSession(sid int64, gateAddr string) (*session.Session
 		ac := &acceptor{
 			sid:        sid,
 			gateClient: clusterpb.NewMemberClient(conns.Get()),
-			rpcHandler: n.handler.remoteProcess,
+			rpcHandler: n.handler.processMessage,
 			gateAddr:   gateAddr,
 		}
 		s = session.New(ac)
@@ -320,10 +332,13 @@ func (n *Node) findOrCreateSession(sid int64, gateAddr string) (*session.Session
 		n.mu.Lock()
 		n.sessions[sid] = s
 		n.mu.Unlock()
+
+		scheduler.PushTask(func() { session.Opened(s) })
 	}
 	return s, nil
 }
 
+// HandleRequest is called by grpc `HandleRequest`
 func (n *Node) HandleRequest(_ context.Context, req *clusterpb.RequestMessage) (*clusterpb.MemberHandleResponse, error) {
 	handler, found := n.handler.localHandlers[req.Route]
 	if !found {
@@ -343,6 +358,7 @@ func (n *Node) HandleRequest(_ context.Context, req *clusterpb.RequestMessage) (
 	return &clusterpb.MemberHandleResponse{}, nil
 }
 
+// HandleNotify is called by grpc `HandleNotify`
 func (n *Node) HandleNotify(_ context.Context, req *clusterpb.NotifyMessage) (*clusterpb.MemberHandleResponse, error) {
 	handler, found := n.handler.localHandlers[req.Route]
 	if !found {
@@ -361,6 +377,7 @@ func (n *Node) HandleNotify(_ context.Context, req *clusterpb.NotifyMessage) (*c
 	return &clusterpb.MemberHandleResponse{}, nil
 }
 
+// HandlePush is called by grpc `HandlePush`
 func (n *Node) HandlePush(_ context.Context, req *clusterpb.PushMessage) (*clusterpb.MemberHandleResponse, error) {
 	s := n.findSession(req.SessionId)
 	if s == nil {
@@ -369,20 +386,24 @@ func (n *Node) HandlePush(_ context.Context, req *clusterpb.PushMessage) (*clust
 	return &clusterpb.MemberHandleResponse{}, s.Push(req.Route, req.Data)
 }
 
+// HandleResponse is called by grpc `HandleResponse`
 func (n *Node) HandleResponse(_ context.Context, req *clusterpb.ResponseMessage) (*clusterpb.MemberHandleResponse, error) {
 	s := n.findSession(req.SessionId)
 	if s == nil {
 		return &clusterpb.MemberHandleResponse{}, fmt.Errorf("session not found: %v", req.SessionId)
 	}
-	return &clusterpb.MemberHandleResponse{}, s.ResponseMID(req.Id, req.Data)
+	return &clusterpb.MemberHandleResponse{}, s.ResponseMid(req.Id, req.Route, req.Data)
 }
 
+// NewMember is called by grpc `NewMember`
 func (n *Node) NewMember(_ context.Context, req *clusterpb.NewMemberRequest) (*clusterpb.NewMemberResponse, error) {
 	n.handler.addRemoteService(req.MemberInfo)
+	n.handler.addRemoteDictionary(req.MemberInfo)
 	n.cluster.addMember(req.MemberInfo)
 	return &clusterpb.NewMemberResponse{}, nil
 }
 
+// DelMember is called by grpc `DelMember`
 func (n *Node) DelMember(_ context.Context, req *clusterpb.DelMemberRequest) (*clusterpb.DelMemberResponse, error) {
 	n.handler.delMember(req.ServiceAddr)
 	n.cluster.delMember(req.ServiceAddr)
@@ -396,7 +417,7 @@ func (n *Node) SessionClosed(_ context.Context, req *clusterpb.SessionClosedRequ
 	delete(n.sessions, req.SessionId)
 	n.mu.Unlock()
 	if found {
-		scheduler.PushTask(func() { session.Lifetime.Close(s) })
+		scheduler.PushTask(func() { session.Closed(s) })
 	}
 	return &clusterpb.SessionClosedResponse{}, nil
 }

@@ -32,9 +32,8 @@ import (
 
 	"github.com/lonng/nano/cluster"
 	"github.com/lonng/nano/component"
-	"github.com/lonng/nano/internal/env"
-	"github.com/lonng/nano/internal/log"
-	"github.com/lonng/nano/internal/runtime"
+	"github.com/lonng/nano/env"
+	"github.com/lonng/nano/log"
 	"github.com/lonng/nano/scheduler"
 )
 
@@ -93,11 +92,11 @@ func Listen(addr string, opts ...Option) {
 		Options:     opt,
 		ServiceAddr: addr,
 	}
+
 	err := node.Startup()
 	if err != nil {
 		log.Fatalf("Node startup failed: %v", err)
 	}
-	runtime.CurrentNode = node
 
 	if node.ClientAddr != "" {
 		log.Println(fmt.Sprintf("Startup *Nano gate server* %s, client address: %v, service address: %s",
@@ -107,7 +106,9 @@ func Listen(addr string, opts ...Option) {
 			app.name, node.ServiceAddr))
 	}
 
-	go scheduler.Sched()
+	log.SetLogger(node.Logger)
+
+	go scheduler.Digest()
 	sg := make(chan os.Signal)
 	signal.Notify(sg, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGTERM)
 
@@ -121,7 +122,6 @@ func Listen(addr string, opts ...Option) {
 	log.Println("Nano server is stopping...")
 
 	node.Shutdown()
-	runtime.CurrentNode = nil
 	scheduler.Close()
 	atomic.StoreInt32(&running, 0)
 }

@@ -28,18 +28,17 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/lonng/nano/internal/codec"
-	"github.com/lonng/nano/internal/env"
-	"github.com/lonng/nano/internal/log"
-	"github.com/lonng/nano/internal/message"
-	"github.com/lonng/nano/internal/packet"
+	"github.com/lonng/nano/codec"
+	"github.com/lonng/nano/env"
+	"github.com/lonng/nano/log"
+	"github.com/lonng/nano/message"
 	"github.com/lonng/nano/pipeline"
 	"github.com/lonng/nano/scheduler"
 	"github.com/lonng/nano/session"
 )
 
 const (
-	agentWriteBacklog = 16
+	agentWriteBacklog = 256
 )
 
 var (
@@ -65,7 +64,10 @@ type (
 		pipeline pipeline.Pipeline
 
 		rpcHandler rpcHandler
-		srv        reflect.Value // cached session reflect.Value
+		srv        reflect.Value     // cached session reflect.Value
+		routes     map[string]uint16 // copy system routes for agent
+		codes      map[uint16]string // copy system codes for agent
+		compressed bool              // whether to use compressed msg to client
 	}
 
 	pendingMessage struct {
@@ -78,6 +80,7 @@ type (
 
 // Create new agent instance
 func newAgent(conn net.Conn, pipeline pipeline.Pipeline, rpcHandler rpcHandler) *agent {
+	routes, codes := message.ReadDictionary()
 	a := &agent{
 		conn:       conn,
 		state:      statusStart,
@@ -87,6 +90,8 @@ func newAgent(conn net.Conn, pipeline pipeline.Pipeline, rpcHandler rpcHandler) 
 		decoder:    codec.NewDecoder(),
 		pipeline:   pipeline,
 		rpcHandler: rpcHandler,
+		routes:     routes,
+		codes:      codes,
 	}
 
 	// binding session
@@ -158,13 +163,13 @@ func (a *agent) RPC(route string, v interface{}) error {
 
 // Response, implementation for session.NetworkEntity interface
 // Response message to session
-func (a *agent) Response(v interface{}) error {
-	return a.ResponseMid(a.lastMid, v)
+func (a *agent) Response(route string, v interface{}) error {
+	return a.ResponseMid(a.lastMid, route, v)
 }
 
 // ResponseMid, implementation for session.NetworkEntity interface
 // Response message to session
-func (a *agent) ResponseMid(mid uint64, v interface{}) error {
+func (a *agent) ResponseMid(mid uint64, route string, v interface{}) error {
 	if a.status() == statusClosed {
 		return ErrBrokenPipe
 	}
@@ -180,15 +185,15 @@ func (a *agent) ResponseMid(mid uint64, v interface{}) error {
 	if env.Debug {
 		switch d := v.(type) {
 		case []byte:
-			log.Println(fmt.Sprintf("Type=Response, ID=%d, UID=%d, MID=%d, Data=%dbytes",
-				a.session.ID(), a.session.UID(), mid, len(d)))
+			log.Println(fmt.Sprintf("Type=Response, ID=%d, UID=%d, Route=%s, MID=%d,  Data=%dbytes",
+				a.session.ID(), a.session.UID(), route, mid, len(d)))
 		default:
-			log.Println(fmt.Sprintf("Type=Response, ID=%d, UID=%d, MID=%d, Data=%+v",
-				a.session.ID(), a.session.UID(), mid, v))
+			log.Println(fmt.Sprintf("Type=Response, ID=%d, UID=%d, Route=%s, MID=%d, Data=%+v",
+				a.session.ID(), a.session.UID(), route, mid, v))
 		}
 	}
 
-	return a.send(pendingMessage{typ: message.Response, mid: mid, payload: v})
+	return a.send(pendingMessage{typ: message.Response, route: route, mid: mid, payload: v})
 }
 
 // Close, implementation for session.NetworkEntity interface
@@ -211,7 +216,7 @@ func (a *agent) Close() error {
 		// expect
 	default:
 		close(a.chDie)
-		scheduler.PushTask(func() { session.Lifetime.Close(a.session) })
+		scheduler.PushTask(a.session.Close)
 	}
 
 	return a.conn.Close()
@@ -237,11 +242,9 @@ func (a *agent) setStatus(state int32) {
 }
 
 func (a *agent) write() {
-	ticker := time.NewTicker(env.Heartbeat)
 	chWrite := make(chan []byte, agentWriteBacklog)
 	// clean func
 	defer func() {
-		ticker.Stop()
 		close(a.chSend)
 		close(chWrite)
 		a.Close()
@@ -252,14 +255,6 @@ func (a *agent) write() {
 
 	for {
 		select {
-		case <-ticker.C:
-			deadline := time.Now().Add(-2 * env.Heartbeat).Unix()
-			if atomic.LoadInt64(&a.lastAt) < deadline {
-				log.Println(fmt.Sprintf("Session heartbeat timeout, LastTime=%d, Deadline=%d", atomic.LoadInt64(&a.lastAt), deadline))
-				return
-			}
-			chWrite <- hbd
-
 		case data := <-chWrite:
 			// close agent while low-level conn broken
 			if _, err := a.conn.Write(data); err != nil {
@@ -296,14 +291,18 @@ func (a *agent) write() {
 				}
 			}
 
-			em, err := m.Encode()
+			var routes map[string]uint16
+			if a.compressed {
+				routes = a.routes
+			}
+			em, err := message.Encode(m, routes)
 			if err != nil {
 				log.Println(err.Error())
 				break
 			}
 
 			// packet encode
-			p, err := codec.Encode(packet.Data, em)
+			p, err := codec.Encode(em)
 			if err != nil {
 				log.Println(err)
 				break

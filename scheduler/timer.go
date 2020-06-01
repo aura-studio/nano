@@ -22,7 +22,7 @@ package scheduler
 
 import (
 	"fmt"
-	"log"
+	"github.com/lonng/nano/log"
 	"math"
 	"runtime/debug"
 	"sync"

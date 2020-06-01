@@ -21,13 +21,13 @@
 package scheduler
 
 import (
-	"fmt"
 	"runtime/debug"
 	"sync/atomic"
 	"time"
 
-	"github.com/lonng/nano/internal/env"
-	"github.com/lonng/nano/internal/log"
+	"github.com/lonng/nano/env"
+	"github.com/lonng/nano/log"
+	"github.com/lonng/nano/session"
 )
 
 const (
@@ -35,14 +35,11 @@ const (
 	sessionCloseBacklog = 1 << 8
 )
 
-// LocalScheduler schedules task to a customized goroutine
-type LocalScheduler interface {
-	Schedule(Task)
-}
-
+// Task is the unit to be scheduled
 type Task func()
 
-type Hook func()
+// SchedFunc is the Func type of schedule
+type SchedFunc func(session *session.Session, v interface{}, task Task)
 
 var (
 	chDie   = make(chan struct{})
@@ -55,13 +52,14 @@ var (
 func try(f func()) {
 	defer func() {
 		if err := recover(); err != nil {
-			log.Println(fmt.Sprintf("Handle message panic: %+v\n%s", err, debug.Stack()))
+			log.Errorf("Handle message panic: %+v\n%s", err, debug.Stack())
 		}
 	}()
 	f()
 }
 
-func Sched() {
+// Digest pops tasks from task channel, and handle them.
+func Digest() {
 	if atomic.AddInt32(&started, 1) != 1 {
 		return
 	}
@@ -86,6 +84,7 @@ func Sched() {
 	}
 }
 
+// Close closes scheduler.
 func Close() {
 	if atomic.AddInt32(&closed, 1) != 1 {
 		return
@@ -95,6 +94,12 @@ func Close() {
 	log.Println("Scheduler stopped")
 }
 
+// Schedule is to fill the default func for Service.Schedule
+func Schedule(_ *session.Session, _ interface{}, task Task) {
+	PushTask(task)
+}
+
+// PushTask pushes task in task channel
 func PushTask(task Task) {
 	chTasks <- task
 }

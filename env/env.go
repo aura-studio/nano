@@ -18,49 +18,52 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package component
+// env represents the environment of the current process, includes
+// work path and config path etc.
+package env
 
 import (
-	"github.com/lonng/nano/scheduler"
+	"net/http"
+	"time"
+
+	"github.com/lonng/nano/serialize"
+	"github.com/lonng/nano/serialize/protobuf"
+	"google.golang.org/grpc"
 )
 
-type (
-	options struct {
-		name          string                 // component name
-		renameHandler func(string) string    // rename handler name
-		schedule      scheduler.SchedFunc    // schedule service task
-		dictionary    map[uint16]interface{} // Dictionary info slice
-	}
+var (
+	// Wd is working path
+	Wd string
 
-	// Option used to customize handler
-	Option func(options *options)
+	// Die waits for end application
+	Die chan bool
+
+	// CheckOrigin checks origin when websocket enabled
+	CheckOrigin func(*http.Request) bool
+
+	// Debug enables Debug mode
+	Debug bool
+
+	// WSPath is WebSocket path(eg: ws://127.0.0.1/WSPath)
+	WSPath string
+
+	// TimerPrecision indicates the precision of timer, default is time.Second
+	TimerPrecision = time.Second
+
+	// GlobalTicker represents global ticker that all cron job will be executed
+	// in globalTicker.
+	GlobalTicker *time.Ticker
+
+	// Serializer is message serializer, json or protobuf
+	Serializer serialize.Serializer
+
+	// GrpcOptions is options for grpc
+	GrpcOptions = []grpc.DialOption{grpc.WithInsecure()}
 )
 
-// WithName used to rename component name
-func WithName(name string) Option {
-	return func(opt *options) {
-		opt.name = name
-	}
-}
-
-// WithRenameHandlerFunc override handler name by specific function
-// such as: strings.ToUpper/strings.ToLower
-func WithRenameHandlerFunc(fn func(string) string) Option {
-	return func(opt *options) {
-		opt.renameHandler = fn
-	}
-}
-
-// WithScheduleFunc set the func of the service schedule
-func WithScheduleFunc(fn scheduler.SchedFunc) Option {
-	return func(opt *options) {
-		opt.schedule = fn
-	}
-}
-
-// WithDictionary set dictionary for compressed route
-func WithDictionary(dict map[uint16]interface{}) Option {
-	return func(opt *options) {
-		opt.dictionary = dict
-	}
+func init() {
+	Die = make(chan bool)
+	Debug = false
+	CheckOrigin = func(_ *http.Request) bool { return true }
+	Serializer = protobuf.NewSerializer()
 }

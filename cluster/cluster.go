@@ -26,7 +26,7 @@ import (
 	"sync"
 
 	"github.com/lonng/nano/cluster/clusterpb"
-	"github.com/lonng/nano/internal/log"
+	"github.com/lonng/nano/log"
 )
 
 // cluster represents a nano cluster, which contains a bunch of nano nodes
@@ -80,6 +80,8 @@ func (c *cluster) Register(_ context.Context, req *clusterpb.RegisterRequest) (*
 
 	// Register services to current node
 	c.currentNode.handler.addRemoteService(req.MemberInfo)
+	c.currentNode.handler.addRemoteDictionary(req.MemberInfo)
+
 	c.mu.Lock()
 	c.members = append(c.members, &Member{isMaster: false, memberInfo: req.MemberInfo})
 	c.mu.Unlock()
@@ -107,9 +109,6 @@ func (c *cluster) Unregister(_ context.Context, req *clusterpb.UnregisterRequest
 	// Notify registered node to update remote services
 	delMember := &clusterpb.DelMemberRequest{ServiceAddr: req.ServiceAddr}
 	for _, m := range c.members {
-		if m.MemberInfo().ServiceAddr == c.currentNode.ServiceAddr {
-			continue
-		}
 		pool, err := c.rpcClient.getConnPool(m.memberInfo.ServiceAddr)
 		if err != nil {
 			return nil, err

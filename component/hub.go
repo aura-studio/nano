@@ -20,11 +20,13 @@
 
 package component
 
+// CompWithOptions combines Component and options
 type CompWithOptions struct {
 	Comp Component
 	Opts []Option
 }
 
+// Components stores a slice of CompWithOptions
 type Components struct {
 	comps []CompWithOptions
 }
