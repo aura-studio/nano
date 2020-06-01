@@ -24,9 +24,6 @@ import (
 	"errors"
 	"reflect"
 
-	"github.com/lonng/nano/env"
-	"github.com/lonng/nano/log"
-
 	"github.com/lonng/nano/scheduler"
 )
 
@@ -133,18 +130,8 @@ func (s *Service) ExtractHandler() error {
 	s.Handlers = s.suitableHandlerMethods(s.Type)
 
 	if len(s.Handlers) == 0 {
-		str := ""
 		// To help the user, see if a pointer receiver would work.
-		method := s.suitableHandlerMethods(reflect.PtrTo(s.Type))
-
-		if len(method) != 0 {
-			str = "type " + s.Name + " has no exported methods of suitable type (hint: pass a pointer to value of that type)"
-		} else {
-			str = "type " + s.Name + " has no exported methods of suitable type"
-		}
-		if env.Debug {
-			log.Println(str)
-		}
+		s.suitableHandlerMethods(reflect.PtrTo(s.Type))
 		return nil
 	}
 
