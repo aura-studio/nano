@@ -92,9 +92,6 @@ func (h *LocalHandler) Register(comp component.Component, opts []component.Optio
 	h.localServices[s.Name] = s
 	for name, handler := range s.Handlers {
 		n := fmt.Sprintf("%s.%s", s.Name, name)
-		if env.Debug {
-			log.Println("Register local handler", n)
-		}
 		h.localHandlers[n] = handler
 		message.WriteDictionaryItem(n, handler.Code)
 	}
