@@ -210,7 +210,7 @@ func (h *LocalHandler) handle(conn net.Conn) {
 	if env.Debug {
 		log.Println(fmt.Sprintf("New session established: %s", agent.String()))
 	}
-	scheduler.PushTask(func() { session.Opened(agent.session) })
+	scheduler.PushTask(func() { session.Inited(agent.session) })
 
 	// guarantee agent related resource be destroyed
 	defer func() {

@@ -333,7 +333,7 @@ func (n *Node) findOrCreateSession(sid int64, gateAddr string) (*session.Session
 		n.sessions[sid] = s
 		n.mu.Unlock()
 
-		scheduler.PushTask(func() { session.Opened(s) })
+		scheduler.PushTask(func() { session.Inited(s) })
 	}
 	return s, nil
 }

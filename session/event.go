@@ -1,18 +1,18 @@
 package session
 
 var (
-	onOpened []func(s *Session) // call func in slice when session is opened
+	onInited []func(s *Session) // call func in slice when session is inited
 	onClosed []func(s *Session) // call func in slice when session is closed
 )
 
-// OnOpened set a func that will be called on session opened
-func OnOpened(f func(*Session)) {
-	onOpened = append(onOpened, f)
+// OnInited set a func that will be called on session inited
+func OnInited(f func(*Session)) {
+	onInited = append(onInited, f)
 }
 
-// Opened call all funcs that was registerd by OnOpened
-func Opened(s *Session) {
-	for _, f := range onOpened {
+// Inited call all funcs that was registerd by OnInited
+func Inited(s *Session) {
+	for _, f := range onInited {
 		f(s)
 	}
 }
