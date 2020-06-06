@@ -166,12 +166,40 @@ func (c *Connector) Request(route string, v interface{}, callback Callback) erro
 	return nil
 }
 
+// RawRequest send a request []byte to server and register a callbck for the response
+func (c *Connector) RawRequest(route string, data []byte, callback Callback) error {
+	msg := &message.Message{
+		Type:  message.Request,
+		Route: route,
+		ID:    c.mid,
+		Data:  data,
+	}
+
+	c.setResponseHandler(c.mid, callback)
+	if err := c.sendMessage(msg); err != nil {
+		c.setResponseHandler(c.mid, nil)
+		return err
+	}
+
+	return nil
+}
+
 // Notify send a notification to server
 func (c *Connector) Notify(route string, v interface{}) error {
 	data, err := c.Serialize(v)
 	if err != nil {
 		return err
 	}
+	msg := &message.Message{
+		Type:  message.Notify,
+		Route: route,
+		Data:  data,
+	}
+	return c.sendMessage(msg)
+}
+
+// RawNotify send a []byte notification to server
+func (c *Connector) RawNotify(route string, data []byte) error {
 	msg := &message.Message{
 		Type:  message.Notify,
 		Route: route,
