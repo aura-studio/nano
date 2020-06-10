@@ -74,6 +74,10 @@ func NewConnector(opts ...Option) *Connector {
 		opt(&c.Options)
 	}
 
+	if c.Options.logger != nil {
+		log.SetLogger(c.Options.logger)
+	}
+
 	c.routes, c.codes = message.ParseDictionary(c.dictionary)
 	return c
 }
@@ -322,7 +326,7 @@ func (c *Connector) write() {
 		select {
 		case data := <-c.chSend:
 			if _, err := c.conn.Write(data); err != nil {
-				log.Println(err.Error())
+				log.Println(err)
 				c.Close()
 			}
 
@@ -343,15 +347,14 @@ func (c *Connector) read() {
 	for {
 		n, err := c.conn.Read(buf)
 		if err != nil {
-			log.Println(err.Error())
-
+			log.Println(err)
 			c.Close()
 			return
 		}
 
 		packets, err := c.codec.Decode(buf[:n])
 		if err != nil {
-			log.Println(err.Error())
+			log.Println(err)
 			c.Close()
 			return
 		}
@@ -366,7 +369,7 @@ func (c *Connector) read() {
 func (c *Connector) processPacket(p *packet.Packet) {
 	msg, _, err := message.Decode(p.Data, c.codes)
 	if err != nil {
-		log.Println(err.Error())
+		log.Println(err)
 		return
 	}
 	c.processMessage(msg)

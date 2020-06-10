@@ -1,6 +1,7 @@
 package connector
 
 import (
+	"github.com/lonng/nano/log"
 	"github.com/lonng/nano/serialize"
 )
 
@@ -11,6 +12,7 @@ type (
 		dictionary map[string]uint16    // Dictionary info
 		serializer serialize.Serializer // serializer for connector
 		wsPath     string               //websocket path
+		logger     log.Logger           // logger
 	}
 
 	// Option used to customize handler
@@ -43,5 +45,12 @@ func WithSerializer(serializer serialize.Serializer) Option {
 func WithWSPath(path string) Option {
 	return func(opt *Options) {
 		opt.wsPath = path
+	}
+}
+
+// WithLogger overrides the default logger
+func WithLogger(l log.Logger) Option {
+	return func(opt *Options) {
+		opt.logger = l
 	}
 }
