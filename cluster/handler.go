@@ -280,7 +280,7 @@ func (h *LocalHandler) processPacket(agent *agent, p *packet.Packet) error {
 	}
 	if msg.ID == 1 {
 		agent.compressed = compressed
-		log.Println("set session Response & Push compress flag:%v", compressed)
+		log.Printf("set session Response & Push compress flag:%v", compressed)
 	}
 
 	h.processMessage(agent.session, msg, false)
