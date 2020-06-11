@@ -281,9 +281,11 @@ func (h *LocalHandler) processPacket(agent *agent, p *packet.Packet) error {
 	if msg.ID == 1 {
 		agent.compressed = compressed
 		if compressed {
-			log.Printf("Use compressed router mode for agent")
+			log.Printf("Use compressed router mode for agent, SessionID=%d",
+				agent.session.ID())
 		} else {
-			log.Printf("Use uncompressed router mode for agent")
+			log.Printf("Use uncompressed router mode for agent, SessionID=%d",
+				agent.session.ID())
 		}
 	}
 
