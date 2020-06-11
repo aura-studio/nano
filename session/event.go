@@ -14,7 +14,7 @@ func OnInited(f func(*Session)) {
 
 // Inited call all funcs that was registerd by OnInited
 func Inited(s *Session) {
-	log.Printf("Handle session `Inited` event callbacks, SessionID=%v", s.ID)
+	log.Printf("Handle session `Inited` callbacks, SessionID=%d", s.ID)
 	for _, f := range onInited {
 		f(s)
 	}
@@ -27,7 +27,7 @@ func OnClosed(f func(*Session)) {
 
 // Closed call all funcs that was registerd by OnClosed
 func Closed(s *Session) {
-	log.Printf("Handle session `Closed` event callbacks, SessionID=%v", s.ID)
+	log.Printf("Handle session `Closed` callbacks, SessionID=%d", s.ID)
 	for _, f := range onClosed {
 		f(s)
 	}
