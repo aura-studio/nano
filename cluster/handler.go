@@ -26,6 +26,7 @@ import (
 	"math/rand"
 	"net"
 	"reflect"
+	"runtime/debug"
 	"sort"
 	"strings"
 	"sync"
@@ -215,7 +216,7 @@ func (h *LocalHandler) handle(conn net.Conn) {
 	// guarantee agent related resource be destroyed
 	defer func() {
 		if err := recover(); err != nil {
-			log.Println(err)
+			log.Errorf("Handle session panic: %+v\n%s", err, debug.Stack())
 		}
 		request := &clusterpb.SessionClosedRequest{
 			SessionId: agent.session.ID(),
