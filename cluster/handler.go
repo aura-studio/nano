@@ -214,6 +214,9 @@ func (h *LocalHandler) handle(conn net.Conn) {
 
 	// guarantee agent related resource be destroyed
 	defer func() {
+		if err := recover(); err != nil {
+			log.Println(err)
+		}
 		request := &clusterpb.SessionClosedRequest{
 			SessionId: agent.session.ID(),
 		}
