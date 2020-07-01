@@ -56,7 +56,7 @@ func NewConnector(opts ...Option) *Connector {
 		},
 		die:       make(chan struct{}),
 		codec:     codec.NewDecoder(),
-		chSend:    make(chan []byte, 64),
+		chSend:    make(chan []byte, 256),
 		mid:       1,
 		connected: 0,
 		events:    map[string]Callback{},
