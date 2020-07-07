@@ -1,11 +1,15 @@
 package connector
 
 import (
+	"crypto/tls"
 	"fmt"
 	"net"
+	"net/url"
 	"sync"
 	"sync/atomic"
 
+	"github.com/gorilla/websocket"
+	"github.com/lonng/nano/cluster"
 	"github.com/lonng/nano/log"
 	"github.com/lonng/nano/serialize/protobuf"
 
@@ -99,31 +103,31 @@ func (c *Connector) Start(addr string) error {
 
 // StartWS connects to websocket server
 func (c *Connector) StartWS(addr string) error {
-	// u := url.URL{Scheme: "ws", Host: addr, Path: c.wsPath}
-	// dialer := websocket.DefaultDialer
-	// var conn *websocket.Conn
-	// var err error
-	// conn, _, err = dialer.Dial(u.String(), nil)
-	// if err != nil {
-	// 	u.Scheme = "wss"
-	// 	dialer.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-	// 	conn, _, err = dialer.Dial(u.String(), nil)
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
+	u := url.URL{Scheme: "ws", Host: addr, Path: c.wsPath}
+	dialer := websocket.DefaultDialer
+	var conn *websocket.Conn
+	var err error
+	conn, _, err = dialer.Dial(u.String(), nil)
+	if err != nil {
+		u.Scheme = "wss"
+		dialer.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+		conn, _, err = dialer.Dial(u.String(), nil)
+		if err != nil {
+			return err
+		}
+	}
 
-	// c.conn, err = acceptor.NewWSConn(conn)
-	// if err != nil {
-	// 	return err
-	// }
+	c.conn, err = cluster.NewWSConn(conn)
+	if err != nil {
+		return err
+	}
 
-	// go c.write()
+	go c.write()
 
-	// go c.read()
+	go c.read()
 
-	// atomic.StoreInt32(&c.connected, 1)
-	// go c.connectedCallback()
+	atomic.StoreInt32(&c.connected, 1)
+	go c.connectedCallback()
 
 	return nil
 }

@@ -36,8 +36,8 @@ type wsConn struct {
 	reader io.Reader
 }
 
-// newWSConn return an initialized *wsConn
-func newWSConn(conn *websocket.Conn) (*wsConn, error) {
+// NewWSConn return an initialized *wsConn
+func NewWSConn(conn *websocket.Conn) (*wsConn, error) {
 	c := &wsConn{conn: conn}
 
 	t, r, err := conn.NextReader()

@@ -342,11 +342,11 @@ func (h *LocalHandler) remoteProcess(session *session.Session, msg *message.Mess
 
 	// Retrieve gate address and session id
 	gateAddr := h.currentNode.ServiceAddr
-	sessionId := session.ID()
+	sessionID := session.ID()
 	switch v := session.NetworkEntity().(type) {
 	case *acceptor:
 		gateAddr = v.gateAddr
-		sessionId = v.sid
+		sessionID = v.sid
 	}
 
 	client := clusterpb.NewMemberClient(pool.Get())
@@ -354,7 +354,7 @@ func (h *LocalHandler) remoteProcess(session *session.Session, msg *message.Mess
 	case message.Request:
 		request := &clusterpb.RequestMessage{
 			GateAddr:  gateAddr,
-			SessionId: sessionId,
+			SessionId: sessionID,
 			Id:        msg.ID,
 			Route:     msg.Route,
 			Data:      data,
@@ -363,7 +363,7 @@ func (h *LocalHandler) remoteProcess(session *session.Session, msg *message.Mess
 	case message.Notify:
 		request := &clusterpb.NotifyMessage{
 			GateAddr:  gateAddr,
-			SessionId: sessionId,
+			SessionId: sessionID,
 			Route:     msg.Route,
 			Data:      data,
 		}
@@ -395,7 +395,7 @@ func (h *LocalHandler) processMessage(s *session.Session, msg *message.Message, 
 }
 
 func (h *LocalHandler) handleWS(conn *websocket.Conn) {
-	c, err := newWSConn(conn)
+	c, err := NewWSConn(conn)
 	if err != nil {
 		log.Println(err)
 		return

@@ -22,11 +22,13 @@ package cluster
 
 import "github.com/lonng/nano/cluster/clusterpb"
 
+// Member is a member of clusters
 type Member struct {
 	isMaster   bool
 	memberInfo *clusterpb.MemberInfo
 }
 
+// MemberInfo gets member info of a member
 func (m *Member) MemberInfo() *clusterpb.MemberInfo {
 	return m.memberInfo
 }
