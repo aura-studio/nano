@@ -428,8 +428,8 @@ func (s *Session) On(ev string, f func()) {
 	s.onEvents[ev] = append(s.onEvents[ev], f)
 }
 
-// Event is to trigger an event with args
-func (s *Session) Event(ev string) {
+// Trigger is to trigger an event with args
+func (s *Session) Trigger(ev string) {
 	for _, f := range s.onEvents[ev] {
 		f()
 	}
