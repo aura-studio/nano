@@ -27,7 +27,7 @@ func (a *acceptor) Push(route string, v interface{}) error {
 		return err
 	}
 	request := &clusterpb.PushMessage{
-		SessionId: a.sid,
+		SessionID: a.sid,
 		Route:     route,
 		Data:      data,
 	}
@@ -69,7 +69,7 @@ func (a *acceptor) ResponseMid(mid uint64, route string, v interface{}) error {
 		return err
 	}
 	request := &clusterpb.ResponseMessage{
-		SessionId: a.sid,
+		SessionID: a.sid,
 		Id:        mid,
 		Route:     route,
 		Data:      data,
@@ -82,7 +82,7 @@ func (a *acceptor) ResponseMid(mid uint64, route string, v interface{}) error {
 func (a *acceptor) Close() error {
 	// TODO: buffer
 	request := &clusterpb.CloseSessionRequest{
-		SessionId: a.sid,
+		SessionID: a.sid,
 	}
 	_, err := a.gateClient.CloseSession(context.Background(), request)
 	return err

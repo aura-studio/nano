@@ -344,7 +344,7 @@ func (n *Node) HandleRequest(_ context.Context, req *clusterpb.RequestMessage) (
 	if !found {
 		return nil, fmt.Errorf("service not found in current node: %v", req.Route)
 	}
-	s, err := n.findOrCreateSession(req.SessionId, req.GateAddr)
+	s, err := n.findOrCreateSession(req.SessionID, req.GateAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -364,7 +364,7 @@ func (n *Node) HandleNotify(_ context.Context, req *clusterpb.NotifyMessage) (*c
 	if !found {
 		return nil, fmt.Errorf("service not found in current node: %v", req.Route)
 	}
-	s, err := n.findOrCreateSession(req.SessionId, req.GateAddr)
+	s, err := n.findOrCreateSession(req.SessionID, req.GateAddr)
 	if err != nil {
 		return nil, err
 	}
@@ -379,18 +379,18 @@ func (n *Node) HandleNotify(_ context.Context, req *clusterpb.NotifyMessage) (*c
 
 // HandlePush is called by grpc `HandlePush`
 func (n *Node) HandlePush(_ context.Context, req *clusterpb.PushMessage) (*clusterpb.MemberHandleResponse, error) {
-	s := n.findSession(req.SessionId)
+	s := n.findSession(req.SessionID)
 	if s == nil {
-		return &clusterpb.MemberHandleResponse{}, fmt.Errorf("session not found: %v", req.SessionId)
+		return &clusterpb.MemberHandleResponse{}, fmt.Errorf("session not found: %v", req.SessionID)
 	}
 	return &clusterpb.MemberHandleResponse{}, s.Push(req.Route, req.Data)
 }
 
 // HandleResponse is called by grpc `HandleResponse`
 func (n *Node) HandleResponse(_ context.Context, req *clusterpb.ResponseMessage) (*clusterpb.MemberHandleResponse, error) {
-	s := n.findSession(req.SessionId)
+	s := n.findSession(req.SessionID)
 	if s == nil {
-		return &clusterpb.MemberHandleResponse{}, fmt.Errorf("session not found: %v", req.SessionId)
+		return &clusterpb.MemberHandleResponse{}, fmt.Errorf("session not found: %v", req.SessionID)
 	}
 	return &clusterpb.MemberHandleResponse{}, s.ResponseMid(req.Id, req.Route, req.Data)
 }
@@ -413,8 +413,8 @@ func (n *Node) DelMember(_ context.Context, req *clusterpb.DelMemberRequest) (*c
 // SessionClosed implements the MemberServer interface
 func (n *Node) SessionClosed(_ context.Context, req *clusterpb.SessionClosedRequest) (*clusterpb.SessionClosedResponse, error) {
 	n.mu.Lock()
-	s, found := n.sessions[req.SessionId]
-	delete(n.sessions, req.SessionId)
+	s, found := n.sessions[req.SessionID]
+	delete(n.sessions, req.SessionID)
 	n.mu.Unlock()
 	if found {
 		scheduler.PushTask(func() { session.Closed(s) })
@@ -425,8 +425,8 @@ func (n *Node) SessionClosed(_ context.Context, req *clusterpb.SessionClosedRequ
 // CloseSession implements the MemberServer interface
 func (n *Node) CloseSession(_ context.Context, req *clusterpb.CloseSessionRequest) (*clusterpb.CloseSessionResponse, error) {
 	n.mu.Lock()
-	s, found := n.sessions[req.SessionId]
-	delete(n.sessions, req.SessionId)
+	s, found := n.sessions[req.SessionID]
+	delete(n.sessions, req.SessionID)
 	n.mu.Unlock()
 	if found {
 		s.Close()

@@ -348,7 +348,7 @@ type RequestMessage struct {
 	unknownFields protoimpl.UnknownFields
 
 	GateAddr  string `protobuf:"bytes,1,opt,name=gateAddr,proto3" json:"gateAddr,omitempty"`
-	SessionId int64  `protobuf:"varint,2,opt,name=sessionID,proto3" json:"sessionID,omitempty"`
+	SessionID int64  `protobuf:"varint,2,opt,name=sessionID,proto3" json:"sessionID,omitempty"`
 	Id        uint64 `protobuf:"varint,3,opt,name=id,proto3" json:"id,omitempty"`
 	Route     string `protobuf:"bytes,4,opt,name=route,proto3" json:"route,omitempty"`
 	Data      []byte `protobuf:"bytes,5,opt,name=data,proto3" json:"data,omitempty"`
@@ -395,7 +395,7 @@ func (x *RequestMessage) GetGateAddr() string {
 
 func (x *RequestMessage) GetSessionId() int64 {
 	if x != nil {
-		return x.SessionId
+		return x.SessionID
 	}
 	return 0
 }
@@ -427,7 +427,7 @@ type NotifyMessage struct {
 	unknownFields protoimpl.UnknownFields
 
 	GateAddr  string `protobuf:"bytes,1,opt,name=gateAddr,proto3" json:"gateAddr,omitempty"`
-	SessionId int64  `protobuf:"varint,2,opt,name=sessionID,proto3" json:"sessionID,omitempty"`
+	SessionID int64  `protobuf:"varint,2,opt,name=sessionID,proto3" json:"sessionID,omitempty"`
 	Route     string `protobuf:"bytes,3,opt,name=route,proto3" json:"route,omitempty"`
 	Data      []byte `protobuf:"bytes,4,opt,name=data,proto3" json:"data,omitempty"`
 }
@@ -473,7 +473,7 @@ func (x *NotifyMessage) GetGateAddr() string {
 
 func (x *NotifyMessage) GetSessionId() int64 {
 	if x != nil {
-		return x.SessionId
+		return x.SessionID
 	}
 	return 0
 }
@@ -497,7 +497,7 @@ type ResponseMessage struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	SessionId int64  `protobuf:"varint,1,opt,name=sessionID,proto3" json:"sessionID,omitempty"`
+	SessionID int64  `protobuf:"varint,1,opt,name=sessionID,proto3" json:"sessionID,omitempty"`
 	Id        uint64 `protobuf:"varint,2,opt,name=id,proto3" json:"id,omitempty"`
 	Route     string `protobuf:"bytes,3,opt,name=route,proto3" json:"route,omitempty"`
 	Data      []byte `protobuf:"bytes,4,opt,name=data,proto3" json:"data,omitempty"`
@@ -537,7 +537,7 @@ func (*ResponseMessage) Descriptor() ([]byte, []int) {
 
 func (x *ResponseMessage) GetSessionId() int64 {
 	if x != nil {
-		return x.SessionId
+		return x.SessionID
 	}
 	return 0
 }
@@ -568,7 +568,7 @@ type PushMessage struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	SessionId int64  `protobuf:"varint,1,opt,name=sessionID,proto3" json:"sessionID,omitempty"`
+	SessionID int64  `protobuf:"varint,1,opt,name=sessionID,proto3" json:"sessionID,omitempty"`
 	Route     string `protobuf:"bytes,2,opt,name=route,proto3" json:"route,omitempty"`
 	Data      []byte `protobuf:"bytes,3,opt,name=data,proto3" json:"data,omitempty"`
 }
@@ -607,7 +607,7 @@ func (*PushMessage) Descriptor() ([]byte, []int) {
 
 func (x *PushMessage) GetSessionId() int64 {
 	if x != nil {
-		return x.SessionId
+		return x.SessionID
 	}
 	return 0
 }
@@ -839,7 +839,7 @@ type SessionClosedRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	SessionId int64 `protobuf:"varint,1,opt,name=sessionID,proto3" json:"sessionID,omitempty"`
+	SessionID int64 `protobuf:"varint,1,opt,name=sessionID,proto3" json:"sessionID,omitempty"`
 }
 
 func (x *SessionClosedRequest) Reset() {
@@ -876,7 +876,7 @@ func (*SessionClosedRequest) Descriptor() ([]byte, []int) {
 
 func (x *SessionClosedRequest) GetSessionId() int64 {
 	if x != nil {
-		return x.SessionId
+		return x.SessionID
 	}
 	return 0
 }
@@ -924,7 +924,7 @@ type CloseSessionRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	SessionId int64 `protobuf:"varint,1,opt,name=sessionID,proto3" json:"sessionID,omitempty"`
+	SessionID int64 `protobuf:"varint,1,opt,name=sessionID,proto3" json:"sessionID,omitempty"`
 }
 
 func (x *CloseSessionRequest) Reset() {
@@ -961,7 +961,7 @@ func (*CloseSessionRequest) Descriptor() ([]byte, []int) {
 
 func (x *CloseSessionRequest) GetSessionId() int64 {
 	if x != nil {
-		return x.SessionId
+		return x.SessionID
 	}
 	return 0
 }

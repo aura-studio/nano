@@ -219,7 +219,7 @@ func (h *LocalHandler) handle(conn net.Conn) {
 			log.Errorf("Handle session panic: %+v\n%s", err, debug.Stack())
 		}
 		request := &clusterpb.SessionClosedRequest{
-			SessionId: agent.session.ID(),
+			SessionID: agent.session.ID(),
 		}
 
 		members := h.currentNode.cluster.remoteAddrs()
@@ -354,7 +354,7 @@ func (h *LocalHandler) remoteProcess(session *session.Session, msg *message.Mess
 	case message.Request:
 		request := &clusterpb.RequestMessage{
 			GateAddr:  gateAddr,
-			SessionId: sessionID,
+			SessionID: sessionID,
 			Id:        msg.ID,
 			Route:     msg.Route,
 			Data:      data,
@@ -363,7 +363,7 @@ func (h *LocalHandler) remoteProcess(session *session.Session, msg *message.Mess
 	case message.Notify:
 		request := &clusterpb.NotifyMessage{
 			GateAddr:  gateAddr,
-			SessionId: sessionID,
+			SessionID: sessionID,
 			Route:     msg.Route,
 			Data:      data,
 		}
