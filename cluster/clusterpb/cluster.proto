@@ -37,7 +37,7 @@ service Master {
 
 message RequestMessage {
     string gateAddr = 1;
-    int64 sessionId = 2;
+    int64 sessionID = 2;
     uint64 id = 3;
     string route = 4;
     bytes data = 5;
@@ -45,20 +45,20 @@ message RequestMessage {
 
 message NotifyMessage {
     string gateAddr = 1;
-    int64 sessionId = 2;
+    int64 sessionID = 2;
     string route = 3;
     bytes data = 4;
 }
 
 message ResponseMessage {
-    int64 sessionId = 1;
+    int64 sessionID = 1;
     uint64 id = 2;
     string route = 3;
     bytes data = 4;
 }
 
 message PushMessage {
-    int64 sessionId = 1;
+    int64 sessionID = 1;
     string route = 2;
     bytes data = 3;
 }
@@ -78,13 +78,13 @@ message DelMemberRequest {
 message DelMemberResponse {}
 
 message SessionClosedRequest {
-    int64 sessionId = 1;
+    int64 sessionID = 1;
 }
 
 message SessionClosedResponse {}
 
 message CloseSessionRequest {
-    int64 sessionId = 1;
+    int64 sessionID = 1;
 }
 
 message CloseSessionResponse {}

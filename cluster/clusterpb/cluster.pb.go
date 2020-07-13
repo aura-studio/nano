@@ -348,7 +348,7 @@ type RequestMessage struct {
 	unknownFields protoimpl.UnknownFields
 
 	GateAddr  string `protobuf:"bytes,1,opt,name=gateAddr,proto3" json:"gateAddr,omitempty"`
-	SessionId int64  `protobuf:"varint,2,opt,name=sessionId,proto3" json:"sessionId,omitempty"`
+	SessionId int64  `protobuf:"varint,2,opt,name=sessionID,proto3" json:"sessionID,omitempty"`
 	Id        uint64 `protobuf:"varint,3,opt,name=id,proto3" json:"id,omitempty"`
 	Route     string `protobuf:"bytes,4,opt,name=route,proto3" json:"route,omitempty"`
 	Data      []byte `protobuf:"bytes,5,opt,name=data,proto3" json:"data,omitempty"`
@@ -427,7 +427,7 @@ type NotifyMessage struct {
 	unknownFields protoimpl.UnknownFields
 
 	GateAddr  string `protobuf:"bytes,1,opt,name=gateAddr,proto3" json:"gateAddr,omitempty"`
-	SessionId int64  `protobuf:"varint,2,opt,name=sessionId,proto3" json:"sessionId,omitempty"`
+	SessionId int64  `protobuf:"varint,2,opt,name=sessionID,proto3" json:"sessionID,omitempty"`
 	Route     string `protobuf:"bytes,3,opt,name=route,proto3" json:"route,omitempty"`
 	Data      []byte `protobuf:"bytes,4,opt,name=data,proto3" json:"data,omitempty"`
 }
@@ -497,7 +497,7 @@ type ResponseMessage struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	SessionId int64  `protobuf:"varint,1,opt,name=sessionId,proto3" json:"sessionId,omitempty"`
+	SessionId int64  `protobuf:"varint,1,opt,name=sessionID,proto3" json:"sessionID,omitempty"`
 	Id        uint64 `protobuf:"varint,2,opt,name=id,proto3" json:"id,omitempty"`
 	Route     string `protobuf:"bytes,3,opt,name=route,proto3" json:"route,omitempty"`
 	Data      []byte `protobuf:"bytes,4,opt,name=data,proto3" json:"data,omitempty"`
@@ -568,7 +568,7 @@ type PushMessage struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	SessionId int64  `protobuf:"varint,1,opt,name=sessionId,proto3" json:"sessionId,omitempty"`
+	SessionId int64  `protobuf:"varint,1,opt,name=sessionID,proto3" json:"sessionID,omitempty"`
 	Route     string `protobuf:"bytes,2,opt,name=route,proto3" json:"route,omitempty"`
 	Data      []byte `protobuf:"bytes,3,opt,name=data,proto3" json:"data,omitempty"`
 }
@@ -839,7 +839,7 @@ type SessionClosedRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	SessionId int64 `protobuf:"varint,1,opt,name=sessionId,proto3" json:"sessionId,omitempty"`
+	SessionId int64 `protobuf:"varint,1,opt,name=sessionID,proto3" json:"sessionID,omitempty"`
 }
 
 func (x *SessionClosedRequest) Reset() {
@@ -924,7 +924,7 @@ type CloseSessionRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	SessionId int64 `protobuf:"varint,1,opt,name=sessionId,proto3" json:"sessionId,omitempty"`
+	SessionId int64 `protobuf:"varint,1,opt,name=sessionID,proto3" json:"sessionID,omitempty"`
 }
 
 func (x *CloseSessionRequest) Reset() {
