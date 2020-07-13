@@ -209,7 +209,7 @@ func (h *LocalHandler) handle(conn net.Conn) {
 	go agent.write()
 
 	if env.Debug {
-		log.Debugf("New session established: %s", agent.String())
+		log.Infof("New session established: %s", agent.String())
 	}
 	scheduler.PushTask(func() { session.Inited(agent.session) })
 
@@ -243,7 +243,7 @@ func (h *LocalHandler) handle(conn net.Conn) {
 
 		agent.Close()
 		if env.Debug {
-			log.Debugf("Session read goroutine exit, SessionID=%d, UID=%d", agent.session.ID(), agent.session.UID())
+			log.Infof("Session read goroutine exit, SessionID=%d, UID=%d", agent.session.ID(), agent.session.UID())
 		}
 	}()
 
@@ -252,7 +252,7 @@ func (h *LocalHandler) handle(conn net.Conn) {
 	for {
 		n, err := conn.Read(buf)
 		if err != nil {
-			log.Errorf("Read message error: %s, session will be closed immediately", err.Error())
+			log.Infoln("Read message error: %s, session will be closed immediately", err.Error())
 			return
 		}
 
@@ -427,7 +427,7 @@ func (h *LocalHandler) localProcess(handler *component.Handler, lastMid uint64, 
 	}
 
 	if env.Debug {
-		log.Debugf("UID=%d, Mid=%d, Message={%s}, Data=%+v", session.UID(), lastMid, msg.String(), data)
+		log.Infof("UID=%d, Mid=%d, Message={%s}, Data=%+v", session.UID(), lastMid, msg.String(), data)
 	}
 
 	args := []reflect.Value{handler.Receiver, reflect.ValueOf(session), reflect.ValueOf(data)}

@@ -185,10 +185,10 @@ func (a *agent) ResponseMid(mid uint64, route string, v interface{}) error {
 	if env.Debug {
 		switch d := v.(type) {
 		case []byte:
-			log.Debugf("Type=Response, ID=%d, UID=%d, Route=%s, MID=%d,  Data=%dbytes",
+			log.Infof("Type=Response, ID=%d, UID=%d, Route=%s, MID=%d,  Data=%dbytes",
 				a.session.ID(), a.session.UID(), route, mid, len(d))
 		default:
-			log.Debugf("Type=Response, ID=%d, UID=%d, Route=%s, MID=%d, Data=%+v",
+			log.Infof("Type=Response, ID=%d, UID=%d, Route=%s, MID=%d, Data=%+v",
 				a.session.ID(), a.session.UID(), route, mid, v)
 		}
 	}
@@ -206,7 +206,7 @@ func (a *agent) Close() error {
 	a.setStatus(statusClosed)
 
 	if env.Debug {
-		log.Debugf("Session closed, ID=%d, UID=%d, IP=%s",
+		log.Infof("Session closed, ID=%d, UID=%d, IP=%s",
 			a.session.ID(), a.session.UID(), a.conn.RemoteAddr())
 	}
 
@@ -250,7 +250,7 @@ func (a *agent) write() {
 		close(chWrite)
 		a.Close()
 		if env.Debug {
-			log.Debugf("Session write goroutine exit, SessionID=%d, UID=%d",
+			log.Infof("Session write goroutine exit, SessionID=%d, UID=%d",
 				a.session.ID(), a.session.UID())
 		}
 	}()
