@@ -21,13 +21,13 @@
 package scheduler
 
 import (
-	"fmt"
-	"github.com/lonng/nano/log"
 	"math"
 	"runtime/debug"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/lonng/nano/log"
 )
 
 const (
@@ -93,7 +93,7 @@ func (t *Timer) Stop() {
 func safecall(id int64, fn TimerFunc) {
 	defer func() {
 		if err := recover(); err != nil {
-			log.Println(fmt.Sprintf("Handle timer panic: %+v\n%s", err, debug.Stack()))
+			log.Errorf("Handle timer panic: %+v\n%s", err, debug.Stack())
 		}
 	}()
 

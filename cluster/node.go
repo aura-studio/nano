@@ -187,7 +187,7 @@ func (n *Node) initNode() error {
 				n.cluster.initMembers(resp.Members)
 				break
 			}
-			log.Println("Register current node to cluster failed", err, "and will retry in", n.RetryInterval.String())
+			log.Errorln("Register current node to cluster failed", err, "and will retry in", n.RetryInterval.String())
 			time.Sleep(n.RetryInterval)
 		}
 
@@ -214,7 +214,7 @@ func (n *Node) Shutdown() {
 	if !n.IsMaster && n.AdvertiseAddr != "" {
 		pool, err := n.rpcClient.getConnPool(n.AdvertiseAddr)
 		if err != nil {
-			log.Println("Retrieve master address error", err)
+			log.Errorln("Retrieve master address error", err)
 			goto EXIT
 		}
 		client := clusterpb.NewMasterClient(pool.Get())
@@ -223,7 +223,7 @@ func (n *Node) Shutdown() {
 		}
 		_, err = client.Unregister(context.Background(), request)
 		if err != nil {
-			log.Println("Unregister current node failed", err)
+			log.Errorln("Unregister current node failed", err)
 			goto EXIT
 		}
 	}
@@ -247,7 +247,7 @@ func (n *Node) listenAndServe() {
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
-			log.Println(err.Error())
+			log.Errorln(err.Error())
 			continue
 		}
 
@@ -265,7 +265,7 @@ func (n *Node) listenAndServeWS() {
 	http.HandleFunc("/"+strings.TrimPrefix(env.WSPath, "/"), func(w http.ResponseWriter, r *http.Request) {
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
-			log.Println(fmt.Sprintf("Upgrade failure, URI=%s, Error=%s", r.RequestURI, err.Error()))
+			log.Errorf("Upgrade failure, URI=%s, Error=%s", r.RequestURI, err.Error())
 			return
 		}
 
@@ -287,7 +287,7 @@ func (n *Node) listenAndServeWSTLS() {
 	http.HandleFunc("/"+strings.TrimPrefix(env.WSPath, "/"), func(w http.ResponseWriter, r *http.Request) {
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
-			log.Println(fmt.Sprintf("Upgrade failure, URI=%s, Error=%s", r.RequestURI, err.Error()))
+			log.Errorf("Upgrade failure, URI=%s, Error=%s", r.RequestURI, err.Error())
 			return
 		}
 
