@@ -44,6 +44,7 @@ func (a *acceptor) RPC(route string, v interface{}) error {
 	}
 	msg := &message.Message{
 		Type:  message.Notify,
+		ID:    a.lastMid,
 		Route: route,
 		Data:  data,
 	}

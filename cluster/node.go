@@ -370,10 +370,11 @@ func (n *Node) HandleNotify(_ context.Context, req *clusterpb.NotifyMessage) (*c
 	}
 	msg := &message.Message{
 		Type:  message.Notify,
+		ID:    req.ID,
 		Route: req.Route,
 		Data:  req.Data,
 	}
-	n.handler.localProcess(handler, 0, s, msg)
+	n.handler.localProcess(handler, req.ID, s, msg)
 	return &clusterpb.MemberHandleResponse{}, nil
 }
 

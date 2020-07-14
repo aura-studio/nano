@@ -154,6 +154,7 @@ func (a *agent) RPC(route string, v interface{}) error {
 	}
 	msg := &message.Message{
 		Type:  message.Notify,
+		ID:    a.lastMid,
 		Route: route,
 		Data:  data,
 	}
@@ -172,10 +173,6 @@ func (a *agent) Response(route string, v interface{}) error {
 func (a *agent) ResponseMid(mid uint64, route string, v interface{}) error {
 	if a.status() == statusClosed {
 		return ErrBrokenPipe
-	}
-
-	if mid <= 0 {
-		return ErrSessionOnNotify
 	}
 
 	if len(a.chSend) >= agentWriteBacklog {

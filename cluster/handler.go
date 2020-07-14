@@ -364,6 +364,7 @@ func (h *LocalHandler) remoteProcess(session *session.Session, msg *message.Mess
 		request := &clusterpb.NotifyMessage{
 			GateAddr:  gateAddr,
 			SessionID: sessionID,
+			ID:        msg.ID,
 			Route:     msg.Route,
 			Data:      data,
 		}
@@ -381,7 +382,7 @@ func (h *LocalHandler) processMessage(s *session.Session, msg *message.Message, 
 	case message.Request:
 		lastMid = msg.ID
 	case message.Notify:
-		lastMid = 0
+		lastMid = msg.ID
 	default:
 		log.Errorln("Invalid message type: " + msg.Type.String())
 		return
@@ -435,8 +436,10 @@ func (h *LocalHandler) localProcess(handler *component.Handler, lastMid uint64, 
 		if lastMid > 0 {
 			switch v := session.NetworkEntity().(type) {
 			case *agent:
+				log.Println("agent lastmid")
 				v.lastMid = lastMid
 			case *acceptor:
+				log.Println("acceptor lastmid")
 				v.lastMid = lastMid
 			}
 		}
