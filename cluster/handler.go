@@ -436,10 +436,8 @@ func (h *LocalHandler) localProcess(handler *component.Handler, lastMid uint64, 
 		if lastMid > 0 {
 			switch v := session.NetworkEntity().(type) {
 			case *agent:
-				log.Println("agent lastmid")
 				v.lastMid = lastMid
 			case *acceptor:
-				log.Println("acceptor lastmid")
 				v.lastMid = lastMid
 			}
 		}
