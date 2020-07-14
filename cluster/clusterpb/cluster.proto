@@ -38,7 +38,7 @@ service Master {
 message RequestMessage {
     string gateAddr = 1;
     int64 sessionID = 2;
-    uint64 id = 3;
+    uint64 ID = 3;
     string route = 4;
     bytes data = 5;
 }
@@ -52,7 +52,7 @@ message NotifyMessage {
 
 message ResponseMessage {
     int64 sessionID = 1;
-    uint64 id = 2;
+    uint64 ID = 2;
     string route = 3;
     bytes data = 4;
 }

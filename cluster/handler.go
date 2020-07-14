@@ -340,7 +340,7 @@ func (h *LocalHandler) remoteProcess(session *session.Session, msg *message.Mess
 		copy(data, msg.Data)
 	}
 
-	// Retrieve gate address and session id
+	// Retrieve gate address and session ID
 	gateAddr := h.currentNode.ServiceAddr
 	sessionID := session.ID()
 	switch v := session.NetworkEntity().(type) {
@@ -355,7 +355,7 @@ func (h *LocalHandler) remoteProcess(session *session.Session, msg *message.Mess
 		request := &clusterpb.RequestMessage{
 			GateAddr:  gateAddr,
 			SessionID: sessionID,
-			Id:        msg.ID,
+			ID:        msg.ID,
 			Route:     msg.Route,
 			Data:      data,
 		}

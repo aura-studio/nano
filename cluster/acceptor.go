@@ -70,7 +70,7 @@ func (a *acceptor) ResponseMid(mid uint64, route string, v interface{}) error {
 	}
 	request := &clusterpb.ResponseMessage{
 		SessionID: a.sid,
-		Id:        mid,
+		ID:        mid,
 		Route:     route,
 		Data:      data,
 	}

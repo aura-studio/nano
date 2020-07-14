@@ -103,7 +103,7 @@ func (c *cluster) Unregister(_ context.Context, req *clusterpb.UnregisterRequest
 		}
 	}
 	if index < 0 {
-		return nil, fmt.Errorf("address %s has  notregistered", req.ServiceAddr)
+		return nil, fmt.Errorf("address %s has not registered", req.ServiceAddr)
 	}
 
 	// Notify registered node to update remote services

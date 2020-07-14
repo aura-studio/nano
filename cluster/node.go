@@ -350,11 +350,11 @@ func (n *Node) HandleRequest(_ context.Context, req *clusterpb.RequestMessage) (
 	}
 	msg := &message.Message{
 		Type:  message.Request,
-		ID:    req.Id,
+		ID:    req.ID,
 		Route: req.Route,
 		Data:  req.Data,
 	}
-	n.handler.localProcess(handler, req.Id, s, msg)
+	n.handler.localProcess(handler, req.ID, s, msg)
 	return &clusterpb.MemberHandleResponse{}, nil
 }
 
@@ -392,7 +392,7 @@ func (n *Node) HandleResponse(_ context.Context, req *clusterpb.ResponseMessage)
 	if s == nil {
 		return &clusterpb.MemberHandleResponse{}, fmt.Errorf("session not found: %v", req.SessionID)
 	}
-	return &clusterpb.MemberHandleResponse{}, s.ResponseMid(req.Id, req.Route, req.Data)
+	return &clusterpb.MemberHandleResponse{}, s.ResponseMid(req.ID, req.Route, req.Data)
 }
 
 // NewMember is called by grpc `NewMember`
