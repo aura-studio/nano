@@ -237,7 +237,7 @@ func (h *LocalHandler) handle(conn net.Conn) {
 				continue
 			}
 			if env.Debug {
-				log.Errorln("Notify remote server success", remote)
+				log.Infoln("Notify remote server success", remote)
 			}
 		}
 
