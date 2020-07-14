@@ -51,11 +51,45 @@ func (c *cluster) Register(_ context.Context, req *clusterpb.RegisterRequest) (*
 		return nil, ErrInvalidRegisterReq
 	}
 
+	var index = -1
 	resp := &clusterpb.RegisterResponse{}
-	for _, m := range c.members {
+	for i, m := range c.members {
 		if m.memberInfo.ServiceAddr == req.MemberInfo.ServiceAddr {
-			return nil, fmt.Errorf("address %s has registered", req.MemberInfo.ServiceAddr)
+			index = i
+			break
 		}
+	}
+
+	if index >= 0 {
+		log.Warnf("address %s repeatedly registered, it will be unregistered before register", req.MemberInfo.ServiceAddr)
+		// Notify registered node to update remote services
+		delMember := &clusterpb.DelMemberRequest{ServiceAddr: req.MemberInfo.ServiceAddr}
+		for _, m := range c.members {
+			if m.MemberInfo().ServiceAddr == c.currentNode.ServiceAddr {
+				continue
+			}
+			pool, err := c.rpcClient.getConnPool(m.memberInfo.ServiceAddr)
+			if err != nil {
+				return nil, err
+			}
+			client := clusterpb.NewMemberClient(pool.Get())
+			_, err = client.DelMember(context.Background(), delMember)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		log.Infoln("Exists peer unregister to cluster", req.MemberInfo.ServiceAddr)
+
+		// Register services to current node
+		c.currentNode.handler.delMember(req.MemberInfo.ServiceAddr)
+		c.mu.Lock()
+		if index == len(c.members)-1 {
+			c.members = c.members[:index]
+		} else {
+			c.members = append(c.members[:index], c.members[index+1:]...)
+		}
+		c.mu.Unlock()
 	}
 
 	// Notify registered node to update remote services
