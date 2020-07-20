@@ -10,6 +10,7 @@ import (
 	"github.com/lonng/nano/log"
 	"github.com/lonng/nano/pipeline"
 	"github.com/lonng/nano/serialize"
+	"github.com/urfave/cli"
 	"google.golang.org/grpc"
 )
 
@@ -131,5 +132,12 @@ func WithTSLConfig(certificate, key string) Option {
 func WithLogger(l log.Logger) Option {
 	return func(opt *cluster.Options) {
 		opt.Logger = l
+	}
+}
+
+// WithContext set cli.context
+func WithContext(context *cli.Context) Option {
+	return func(opt *cluster.Options) {
+		env.Context = context
 	}
 }

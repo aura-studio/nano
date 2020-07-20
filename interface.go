@@ -80,6 +80,8 @@ func Listen(addr string, opts ...Option) {
 	if !opt.IsMaster && opt.AdvertiseAddr == "" && opt.ClientAddr == "" {
 		log.Infoln("The current server running in singleton mode")
 		opt.ClientAddr = addr
+	} else {
+		log.Infoln("The current server running in cluster mode")
 	}
 
 	// Set the retry interval to 3 secondes if doesn't set by user
