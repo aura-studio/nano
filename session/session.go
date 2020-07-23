@@ -108,6 +108,11 @@ func (s *Session) ResponseMid(mid uint64, route string, v interface{}) error {
 	return s.entity.ResponseMid(mid, route, v)
 }
 
+// SetID sets the session id
+func (s *Session) SetID(id int64) {
+	s.id = id
+}
+
 // ID returns the session id
 func (s *Session) ID() int64 {
 	return s.id

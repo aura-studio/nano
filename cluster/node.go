@@ -328,6 +328,7 @@ func (n *Node) findOrCreateSession(sid int64, gateAddr string) (*session.Session
 			gateAddr:   gateAddr,
 		}
 		s = session.New(ac)
+		s.SetID(sid)
 		ac.session = s
 		n.mu.Lock()
 		n.sessions[sid] = s
