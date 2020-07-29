@@ -54,14 +54,14 @@ var (
 // Session instance related to the client will be passed to Handler method as the first
 // parameter.
 type Session struct {
-	sync.RWMutex                          // protect data
-	id           int64                    // session global unique id
-	uid          int64                    // binding user id
-	lastTime     int64                    // last heartbeat time
-	entity       NetworkEntity            // low-level network entity
-	data         map[string]interface{}   // session data store
-	router       *Router                  // store remote addr
-	onEvents     map[interface{}][]func() // call EventCallback after event trigged
+	sync.RWMutex                                  // protect data
+	id           int64                            // session global unique id
+	uid          int64                            // binding user id
+	lastTime     int64                            // last heartbeat time
+	entity       NetworkEntity                    // low-level network entity
+	data         map[string]interface{}           // session data store
+	router       *Router                          // store remote addr
+	onEvents     map[interface{}][]func(*Session) // call EventCallback after event trigged
 }
 
 // New returns a new session instance
@@ -73,7 +73,7 @@ func New(entity NetworkEntity) *Session {
 		data:     make(map[string]interface{}),
 		lastTime: time.Now().Unix(),
 		router:   newRouter(),
-		onEvents: make(map[interface{}][]func()),
+		onEvents: make(map[interface{}][]func(*Session)),
 	}
 }
 
@@ -429,13 +429,13 @@ func (s *Session) Clear() {
 }
 
 // On is to register callback on events
-func (s *Session) On(ev string, f func()) {
+func (s *Session) On(ev string, f func(s *Session)) {
 	s.onEvents[ev] = append(s.onEvents[ev], f)
 }
 
 // Trigger is to trigger an event with args
 func (s *Session) Trigger(ev string) {
 	for _, f := range s.onEvents[ev] {
-		f()
+		f(s)
 	}
 }
