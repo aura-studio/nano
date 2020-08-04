@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/lonng/nano/cluster"
@@ -80,6 +81,25 @@ func NewConnector(opts ...Option) *Connector {
 
 	c.routes, c.codes = message.ParseDictionary(c.dictionary)
 	return c
+}
+
+// StartWithTimeout connects to server with custom timeout
+func (c *Connector) StartWithTimeout(addr string, timeout time.Duration) error {
+	conn, err := net.DialTimeout("tcp", addr, timeout)
+	if err != nil {
+		return err
+	}
+
+	c.conn = conn
+
+	go c.write()
+
+	go c.read()
+
+	atomic.StoreInt32(&c.connected, 1)
+	go c.connectedCallback()
+
+	return nil
 }
 
 // Start connects to the server and send/recv between the c/s
