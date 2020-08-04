@@ -252,7 +252,7 @@ func (h *LocalHandler) handle(conn net.Conn) {
 	for {
 		n, err := conn.Read(buf)
 		if err != nil {
-			log.Infoln("Read message error: %s, session will be closed immediately", err.Error())
+			log.Infof("Read message error: %s, session will be closed immediately", err.Error())
 			return
 		}
 
