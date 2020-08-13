@@ -320,7 +320,7 @@ func (h *LocalHandler) remoteProcess(session *session.Session, msg *message.Mess
 	}
 
 	if env.Debug {
-		log.Infof("Type=%s, Route=%s, SID=%d, UID=%d, Mid=%d, Data=%dbytes",
+		log.Infof("Type=%s, Route=%s, ID=%d, UID=%d, Mid=%d, Data=%dbytes",
 			msg.Type.String(), msg.String(), session.ID(), session.UID(), msg.ID, len(msg.Data))
 	}
 
@@ -435,10 +435,10 @@ func (h *LocalHandler) localProcess(handler *component.Handler, lastMid uint64, 
 	if env.Debug {
 		switch d := data.(type) {
 		case []byte:
-			log.Infof("Type=%s, Route=%s, SID=%d, UID=%d, Mid=%d, Data=%dbytes",
+			log.Infof("Type=%s, Route=%s, ID=%d, UID=%d, Mid=%d, Data=%dbytes",
 				msg.Type.String(), msg.String(), session.ID(), session.UID(), msg.ID, len(d))
 		default:
-			log.Infof("Type=%s, Route=%s, SID=%d, UID=%d, Mid=%d, Data=%+v",
+			log.Infof("Type=%s, Route=%s, ID=%d, UID=%d, Mid=%d, Data=%+v",
 				msg.Type.String(), msg.String(), session.ID(), session.UID(), msg.ID, data)
 		}
 	}

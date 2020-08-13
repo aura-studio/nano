@@ -130,10 +130,10 @@ func (a *agent) Push(route string, v interface{}) error {
 	if env.Debug {
 		switch d := v.(type) {
 		case []byte:
-			log.Infof("Type=Push, Route=%s, SID=%d, UID=%d,  MID=%d, Data=%dbytes",
+			log.Infof("Type=Push, Route=%s, ID=%d, UID=%d,  MID=%d, Data=%dbytes",
 				route, a.session.ID(), a.session.UID(), 0, len(d))
 		default:
-			log.Infof("Type=Push, Route=%s, SID=%d, UID=%d, MID=%d, Data=%+v",
+			log.Infof("Type=Push, Route=%s, ID=%d, UID=%d, MID=%d, Data=%+v",
 				route, a.session.ID(), a.session.UID(), 0, v)
 		}
 	}
@@ -155,10 +155,10 @@ func (a *agent) RPC(route string, v interface{}) error {
 	if env.Debug {
 		switch d := v.(type) {
 		case []byte:
-			log.Infof("Type=RPC, Route=%s, SID=%d, UID=%d, MID=%d, Data=%dbytes",
+			log.Infof("Type=RPC, Route=%s, ID=%d, UID=%d, MID=%d, Data=%dbytes",
 				route, a.session.ID(), a.session.UID(), a.lastMid, len(d))
 		default:
-			log.Infof("Type=RPC, Route=%s, SID=%d, UID=%d, MID=%d, Data=%+v",
+			log.Infof("Type=RPC, Route=%s, ID=%d, UID=%d, MID=%d, Data=%+v",
 				route, a.session.ID(), a.session.UID(), a.lastMid, v)
 		}
 	}
@@ -193,10 +193,10 @@ func (a *agent) ResponseMid(mid uint64, route string, v interface{}) error {
 	if env.Debug {
 		switch d := v.(type) {
 		case []byte:
-			log.Infof("Type=Response, Route=%s, SID=%d, UID=%d, MID=%d, Data=%dbytes",
+			log.Infof("Type=Response, Route=%s, ID=%d, UID=%d, MID=%d, Data=%dbytes",
 				route, a.session.ID(), a.session.UID(), mid, len(d))
 		default:
-			log.Infof("Type=Response, Route=%s, SID=%d, UID=%d, MID=%d, Data=%+v",
+			log.Infof("Type=Response, Route=%s, ID=%d, UID=%d, MID=%d, Data=%+v",
 				route, a.session.ID(), a.session.UID(), mid, v)
 		}
 	}
