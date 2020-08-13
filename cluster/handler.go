@@ -319,6 +319,11 @@ func (h *LocalHandler) remoteProcess(session *session.Session, msg *message.Mess
 		return
 	}
 
+	if env.Debug {
+		log.Infof("Type=%s, Route=%s, SID=%d, UID=%d, Mid=%d, Data=%dbytes",
+			msg.Type.String(), msg.String(), session.ID(), session.UID(), msg.ID, len(msg.Data))
+	}
+
 	// Select a remote service address
 	// 1. Use the service address directly if the router contains binding item
 	// 2. Select a remote service address randomly and bind to router
@@ -428,7 +433,14 @@ func (h *LocalHandler) localProcess(handler *component.Handler, lastMid uint64, 
 	}
 
 	if env.Debug {
-		log.Infof("UID=%d, Mid=%d, Message={%s}, Data=%+v", session.UID(), lastMid, msg.String(), data)
+		switch d := data.(type) {
+		case []byte:
+			log.Infof("Type=%s, Route=%s, SID=%d, UID=%d, Mid=%d, Data=%dbytes",
+				msg.Type.String(), msg.String(), session.ID(), session.UID(), msg.ID, len(d))
+		default:
+			log.Infof("Type=%s, Route=%s, SID=%d, UID=%d, Mid=%d, Data=%+v",
+				msg.Type.String(), msg.String(), session.ID(), session.UID(), msg.ID, data)
+		}
 	}
 
 	args := []reflect.Value{handler.Receiver, reflect.ValueOf(session), reflect.ValueOf(data)}

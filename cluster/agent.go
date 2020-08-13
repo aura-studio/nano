@@ -130,11 +130,11 @@ func (a *agent) Push(route string, v interface{}) error {
 	if env.Debug {
 		switch d := v.(type) {
 		case []byte:
-			log.Infof("Type=Push, ID=%d, UID=%d, Route=%s, Data=%dbytes",
-				a.session.ID(), a.session.UID(), route, len(d))
+			log.Infof("Type=Push, Route=%s, SID=%d, UID=%d,  MID=%d, Data=%dbytes",
+				route, a.session.ID(), a.session.UID(), 0, len(d))
 		default:
-			log.Infof("Type=Push, ID=%d, UID=%d, Route=%s, Data=%+v",
-				a.session.ID(), a.session.UID(), route, v)
+			log.Infof("Type=Push, Route=%s, SID=%d, UID=%d, MID=%d, Data=%+v",
+				route, a.session.ID(), a.session.UID(), 0, v)
 		}
 	}
 
@@ -147,11 +147,22 @@ func (a *agent) RPC(route string, v interface{}) error {
 		return ErrBrokenPipe
 	}
 
-	// TODO: buffer
 	data, err := message.Serialize(v)
 	if err != nil {
 		return err
 	}
+
+	if env.Debug {
+		switch d := v.(type) {
+		case []byte:
+			log.Infof("Type=RPC, Route=%s, SID=%d, UID=%d, MID=%d, Data=%dbytes",
+				route, a.session.ID(), a.session.UID(), a.lastMid, len(d))
+		default:
+			log.Infof("Type=RPC, Route=%s, SID=%d, UID=%d, MID=%d, Data=%+v",
+				route, a.session.ID(), a.session.UID(), a.lastMid, v)
+		}
+	}
+
 	msg := &message.Message{
 		Type:  message.Notify,
 		ID:    a.lastMid,
@@ -182,11 +193,11 @@ func (a *agent) ResponseMid(mid uint64, route string, v interface{}) error {
 	if env.Debug {
 		switch d := v.(type) {
 		case []byte:
-			log.Infof("Type=Response, ID=%d, UID=%d, Route=%s, MID=%d,  Data=%dbytes",
-				a.session.ID(), a.session.UID(), route, mid, len(d))
+			log.Infof("Type=Response, Route=%s, SID=%d, UID=%d, MID=%d, Data=%dbytes",
+				route, a.session.ID(), a.session.UID(), mid, len(d))
 		default:
-			log.Infof("Type=Response, ID=%d, UID=%d, Route=%s, MID=%d, Data=%+v",
-				a.session.ID(), a.session.UID(), route, mid, v)
+			log.Infof("Type=Response, Route=%s, SID=%d, UID=%d, MID=%d, Data=%+v",
+				route, a.session.ID(), a.session.UID(), mid, v)
 		}
 	}
 
