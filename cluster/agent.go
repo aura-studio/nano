@@ -68,6 +68,8 @@ type (
 		routes     map[string]uint16 // copy system routes for agent
 		codes      map[uint16]string // copy system codes for agent
 		compressed bool              // whether to use compressed msg to client
+		recvPckCnt int64             // agent receive packet count
+		sendPckCnt int64             // agent send packet count
 	}
 
 	pendingMessage struct {
@@ -317,6 +319,8 @@ func (a *agent) write() {
 				log.Errorln(err)
 				break
 			}
+
+			a.sendPckCnt++
 			chWrite <- p
 
 		case <-a.chDie: // agent closed signal

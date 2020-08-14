@@ -278,11 +278,14 @@ func (h *LocalHandler) handle(conn net.Conn) {
 }
 
 func (h *LocalHandler) processPacket(agent *agent, p *packet.Packet) error {
+	agent.recvPckCnt++
+
 	msg, compressed, err := message.Decode(p.Data, agent.codes)
 	if err != nil {
 		return err
 	}
-	if msg.ID == 1 {
+
+	if agent.recvPckCnt == 1 {
 		agent.compressed = compressed
 		if compressed {
 			log.Printf("Use compressed router mode for agent, SessionID=%d",
