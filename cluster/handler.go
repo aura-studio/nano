@@ -321,7 +321,7 @@ func (h *LocalHandler) remoteProcess(session *session.Session, msg *message.Mess
 
 	if env.Debug {
 		log.Infof("Type=%s, Route=%s, ID=%d, UID=%d, Mid=%d, Data=%dbytes",
-			msg.Type.String(), msg.String(), session.ID(), session.UID(), msg.ID, len(msg.Data))
+			msg.Type.String(), msg.Route, session.ID(), session.UID(), msg.ID, len(msg.Data))
 	}
 
 	// Select a remote service address
@@ -436,10 +436,10 @@ func (h *LocalHandler) localProcess(handler *component.Handler, lastMid uint64, 
 		switch d := data.(type) {
 		case []byte:
 			log.Infof("Type=%s, Route=%s, ID=%d, UID=%d, Mid=%d, Data=%dbytes",
-				msg.Type.String(), msg.String(), session.ID(), session.UID(), msg.ID, len(d))
+				msg.Type.String(), msg.Route, session.ID(), session.UID(), msg.ID, len(d))
 		default:
 			log.Infof("Type=%s, Route=%s, ID=%d, UID=%d, Mid=%d, Data=%+v",
-				msg.Type.String(), msg.String(), session.ID(), session.UID(), msg.ID, data)
+				msg.Type.String(), msg.Route, session.ID(), session.UID(), msg.ID, data)
 		}
 	}
 
