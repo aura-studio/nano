@@ -90,6 +90,38 @@ message CloseSessionRequest {
 
 message CloseSessionResponse {}
 
+message PipeInfo {
+    string Label = 1;
+    string Addr = 2;
+    StatisticItem Item = 3;
+    repeated RouteStatistic RouteItems = 4;
+    repeated TypeStatistic TypeItems = 5;
+}
+
+message StatisticItem {
+    int64 ReqCount = 1;//请求数
+    int64 TotalBytes = 2;//总字节数
+    double BytesPerReq = 3;//平均一个请求字节数
+    int64 TotalProcessTime = 4;//总处理时间
+    double AvgProcessTime = 5;//平均处理时间
+}
+
+message RouteStatistic {
+    string Route = 1;
+    StatisticItem item = 2;
+}
+
+message TypeStatistic {
+    int64 Type = 1;
+    StatisticItem item = 2;
+}
+
+message QueryStatsRequest {}
+
+message QueryStatsResponse {
+    PipeInfo PipeInfo = 1;
+}
+
 service Member {
     rpc HandleRequest (RequestMessage) returns (MemberHandleResponse) {}
     rpc HandleNotify (NotifyMessage) returns (MemberHandleResponse) {}
@@ -100,4 +132,6 @@ service Member {
     rpc DelMember (DelMemberRequest) returns (DelMemberResponse) {}
     rpc SessionClosed(SessionClosedRequest) returns(SessionClosedResponse) {}
     rpc CloseSession(CloseSessionRequest) returns(CloseSessionResponse) {}
+
+    rpc QueryStats (QueryStatsRequest) returns (QueryStatsResponse) {}
 }

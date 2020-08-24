@@ -81,6 +81,10 @@ func (m *Message) String() string {
 	return fmt.Sprintf("%s %s (%dbytes)", types[m.Type], m.Route, len(m.Data))
 }
 
+func (m *Message) Compressed() bool {
+	return m.compressed
+}
+
 func invalidType(t Type) bool {
 	return t < Request || t > Push
 

@@ -21,6 +21,7 @@
 package nano
 
 import (
+	"github.com/lonng/nano/cluster/clusterpb"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -47,6 +48,8 @@ var (
 		name    string    // current application name
 		startAt time.Time // startup time
 	}{}
+
+	node *cluster.Node
 )
 
 // Listen listens on the TCP network address addr
@@ -89,7 +92,7 @@ func Listen(addr string, opts ...Option) {
 		opt.RetryInterval = time.Second * 3
 	}
 
-	node := &cluster.Node{
+	node = &cluster.Node{
 		Options:     opt,
 		ServiceAddr: addr,
 	}
@@ -125,6 +128,11 @@ func Listen(addr string, opts ...Option) {
 	node.Shutdown()
 	scheduler.Close()
 	atomic.StoreInt32(&running, 0)
+}
+
+// Info used for query all members stats
+func Info() ([]*clusterpb.QueryStatsResponse, error) {
+	return node.Info()
 }
 
 // Shutdown send a signal to let 'nano' shutdown itself.

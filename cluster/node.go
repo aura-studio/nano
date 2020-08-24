@@ -196,6 +196,31 @@ func (n *Node) initNode() error {
 	return nil
 }
 
+// Info is for query all member stats
+func (n *Node) Info() ([]*clusterpb.QueryStatsResponse, error) {
+	result := make([]*clusterpb.QueryStatsResponse, 0)
+	queryStat := &clusterpb.QueryStatsRequest{}
+	for _, m := range n.cluster.members {
+		pool, err := n.rpcClient.getConnPool(m.memberInfo.ServiceAddr)
+		if err != nil {
+			return nil, err
+		}
+		client := clusterpb.NewMemberClient(pool.Get())
+		resp, err := client.QueryStats(context.Background(), queryStat)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, resp)
+	}
+
+	selfInfo := pipeline.PipeInfo.ToProto()
+	selfInfo.PipeInfo.Addr = n.ServiceAddr
+	selfInfo.PipeInfo.Label = n.Options.Label
+	result = append(result, selfInfo)
+
+	return result, nil
+}
+
 // Shutdown all components registered by application, that
 // call by reverse order against register
 func (n *Node) Shutdown() {
@@ -410,6 +435,14 @@ func (n *Node) DelMember(_ context.Context, req *clusterpb.DelMemberRequest) (*c
 	n.handler.delMember(req.ServiceAddr)
 	n.cluster.delMember(req.ServiceAddr)
 	return &clusterpb.DelMemberResponse{}, nil
+}
+
+// QueryStats is called by grpc `QueryStats`
+func (n *Node) QueryStats(_ context.Context, req *clusterpb.QueryStatsRequest) (*clusterpb.QueryStatsResponse, error) {
+	result := pipeline.PipeInfo.ToProto()
+	result.PipeInfo.Label = n.Options.Label
+	result.PipeInfo.Addr = n.ServiceAddr
+	return result, nil
 }
 
 // SessionClosed implements the MemberServer interface

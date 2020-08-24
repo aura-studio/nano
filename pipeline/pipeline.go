@@ -1,6 +1,7 @@
 package pipeline
 
 import (
+	"github.com/lonng/nano/cluster/clusterpb"
 	"sync"
 
 	"github.com/lonng/nano/message"
@@ -16,6 +17,24 @@ type (
 	Pipeline interface {
 		Outbound() Channel
 		Inbound() Channel
+	}
+
+	Info struct {
+		Statistic *Statistic
+	}
+
+	StatisticItem struct {
+		ReqCount int64//请求数
+		TotalBytes int64//总字节数
+		BytesPerReq float64//平均一个请求字节数
+		TotalProcessTime int64//总处理时间
+		AvgProcessTime float64//平均处理时间
+	}
+
+	Statistic struct {
+		Summary *StatisticItem
+		RouteStatistic map[string]*StatisticItem//按route分类的统计
+		TypeStatistic map[byte]*StatisticItem//按类型分类的统计
 	}
 
 	pipeline struct {
@@ -34,11 +53,28 @@ type (
 	}
 )
 
-func New() Pipeline {
-	return &pipeline{
+var PipeInfo *Info
+
+func init() {
+	PipeInfo = &Info{
+		Statistic: &Statistic{
+			Summary:       &StatisticItem{},
+			RouteStatistic: make(map[string]*StatisticItem),
+			TypeStatistic:  make(map[byte]*StatisticItem),
+		},
+	}
+}
+
+func New(opts ...Option) Pipeline {
+	p := &pipeline{
 		outbound: &pipelineChannel{},
 		inbound:  &pipelineChannel{},
 	}
+
+	for _, opt := range opts {
+		opt(p)
+	}
+	return p
 }
 
 func (p *pipeline) Outbound() Channel { return p.outbound }
@@ -75,4 +111,45 @@ func (p *pipelineChannel) Process(s *session.Session, msg *message.Message) erro
 		}
 	}
 	return nil
+}
+
+func (info *Info) ToProto() *clusterpb.QueryStatsResponse {
+	result := &clusterpb.QueryStatsResponse{
+		PipeInfo: &clusterpb.PipeInfo{
+			Item:       &clusterpb.StatisticItem{
+				ReqCount:         info.Statistic.Summary.ReqCount,
+				TotalBytes:       info.Statistic.Summary.TotalBytes,
+				BytesPerReq:      info.Statistic.Summary.BytesPerReq,
+				TotalProcessTime: info.Statistic.Summary.TotalProcessTime,
+				AvgProcessTime:   info.Statistic.Summary.AvgProcessTime,
+			},
+			RouteItems: make([]*clusterpb.RouteStatistic, 0),
+			TypeItems:  make([]*clusterpb.TypeStatistic, 0),
+		},
+	}
+	for route, item := range info.Statistic.RouteStatistic {
+		result.PipeInfo.RouteItems = append(result.PipeInfo.RouteItems, &clusterpb.RouteStatistic{
+			Route: route,
+			Item:  &clusterpb.StatisticItem{
+				ReqCount:         item.ReqCount,
+				TotalBytes:       item.TotalBytes,
+				BytesPerReq:      item.BytesPerReq,
+				TotalProcessTime: item.TotalProcessTime,
+				AvgProcessTime:   item.AvgProcessTime,
+			},
+		})
+	}
+	for tp, item := range info.Statistic.TypeStatistic {
+		result.PipeInfo.TypeItems = append(result.PipeInfo.TypeItems, &clusterpb.TypeStatistic{
+			Type: int64(tp),
+			Item: &clusterpb.StatisticItem{
+				ReqCount:         item.ReqCount,
+				TotalBytes:       item.TotalBytes,
+				BytesPerReq:      item.BytesPerReq,
+				TotalProcessTime: item.TotalProcessTime,
+				AvgProcessTime:   item.AvgProcessTime,
+			},
+		})
+	}
+	return result
 }
