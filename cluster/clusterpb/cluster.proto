@@ -12,8 +12,9 @@ message DictionaryItem{
 message MemberInfo {
     string label = 1;
     string serviceAddr = 2;
-    repeated string services = 3;
-    repeated DictionaryItem dictionary = 4;
+    string version = 3;
+    repeated string services = 4;
+    repeated DictionaryItem dictionary = 5;
 }
 
 message RegisterRequest {
@@ -38,17 +39,21 @@ service Master {
 message RequestMessage {
     string gateAddr = 1;
     int64 sessionID = 2;
-    uint64 ID = 3;
-    string route = 4;
-    bytes data = 5;
+    string version = 3;
+    uint64 ID = 4;
+    int64 UID = 5;
+    string route = 6;
+    bytes data = 7;
 }
 
 message NotifyMessage {
     string gateAddr = 1;
     int64 sessionID = 2;
-    uint64 ID = 3;
-    string route = 4;
-    bytes data = 5;
+    string version = 3;
+    uint64 ID = 4;
+    int64 UID = 5;
+    string route = 6;
+    bytes data = 7;
 }
 
 message ResponseMessage {

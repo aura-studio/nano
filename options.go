@@ -113,6 +113,13 @@ func WithLabel(label string) Option {
 	}
 }
 
+// WithVersion sets the current node version in cluster
+func WithVersion(version string) Option {
+	return func(opt *cluster.Options) {
+		opt.Version = version
+	}
+}
+
 // WithIsWebsocket indicates whether current node WebSocket is enabled
 func WithIsWebsocket(enableWs bool) Option {
 	return func(opt *cluster.Options) {

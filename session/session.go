@@ -21,13 +21,10 @@
 package session
 
 import (
-	"errors"
 	"net"
 	"sync"
 	"sync/atomic"
 	"time"
-
-	"github.com/lonng/nano/service"
 )
 
 // NetworkEntity represent low-level network instance
@@ -44,11 +41,6 @@ type NetworkEntity interface {
 // EventCallback is the func called after event trigged
 type EventCallback func()
 
-var (
-	//ErrIllegalUID represents a invalid uid
-	ErrIllegalUID = errors.New("illegal uid")
-)
-
 // Session represents a client session which could storage temp data during low-level
 // keep connected, all data will be released when the low-level connection was broken.
 // Session instance related to the client will be passed to Handler method as the first
@@ -56,6 +48,7 @@ var (
 type Session struct {
 	sync.RWMutex                                  // protect data
 	id           int64                            // session global unique id
+	version      string                           // version
 	uid          int64                            // binding user id
 	lastTime     int64                            // last heartbeat time
 	entity       NetworkEntity                    // low-level network entity
@@ -66,9 +59,10 @@ type Session struct {
 
 // New returns a new session instance
 // a NetworkEntity is a low-level network instance
-func New(entity NetworkEntity) *Session {
+func New(entity NetworkEntity, id int64) *Session {
 	return &Session{
-		id:       service.Connections.SessionID(),
+		id:       id,
+		version:  "",
 		entity:   entity,
 		data:     make(map[string]interface{}),
 		lastTime: time.Now().Unix(),
@@ -108,14 +102,17 @@ func (s *Session) ResponseMid(mid uint64, route string, v interface{}) error {
 	return s.entity.ResponseMid(mid, route, v)
 }
 
-// SetID sets the session id
-func (s *Session) SetID(id int64) {
-	s.id = id
-}
-
 // ID returns the session id
 func (s *Session) ID() int64 {
 	return s.id
+}
+
+// Version returns current session version
+func (s *Session) Version() string {
+	s.Lock()
+	defer s.Unlock()
+
+	return s.version
 }
 
 // UID returns uid that bind to current session
@@ -128,14 +125,16 @@ func (s *Session) LastMid() uint64 {
 	return s.entity.LastMid()
 }
 
-// Bind bind UID to current session
-func (s *Session) Bind(uid int64) error {
-	if uid < 1 {
-		return ErrIllegalUID
-	}
+func (s *Session) BindVersion(version string) {
+	s.Lock()
+	defer s.Unlock()
 
+	s.version = version
+}
+
+// Bind bind UID to current session
+func (s *Session) BindUID(uid int64) {
 	atomic.StoreInt64(&s.uid, uid)
-	return nil
 }
 
 // Close terminate current session, session related data will not be released,

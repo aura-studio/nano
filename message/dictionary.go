@@ -33,7 +33,7 @@ func WriteDictionaryItem(route string, code uint16) (map[string]uint16, map[uint
 	return Routes, Codes
 }
 
-// WriteDictionary is to set dictionary when new route dictionray is found.
+// WriteDictionary is to set dictionary when new route dictionary is found.
 func WriteDictionary(dict map[string]uint16) (map[string]uint16, map[uint16]string) {
 	rw.Lock()
 	defer rw.Unlock()

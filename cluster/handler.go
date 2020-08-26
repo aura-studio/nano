@@ -52,7 +52,7 @@ type LocalHandler struct {
 	localHandlers map[string]*component.Handler // all handler method
 
 	mu             sync.RWMutex
-	remoteServices map[string][]*clusterpb.MemberInfo
+	remoteServices map[string]map[string][]*clusterpb.MemberInfo
 
 	pipeline    pipeline.Pipeline
 	currentNode *Node
@@ -63,7 +63,7 @@ func NewHandler(currentNode *Node, pipeline pipeline.Pipeline) *LocalHandler {
 	h := &LocalHandler{
 		localServices:  make(map[string]*component.Service),
 		localHandlers:  make(map[string]*component.Handler),
-		remoteServices: map[string][]*clusterpb.MemberInfo{},
+		remoteServices: map[string]map[string][]*clusterpb.MemberInfo{},
 		pipeline:       pipeline,
 		currentNode:    currentNode,
 	}
@@ -110,9 +110,17 @@ func (h *LocalHandler) addRemoteService(member *clusterpb.MemberInfo) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
+	v := member.Version
 	for _, s := range member.Services {
-		log.Infoln("Register remote service", s)
-		h.remoteServices[s] = append(h.remoteServices[s], member)
+		if member.Version != "" {
+			log.Infof("Register remote service %s(%s)", s, v)
+		} else {
+			log.Infof("Register remote service %s", s)
+		}
+		if _, ok := h.remoteServices[s]; !ok {
+			h.remoteServices[s] = make(map[string][]*clusterpb.MemberInfo)
+		}
+		h.remoteServices[s][v] = append(h.remoteServices[s][v], member)
 	}
 }
 
@@ -131,20 +139,25 @@ func (h *LocalHandler) delMember(addr string) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
-	for name, members := range h.remoteServices {
-		for i, maddr := range members {
-			if addr == maddr.ServiceAddr {
-				if i == len(members)-1 {
-					members = members[:i]
-				} else {
-					members = append(members[:i], members[i+1:]...)
+	for name, versionServices := range h.remoteServices {
+		for version, members := range versionServices {
+			for i, maddr := range members {
+				if addr == maddr.ServiceAddr {
+					if i == len(members)-1 {
+						members = members[:i]
+					} else {
+						members = append(members[:i], members[i+1:]...)
+					}
 				}
 			}
+			if len(h.remoteServices[name][version]) == 0 {
+				delete(h.remoteServices[name], version)
+			} else {
+				h.remoteServices[name][version] = members
+			}
 		}
-		if len(members) == 0 {
+		if len(h.remoteServices[name]) == 0 {
 			delete(h.remoteServices, name)
-		} else {
-			h.remoteServices[name] = members
 		}
 	}
 }
@@ -295,10 +308,14 @@ func (h *LocalHandler) processPacket(agent *agent, p *packet.Packet) error {
 	return nil
 }
 
-func (h *LocalHandler) findMembers(service string) []*clusterpb.MemberInfo {
+func (h *LocalHandler) findMembers(service string, version string) []*clusterpb.MemberInfo {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
-	return h.remoteServices[service]
+
+	if len(h.remoteServices[service][version]) > 0 {
+		return h.remoteServices[service][version]
+	}
+	return h.remoteServices[service][""]
 }
 
 func (h *LocalHandler) remoteProcess(session *session.Session, msg *message.Message, noCopy bool) {
@@ -309,15 +326,16 @@ func (h *LocalHandler) remoteProcess(session *session.Session, msg *message.Mess
 	}
 
 	service := msg.Route[:index]
-	members := h.findMembers(service)
+	version := session.Version()
+	members := h.findMembers(service, version)
 	if len(members) == 0 {
-		log.Errorf("nano/handler: %s not found(forgot registered?)", msg.Route)
+		log.Errorf("nano/handler: %s (version:%s) not found(forgot registered?)", msg.Route, version)
 		return
 	}
 
 	if env.Debug {
-		log.Infof("Type=%s, Route=%s, ID=%d, UID=%d, Mid=%d, Data=%dbytes",
-			msg.Type.String(), msg.Route, session.ID(), session.UID(), msg.ID, len(msg.Data))
+		log.Infof("Type=%s, Route=%s, ID=%d, Version=%s, UID=%d, Mid=%d, Data=%dbytes",
+			msg.Type.String(), msg.Route, session.ID(), session.Version(), session.UID(), msg.ID, len(msg.Data))
 	}
 
 	// Select a remote service address
@@ -356,7 +374,9 @@ func (h *LocalHandler) remoteProcess(session *session.Session, msg *message.Mess
 		request := &clusterpb.RequestMessage{
 			GateAddr:  gateAddr,
 			SessionID: sessionID,
+			Version:   version,
 			ID:        msg.ID,
+			UID:       session.UID(),
 			Route:     msg.Route,
 			Data:      data,
 		}
@@ -365,7 +385,9 @@ func (h *LocalHandler) remoteProcess(session *session.Session, msg *message.Mess
 		request := &clusterpb.NotifyMessage{
 			GateAddr:  gateAddr,
 			SessionID: sessionID,
+			Version:   version,
 			ID:        msg.ID,
+			UID:       session.UID(),
 			Route:     msg.Route,
 			Data:      data,
 		}
@@ -431,11 +453,11 @@ func (h *LocalHandler) localProcess(handler *component.Handler, lastMid uint64, 
 	if env.Debug {
 		switch d := data.(type) {
 		case []byte:
-			log.Infof("Type=%s, Route=%s, ID=%d, UID=%d, Mid=%d, Data=%dbytes",
-				msg.Type.String(), msg.Route, session.ID(), session.UID(), msg.ID, len(d))
+			log.Infof("Type=%s, Route=%s, ID=%d, Version=%s, UID=%d, Mid=%d, Data=%dbytes",
+				msg.Type.String(), msg.Route, session.ID(), session.Version(), session.UID(), msg.ID, len(d))
 		default:
-			log.Infof("Type=%s, Route=%s, ID=%d, UID=%d, Mid=%d, Data=%+v",
-				msg.Type.String(), msg.Route, session.ID(), session.UID(), msg.ID, data)
+			log.Infof("Type=%s, Route=%s, ID=%d, Version=%s, UID=%d, Mid=%d, Data=%+v",
+				msg.Type.String(), msg.Route, session.ID(), session.Version(), session.UID(), msg.ID, data)
 		}
 	}
 
