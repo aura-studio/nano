@@ -63,7 +63,6 @@ func (c *Decoder) forward() error {
 }
 
 // Decode decode the network bytes slice to packet.Packet(s)
-// TODO(Warning): shared slice
 func (c *Decoder) Decode(data []byte) ([]*packet.Packet, error) {
 	c.buf.Write(data)
 
@@ -95,7 +94,6 @@ func (c *Decoder) Decode(data []byte) ([]*packet.Packet, error) {
 
 		if err = c.forward(); err != nil {
 			return nil, err
-
 		}
 
 	}

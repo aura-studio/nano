@@ -44,12 +44,6 @@ import (
 	"github.com/lonng/nano/session"
 )
 
-var (
-	// cached serialized data
-	hrd []byte // handshake response data
-	hbd []byte // heartbeat packet data
-)
-
 type rpcHandler func(session *session.Session, msg *message.Message, noCopy bool)
 
 // LocalHandler stores local handlers & serivces info
@@ -256,7 +250,6 @@ func (h *LocalHandler) handle(conn net.Conn) {
 			return
 		}
 
-		// TODO(warning): decoder use slice for performance, packet data should be copy before next Decode
 		packets, err := agent.decoder.Decode(buf[:n])
 		if err != nil {
 			log.Errorln(err.Error())
