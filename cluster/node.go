@@ -26,7 +26,6 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -46,6 +45,7 @@ import (
 // Options contains some configurations for current node
 type Options struct {
 	Pipeline       pipeline.Pipeline
+	Conventioner   Conventioner
 	IsMaster       bool
 	AdvertiseAddr  string
 	RetryInterval  time.Duration
@@ -197,36 +197,6 @@ func (n *Node) initNode() error {
 	}
 
 	return nil
-}
-
-// Info is for query all member stats
-func (n *Node) Info() ([]*clusterpb.QueryStatsResponse, error) {
-	result := make([]*clusterpb.QueryStatsResponse, 0)
-	queryStat := &clusterpb.QueryStatsRequest{}
-	for _, m := range n.cluster.members {
-		pool, err := n.rpcClient.getConnPool(m.memberInfo.ServiceAddr)
-		if err != nil {
-			return nil, err
-		}
-		client := clusterpb.NewMemberClient(pool.Get())
-		resp, err := client.QueryStats(context.Background(), queryStat)
-		if err != nil {
-			return nil, err
-		}
-		result = append(result, resp)
-	}
-
-	selfInfo := &clusterpb.QueryStatsResponse{
-		PipeInfo:    pipeline.PipeInfo.ToProto(),
-		ProcessInfo: nil,
-	}
-	selfInfo.PipeInfo.Addr = n.ServiceAddr
-	selfInfo.PipeInfo.Label = n.Options.Label
-	selfInfo.ProcessInfo = n.generateProcessInfo()
-
-	result = append(result, selfInfo)
-
-	return result, nil
 }
 
 // Shutdown all components registered by application, that
@@ -445,79 +415,6 @@ func (n *Node) DelMember(_ context.Context, req *clusterpb.DelMemberRequest) (*c
 	return &clusterpb.DelMemberResponse{}, nil
 }
 
-func (n *Node) generateProcessInfo() *clusterpb.ProcessInfo {
-	var memStats runtime.MemStats
-	runtime.ReadMemStats(&memStats)
-	enableGC := 0
-	if memStats.EnableGC {
-		enableGC = 1
-	}
-	debugGC := 0
-	if memStats.DebugGC {
-		debugGC = 1
-	}
-	var pauseNs []int64
-	for _, item := range memStats.PauseNs {
-		pauseNs = append(pauseNs, int64(item))
-	}
-	var pauseEnd []int64
-	for _, item := range memStats.PauseEnd {
-		pauseEnd = append(pauseEnd, int64(item))
-	}
-	processInfo := &clusterpb.ProcessInfo{
-		NumCPU:       int64(runtime.NumCPU()),
-		NumGoroutine: int64(runtime.NumGoroutine()),
-		Version:      runtime.Version(),
-		MemStats:     &clusterpb.MemStats{
-			Alloc:         int64(memStats.Alloc),
-			TotalAlloc:    int64(memStats.TotalAlloc),
-			Sys:           int64(memStats.Sys),
-			Lookups:       int64(memStats.Lookups),
-			Mallocs:       int64(memStats.Mallocs),
-			Frees:         int64(memStats.Frees),
-			HeapAlloc:     int64(memStats.HeapAlloc),
-			HeapSys:       int64(memStats.HeapSys),
-			HeapIdle:      int64(memStats.HeapIdle),
-			HeapInuse:     int64(memStats.HeapInuse),
-			HeapReleased:  int64(memStats.HeapReleased),
-			HeapObjects:   int64(memStats.HeapObjects),
-			StackInuse:    int64(memStats.StackInuse),
-			StackSys:      int64(memStats.StackSys),
-			MSpanInuse:    int64(memStats.MSpanInuse),
-			MSpanSys:      int64(memStats.MSpanSys),
-			MCacheInuse:   int64(memStats.MCacheInuse),
-			MCacheSys:     int64(memStats.MCacheSys),
-			BuckHashSys:   int64(memStats.BuckHashSys),
-			GCSys:         int64(memStats.GCSys),
-			OtherSys:      int64(memStats.OtherSys),
-			NextGC:        int64(memStats.NextGC),
-			LastGC:        int64(memStats.LastGC),
-			PauseTotalNs:  int64(memStats.PauseTotalNs),
-			PauseNs:       pauseNs,
-			PauseEnd:      pauseEnd,
-			NumGC:         int64(memStats.NumGC),
-			NumForcedGC:   int64(memStats.NumForcedGC),
-			GCCPUFraction: int64(memStats.GCCPUFraction),
-			EnableGC:      int64(enableGC),
-			DebugGC:       int64(debugGC),
-		},
-	}
-	return processInfo
-}
-
-// QueryStats is called by grpc `QueryStats`
-func (n *Node) QueryStats(_ context.Context, req *clusterpb.QueryStatsRequest) (*clusterpb.QueryStatsResponse, error) {
-	result := &clusterpb.QueryStatsResponse{
-		PipeInfo:    pipeline.PipeInfo.ToProto(),
-		ProcessInfo: nil,
-	}
-	result.PipeInfo.Label = n.Options.Label
-	result.PipeInfo.Addr = n.ServiceAddr
-	result.ProcessInfo = n.generateProcessInfo()
-
-	return result, nil
-}
-
 // SessionClosed implements the MemberServer interface
 func (n *Node) SessionClosed(_ context.Context, req *clusterpb.SessionClosedRequest) (*clusterpb.SessionClosedResponse, error) {
 	n.mu.Lock()
@@ -540,4 +437,16 @@ func (n *Node) CloseSession(_ context.Context, req *clusterpb.CloseSessionReques
 		s.Close()
 	}
 	return &clusterpb.CloseSessionResponse{}, nil
+}
+
+// PerformConvention implements the MemberServer interface
+func (n *Node) PerformConvention(_ context.Context, req *clusterpb.PerformConventionRequest) (*clusterpb.PerformConventionResponse, error) {
+	if n.Conventioner.Acceptor != nil {
+		data, err := n.Conventioner.Acceptor.React(req.Sig, req.Data)
+		if err != nil {
+			return &clusterpb.PerformConventionResponse{}, fmt.Errorf("member %s react error %s", n.Label, err.Error())
+		}
+		return &clusterpb.PerformConventionResponse{Data: data}, nil
+	}
+	return &clusterpb.PerformConventionResponse{}, nil
 }

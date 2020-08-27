@@ -16,10 +16,17 @@ import (
 // Option defines a type for option, an option is a func operate cluster.Options
 type Option func(*cluster.Options)
 
-// WithPipeline set the pipeline option.
+// WithPipeline sets the pipeline option.
 func WithPipeline(pipeline pipeline.Pipeline) Option {
 	return func(opt *cluster.Options) {
 		opt.Pipeline = pipeline
+	}
+}
+
+// WithConvention sets the convention between
+func WithConvention(convention cluster.Convention) Option {
+	return func(opt *cluster.Options) {
+		opt.Conventioner = cluster.NewConventioner(convention)
 	}
 }
 

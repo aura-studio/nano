@@ -95,78 +95,13 @@ message CloseSessionRequest {
 
 message CloseSessionResponse {}
 
-message PipeInfo {
-    string Label = 1;
-    string Addr = 2;
-    StatisticItem Item = 3;
-    repeated RouteStatistic RouteItems = 4;
-    repeated TypeStatistic TypeItems = 5;
+message PerformConventionRequest {
+    int64 sig = 1;
+    bytes data = 2;
 }
 
-message StatisticItem {
-    int64 ReqCount = 1;//请求数
-    int64 TotalBytes = 2;//总字节数
-    double BytesPerReq = 3;//平均一个请求字节数
-    int64 TotalProcessTime = 4;//总处理时间
-    double AvgProcessTime = 5;//平均处理时间
-}
-
-message RouteStatistic {
-    string Route = 1;
-    StatisticItem item = 2;
-}
-
-message TypeStatistic {
-    int64 Type = 1;
-    StatisticItem item = 2;
-}
-
-message MemStats {
-    int64 Alloc = 1;
-    int64 TotalAlloc = 2;
-    int64 Sys = 3;
-    int64 Lookups = 4;
-    int64 Mallocs = 5;
-    int64 Frees = 6;
-    int64 HeapAlloc = 7;
-    int64 HeapSys = 8;
-    int64 HeapIdle = 9;
-    int64 HeapInuse = 10;
-    int64 HeapReleased = 11;
-    int64 HeapObjects = 12;
-    int64 StackInuse = 13;
-    int64 StackSys = 14;
-    int64 MSpanInuse = 15;
-    int64 MSpanSys = 16;
-    int64 MCacheInuse = 17;
-    int64 MCacheSys = 18;
-    int64 BuckHashSys = 19;
-    int64 GCSys = 20;
-    int64 OtherSys = 21;
-    int64 NextGC = 22;
-    int64 LastGC = 23;
-    int64 PauseTotalNs = 24;
-    repeated int64 PauseNs = 25;
-    repeated int64 PauseEnd = 26;
-    int64 NumGC = 27;
-    int64 NumForcedGC = 28;
-    int64 GCCPUFraction = 29;
-    int64 EnableGC = 30;
-    int64 DebugGC = 31;
-}
-
-message ProcessInfo {
-    int64 NumCPU = 1;
-    int64 NumGoroutine = 2;
-    string Version = 3;
-    MemStats MemStats = 4;
-}
-
-message QueryStatsRequest {}
-
-message QueryStatsResponse {
-    PipeInfo PipeInfo = 1;
-    ProcessInfo ProcessInfo = 2;
+message PerformConventionResponse {
+    bytes data = 1;
 }
 
 service Member {
@@ -180,5 +115,5 @@ service Member {
     rpc SessionClosed(SessionClosedRequest) returns(SessionClosedResponse) {}
     rpc CloseSession(CloseSessionRequest) returns(CloseSessionResponse) {}
 
-    rpc QueryStats (QueryStatsRequest) returns (QueryStatsResponse) {}
+    rpc PerformConvention (PerformConventionRequest) returns (PerformConventionResponse) {}
 }

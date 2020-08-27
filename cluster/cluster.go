@@ -229,3 +229,46 @@ func (c *cluster) delMember(addr string) {
 	}
 	c.mu.Unlock()
 }
+
+func (c *cluster) Unicast(label string, sig int64, msg []byte) ([]byte, error) {
+	c.mu.RLock()
+	defer c.mu.RLock()
+
+	req := &clusterpb.PerformConventionRequest{Sig: sig, Data: msg}
+	for _, m := range c.members {
+		if m.memberInfo.Label == label {
+			pool, err := c.rpcClient.getConnPool(m.memberInfo.ServiceAddr)
+			if err != nil {
+				return nil, err
+			}
+			client := clusterpb.NewMemberClient(pool.Get())
+			resp, err := client.PerformConvention(context.Background(), req)
+			if err != nil {
+				return nil, err
+			}
+			return resp.Data, nil
+		}
+	}
+	return nil, fmt.Errorf("member not found by label %s", label)
+}
+
+func (c *cluster) Multicast(sig int64, msg []byte) ([][]byte, error) {
+	c.mu.RLock()
+	defer c.mu.RLock()
+
+	var data [][]byte
+	req := &clusterpb.PerformConventionRequest{Sig: sig, Data: msg}
+	for _, m := range c.members {
+		pool, err := c.rpcClient.getConnPool(m.memberInfo.ServiceAddr)
+		if err != nil {
+			return nil, err
+		}
+		client := clusterpb.NewMemberClient(pool.Get())
+		resp, err := client.PerformConvention(context.Background(), req)
+		if err != nil {
+			return nil, err
+		}
+		data = append(data, resp.Data)
+	}
+	return data, nil
+}

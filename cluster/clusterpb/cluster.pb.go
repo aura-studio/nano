@@ -1052,20 +1052,17 @@ func (*CloseSessionResponse) Descriptor() ([]byte, []int) {
 	return file_cluster_proto_rawDescGZIP(), []int{18}
 }
 
-type PipeInfo struct {
+type PerformConventionRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Label      string            `protobuf:"bytes,1,opt,name=Label,proto3" json:"Label,omitempty"`
-	Addr       string            `protobuf:"bytes,2,opt,name=Addr,proto3" json:"Addr,omitempty"`
-	Item       *StatisticItem    `protobuf:"bytes,3,opt,name=Item,proto3" json:"Item,omitempty"`
-	RouteItems []*RouteStatistic `protobuf:"bytes,4,rep,name=RouteItems,proto3" json:"RouteItems,omitempty"`
-	TypeItems  []*TypeStatistic  `protobuf:"bytes,5,rep,name=TypeItems,proto3" json:"TypeItems,omitempty"`
+	Sig  int64  `protobuf:"varint,1,opt,name=sig,proto3" json:"sig,omitempty"`
+	Data []byte `protobuf:"bytes,2,opt,name=data,proto3" json:"data,omitempty"`
 }
 
-func (x *PipeInfo) Reset() {
-	*x = PipeInfo{}
+func (x *PerformConventionRequest) Reset() {
+	*x = PerformConventionRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cluster_proto_msgTypes[19]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1073,13 +1070,13 @@ func (x *PipeInfo) Reset() {
 	}
 }
 
-func (x *PipeInfo) String() string {
+func (x *PerformConventionRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*PipeInfo) ProtoMessage() {}
+func (*PerformConventionRequest) ProtoMessage() {}
 
-func (x *PipeInfo) ProtoReflect() protoreflect.Message {
+func (x *PerformConventionRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_cluster_proto_msgTypes[19]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1091,60 +1088,35 @@ func (x *PipeInfo) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use PipeInfo.ProtoReflect.Descriptor instead.
-func (*PipeInfo) Descriptor() ([]byte, []int) {
+// Deprecated: Use PerformConventionRequest.ProtoReflect.Descriptor instead.
+func (*PerformConventionRequest) Descriptor() ([]byte, []int) {
 	return file_cluster_proto_rawDescGZIP(), []int{19}
 }
 
-func (x *PipeInfo) GetLabel() string {
+func (x *PerformConventionRequest) GetSig() int64 {
 	if x != nil {
-		return x.Label
+		return x.Sig
 	}
-	return ""
+	return 0
 }
 
-func (x *PipeInfo) GetAddr() string {
+func (x *PerformConventionRequest) GetData() []byte {
 	if x != nil {
-		return x.Addr
-	}
-	return ""
-}
-
-func (x *PipeInfo) GetItem() *StatisticItem {
-	if x != nil {
-		return x.Item
+		return x.Data
 	}
 	return nil
 }
 
-func (x *PipeInfo) GetRouteItems() []*RouteStatistic {
-	if x != nil {
-		return x.RouteItems
-	}
-	return nil
-}
-
-func (x *PipeInfo) GetTypeItems() []*TypeStatistic {
-	if x != nil {
-		return x.TypeItems
-	}
-	return nil
-}
-
-type StatisticItem struct {
+type PerformConventionResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	ReqCount         int64   `protobuf:"varint,1,opt,name=ReqCount,proto3" json:"ReqCount,omitempty"`                 //请求数
-	TotalBytes       int64   `protobuf:"varint,2,opt,name=TotalBytes,proto3" json:"TotalBytes,omitempty"`             //总字节数
-	BytesPerReq      float64 `protobuf:"fixed64,3,opt,name=BytesPerReq,proto3" json:"BytesPerReq,omitempty"`          //平均一个请求字节数
-	TotalProcessTime int64   `protobuf:"varint,4,opt,name=TotalProcessTime,proto3" json:"TotalProcessTime,omitempty"` //总处理时间
-	AvgProcessTime   float64 `protobuf:"fixed64,5,opt,name=AvgProcessTime,proto3" json:"AvgProcessTime,omitempty"`    //平均处理时间
+	Data []byte `protobuf:"bytes,1,opt,name=data,proto3" json:"data,omitempty"`
 }
 
-func (x *StatisticItem) Reset() {
-	*x = StatisticItem{}
+func (x *PerformConventionResponse) Reset() {
+	*x = PerformConventionResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_cluster_proto_msgTypes[20]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1152,13 +1124,13 @@ func (x *StatisticItem) Reset() {
 	}
 }
 
-func (x *StatisticItem) String() string {
+func (x *PerformConventionResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*StatisticItem) ProtoMessage() {}
+func (*PerformConventionResponse) ProtoMessage() {}
 
-func (x *StatisticItem) ProtoReflect() protoreflect.Message {
+func (x *PerformConventionResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_cluster_proto_msgTypes[20]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1170,603 +1142,14 @@ func (x *StatisticItem) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use StatisticItem.ProtoReflect.Descriptor instead.
-func (*StatisticItem) Descriptor() ([]byte, []int) {
+// Deprecated: Use PerformConventionResponse.ProtoReflect.Descriptor instead.
+func (*PerformConventionResponse) Descriptor() ([]byte, []int) {
 	return file_cluster_proto_rawDescGZIP(), []int{20}
 }
 
-func (x *StatisticItem) GetReqCount() int64 {
+func (x *PerformConventionResponse) GetData() []byte {
 	if x != nil {
-		return x.ReqCount
-	}
-	return 0
-}
-
-func (x *StatisticItem) GetTotalBytes() int64 {
-	if x != nil {
-		return x.TotalBytes
-	}
-	return 0
-}
-
-func (x *StatisticItem) GetBytesPerReq() float64 {
-	if x != nil {
-		return x.BytesPerReq
-	}
-	return 0
-}
-
-func (x *StatisticItem) GetTotalProcessTime() int64 {
-	if x != nil {
-		return x.TotalProcessTime
-	}
-	return 0
-}
-
-func (x *StatisticItem) GetAvgProcessTime() float64 {
-	if x != nil {
-		return x.AvgProcessTime
-	}
-	return 0
-}
-
-type RouteStatistic struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Route string         `protobuf:"bytes,1,opt,name=Route,proto3" json:"Route,omitempty"`
-	Item  *StatisticItem `protobuf:"bytes,2,opt,name=item,proto3" json:"item,omitempty"`
-}
-
-func (x *RouteStatistic) Reset() {
-	*x = RouteStatistic{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_cluster_proto_msgTypes[21]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *RouteStatistic) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*RouteStatistic) ProtoMessage() {}
-
-func (x *RouteStatistic) ProtoReflect() protoreflect.Message {
-	mi := &file_cluster_proto_msgTypes[21]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use RouteStatistic.ProtoReflect.Descriptor instead.
-func (*RouteStatistic) Descriptor() ([]byte, []int) {
-	return file_cluster_proto_rawDescGZIP(), []int{21}
-}
-
-func (x *RouteStatistic) GetRoute() string {
-	if x != nil {
-		return x.Route
-	}
-	return ""
-}
-
-func (x *RouteStatistic) GetItem() *StatisticItem {
-	if x != nil {
-		return x.Item
-	}
-	return nil
-}
-
-type TypeStatistic struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Type int64          `protobuf:"varint,1,opt,name=Type,proto3" json:"Type,omitempty"`
-	Item *StatisticItem `protobuf:"bytes,2,opt,name=item,proto3" json:"item,omitempty"`
-}
-
-func (x *TypeStatistic) Reset() {
-	*x = TypeStatistic{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_cluster_proto_msgTypes[22]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *TypeStatistic) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*TypeStatistic) ProtoMessage() {}
-
-func (x *TypeStatistic) ProtoReflect() protoreflect.Message {
-	mi := &file_cluster_proto_msgTypes[22]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use TypeStatistic.ProtoReflect.Descriptor instead.
-func (*TypeStatistic) Descriptor() ([]byte, []int) {
-	return file_cluster_proto_rawDescGZIP(), []int{22}
-}
-
-func (x *TypeStatistic) GetType() int64 {
-	if x != nil {
-		return x.Type
-	}
-	return 0
-}
-
-func (x *TypeStatistic) GetItem() *StatisticItem {
-	if x != nil {
-		return x.Item
-	}
-	return nil
-}
-
-type MemStats struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Alloc         int64   `protobuf:"varint,1,opt,name=Alloc,proto3" json:"Alloc,omitempty"`
-	TotalAlloc    int64   `protobuf:"varint,2,opt,name=TotalAlloc,proto3" json:"TotalAlloc,omitempty"`
-	Sys           int64   `protobuf:"varint,3,opt,name=Sys,proto3" json:"Sys,omitempty"`
-	Lookups       int64   `protobuf:"varint,4,opt,name=Lookups,proto3" json:"Lookups,omitempty"`
-	Mallocs       int64   `protobuf:"varint,5,opt,name=Mallocs,proto3" json:"Mallocs,omitempty"`
-	Frees         int64   `protobuf:"varint,6,opt,name=Frees,proto3" json:"Frees,omitempty"`
-	HeapAlloc     int64   `protobuf:"varint,7,opt,name=HeapAlloc,proto3" json:"HeapAlloc,omitempty"`
-	HeapSys       int64   `protobuf:"varint,8,opt,name=HeapSys,proto3" json:"HeapSys,omitempty"`
-	HeapIdle      int64   `protobuf:"varint,9,opt,name=HeapIdle,proto3" json:"HeapIdle,omitempty"`
-	HeapInuse     int64   `protobuf:"varint,10,opt,name=HeapInuse,proto3" json:"HeapInuse,omitempty"`
-	HeapReleased  int64   `protobuf:"varint,11,opt,name=HeapReleased,proto3" json:"HeapReleased,omitempty"`
-	HeapObjects   int64   `protobuf:"varint,12,opt,name=HeapObjects,proto3" json:"HeapObjects,omitempty"`
-	StackInuse    int64   `protobuf:"varint,13,opt,name=StackInuse,proto3" json:"StackInuse,omitempty"`
-	StackSys      int64   `protobuf:"varint,14,opt,name=StackSys,proto3" json:"StackSys,omitempty"`
-	MSpanInuse    int64   `protobuf:"varint,15,opt,name=MSpanInuse,proto3" json:"MSpanInuse,omitempty"`
-	MSpanSys      int64   `protobuf:"varint,16,opt,name=MSpanSys,proto3" json:"MSpanSys,omitempty"`
-	MCacheInuse   int64   `protobuf:"varint,17,opt,name=MCacheInuse,proto3" json:"MCacheInuse,omitempty"`
-	MCacheSys     int64   `protobuf:"varint,18,opt,name=MCacheSys,proto3" json:"MCacheSys,omitempty"`
-	BuckHashSys   int64   `protobuf:"varint,19,opt,name=BuckHashSys,proto3" json:"BuckHashSys,omitempty"`
-	GCSys         int64   `protobuf:"varint,20,opt,name=GCSys,proto3" json:"GCSys,omitempty"`
-	OtherSys      int64   `protobuf:"varint,21,opt,name=OtherSys,proto3" json:"OtherSys,omitempty"`
-	NextGC        int64   `protobuf:"varint,22,opt,name=NextGC,proto3" json:"NextGC,omitempty"`
-	LastGC        int64   `protobuf:"varint,23,opt,name=LastGC,proto3" json:"LastGC,omitempty"`
-	PauseTotalNs  int64   `protobuf:"varint,24,opt,name=PauseTotalNs,proto3" json:"PauseTotalNs,omitempty"`
-	PauseNs       []int64 `protobuf:"varint,25,rep,packed,name=PauseNs,proto3" json:"PauseNs,omitempty"`
-	PauseEnd      []int64 `protobuf:"varint,26,rep,packed,name=PauseEnd,proto3" json:"PauseEnd,omitempty"`
-	NumGC         int64   `protobuf:"varint,27,opt,name=NumGC,proto3" json:"NumGC,omitempty"`
-	NumForcedGC   int64   `protobuf:"varint,28,opt,name=NumForcedGC,proto3" json:"NumForcedGC,omitempty"`
-	GCCPUFraction int64   `protobuf:"varint,29,opt,name=GCCPUFraction,proto3" json:"GCCPUFraction,omitempty"`
-	EnableGC      int64   `protobuf:"varint,30,opt,name=EnableGC,proto3" json:"EnableGC,omitempty"`
-	DebugGC       int64   `protobuf:"varint,31,opt,name=DebugGC,proto3" json:"DebugGC,omitempty"`
-}
-
-func (x *MemStats) Reset() {
-	*x = MemStats{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_cluster_proto_msgTypes[23]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *MemStats) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*MemStats) ProtoMessage() {}
-
-func (x *MemStats) ProtoReflect() protoreflect.Message {
-	mi := &file_cluster_proto_msgTypes[23]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use MemStats.ProtoReflect.Descriptor instead.
-func (*MemStats) Descriptor() ([]byte, []int) {
-	return file_cluster_proto_rawDescGZIP(), []int{23}
-}
-
-func (x *MemStats) GetAlloc() int64 {
-	if x != nil {
-		return x.Alloc
-	}
-	return 0
-}
-
-func (x *MemStats) GetTotalAlloc() int64 {
-	if x != nil {
-		return x.TotalAlloc
-	}
-	return 0
-}
-
-func (x *MemStats) GetSys() int64 {
-	if x != nil {
-		return x.Sys
-	}
-	return 0
-}
-
-func (x *MemStats) GetLookups() int64 {
-	if x != nil {
-		return x.Lookups
-	}
-	return 0
-}
-
-func (x *MemStats) GetMallocs() int64 {
-	if x != nil {
-		return x.Mallocs
-	}
-	return 0
-}
-
-func (x *MemStats) GetFrees() int64 {
-	if x != nil {
-		return x.Frees
-	}
-	return 0
-}
-
-func (x *MemStats) GetHeapAlloc() int64 {
-	if x != nil {
-		return x.HeapAlloc
-	}
-	return 0
-}
-
-func (x *MemStats) GetHeapSys() int64 {
-	if x != nil {
-		return x.HeapSys
-	}
-	return 0
-}
-
-func (x *MemStats) GetHeapIdle() int64 {
-	if x != nil {
-		return x.HeapIdle
-	}
-	return 0
-}
-
-func (x *MemStats) GetHeapInuse() int64 {
-	if x != nil {
-		return x.HeapInuse
-	}
-	return 0
-}
-
-func (x *MemStats) GetHeapReleased() int64 {
-	if x != nil {
-		return x.HeapReleased
-	}
-	return 0
-}
-
-func (x *MemStats) GetHeapObjects() int64 {
-	if x != nil {
-		return x.HeapObjects
-	}
-	return 0
-}
-
-func (x *MemStats) GetStackInuse() int64 {
-	if x != nil {
-		return x.StackInuse
-	}
-	return 0
-}
-
-func (x *MemStats) GetStackSys() int64 {
-	if x != nil {
-		return x.StackSys
-	}
-	return 0
-}
-
-func (x *MemStats) GetMSpanInuse() int64 {
-	if x != nil {
-		return x.MSpanInuse
-	}
-	return 0
-}
-
-func (x *MemStats) GetMSpanSys() int64 {
-	if x != nil {
-		return x.MSpanSys
-	}
-	return 0
-}
-
-func (x *MemStats) GetMCacheInuse() int64 {
-	if x != nil {
-		return x.MCacheInuse
-	}
-	return 0
-}
-
-func (x *MemStats) GetMCacheSys() int64 {
-	if x != nil {
-		return x.MCacheSys
-	}
-	return 0
-}
-
-func (x *MemStats) GetBuckHashSys() int64 {
-	if x != nil {
-		return x.BuckHashSys
-	}
-	return 0
-}
-
-func (x *MemStats) GetGCSys() int64 {
-	if x != nil {
-		return x.GCSys
-	}
-	return 0
-}
-
-func (x *MemStats) GetOtherSys() int64 {
-	if x != nil {
-		return x.OtherSys
-	}
-	return 0
-}
-
-func (x *MemStats) GetNextGC() int64 {
-	if x != nil {
-		return x.NextGC
-	}
-	return 0
-}
-
-func (x *MemStats) GetLastGC() int64 {
-	if x != nil {
-		return x.LastGC
-	}
-	return 0
-}
-
-func (x *MemStats) GetPauseTotalNs() int64 {
-	if x != nil {
-		return x.PauseTotalNs
-	}
-	return 0
-}
-
-func (x *MemStats) GetPauseNs() []int64 {
-	if x != nil {
-		return x.PauseNs
-	}
-	return nil
-}
-
-func (x *MemStats) GetPauseEnd() []int64 {
-	if x != nil {
-		return x.PauseEnd
-	}
-	return nil
-}
-
-func (x *MemStats) GetNumGC() int64 {
-	if x != nil {
-		return x.NumGC
-	}
-	return 0
-}
-
-func (x *MemStats) GetNumForcedGC() int64 {
-	if x != nil {
-		return x.NumForcedGC
-	}
-	return 0
-}
-
-func (x *MemStats) GetGCCPUFraction() int64 {
-	if x != nil {
-		return x.GCCPUFraction
-	}
-	return 0
-}
-
-func (x *MemStats) GetEnableGC() int64 {
-	if x != nil {
-		return x.EnableGC
-	}
-	return 0
-}
-
-func (x *MemStats) GetDebugGC() int64 {
-	if x != nil {
-		return x.DebugGC
-	}
-	return 0
-}
-
-type ProcessInfo struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	NumCPU       int64     `protobuf:"varint,1,opt,name=NumCPU,proto3" json:"NumCPU,omitempty"`
-	NumGoroutine int64     `protobuf:"varint,2,opt,name=NumGoroutine,proto3" json:"NumGoroutine,omitempty"`
-	Version      string    `protobuf:"bytes,3,opt,name=Version,proto3" json:"Version,omitempty"`
-	MemStats     *MemStats `protobuf:"bytes,4,opt,name=MemStats,proto3" json:"MemStats,omitempty"`
-}
-
-func (x *ProcessInfo) Reset() {
-	*x = ProcessInfo{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_cluster_proto_msgTypes[24]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *ProcessInfo) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ProcessInfo) ProtoMessage() {}
-
-func (x *ProcessInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_cluster_proto_msgTypes[24]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ProcessInfo.ProtoReflect.Descriptor instead.
-func (*ProcessInfo) Descriptor() ([]byte, []int) {
-	return file_cluster_proto_rawDescGZIP(), []int{24}
-}
-
-func (x *ProcessInfo) GetNumCPU() int64 {
-	if x != nil {
-		return x.NumCPU
-	}
-	return 0
-}
-
-func (x *ProcessInfo) GetNumGoroutine() int64 {
-	if x != nil {
-		return x.NumGoroutine
-	}
-	return 0
-}
-
-func (x *ProcessInfo) GetVersion() string {
-	if x != nil {
-		return x.Version
-	}
-	return ""
-}
-
-func (x *ProcessInfo) GetMemStats() *MemStats {
-	if x != nil {
-		return x.MemStats
-	}
-	return nil
-}
-
-type QueryStatsRequest struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-}
-
-func (x *QueryStatsRequest) Reset() {
-	*x = QueryStatsRequest{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_cluster_proto_msgTypes[25]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *QueryStatsRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*QueryStatsRequest) ProtoMessage() {}
-
-func (x *QueryStatsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_cluster_proto_msgTypes[25]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use QueryStatsRequest.ProtoReflect.Descriptor instead.
-func (*QueryStatsRequest) Descriptor() ([]byte, []int) {
-	return file_cluster_proto_rawDescGZIP(), []int{25}
-}
-
-type QueryStatsResponse struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	PipeInfo    *PipeInfo    `protobuf:"bytes,1,opt,name=PipeInfo,proto3" json:"PipeInfo,omitempty"`
-	ProcessInfo *ProcessInfo `protobuf:"bytes,2,opt,name=ProcessInfo,proto3" json:"ProcessInfo,omitempty"`
-}
-
-func (x *QueryStatsResponse) Reset() {
-	*x = QueryStatsResponse{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_cluster_proto_msgTypes[26]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *QueryStatsResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*QueryStatsResponse) ProtoMessage() {}
-
-func (x *QueryStatsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_cluster_proto_msgTypes[26]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use QueryStatsResponse.ProtoReflect.Descriptor instead.
-func (*QueryStatsResponse) Descriptor() ([]byte, []int) {
-	return file_cluster_proto_rawDescGZIP(), []int{26}
-}
-
-func (x *QueryStatsResponse) GetPipeInfo() *PipeInfo {
-	if x != nil {
-		return x.PipeInfo
-	}
-	return nil
-}
-
-func (x *QueryStatsResponse) GetProcessInfo() *ProcessInfo {
-	if x != nil {
-		return x.ProcessInfo
+		return x.Data
 	}
 	return nil
 }
@@ -1862,118 +1245,14 @@ var file_cluster_proto_rawDesc = []byte{
 	0x0a, 0x09, 0x73, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x49, 0x44, 0x18, 0x01, 0x20, 0x01, 0x28,
 	0x03, 0x52, 0x09, 0x73, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x49, 0x44, 0x22, 0x16, 0x0a, 0x14,
 	0x43, 0x6c, 0x6f, 0x73, 0x65, 0x53, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70,
-	0x6f, 0x6e, 0x73, 0x65, 0x22, 0xd5, 0x01, 0x0a, 0x08, 0x50, 0x69, 0x70, 0x65, 0x49, 0x6e, 0x66,
-	0x6f, 0x12, 0x14, 0x0a, 0x05, 0x4c, 0x61, 0x62, 0x65, 0x6c, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x05, 0x4c, 0x61, 0x62, 0x65, 0x6c, 0x12, 0x12, 0x0a, 0x04, 0x41, 0x64, 0x64, 0x72, 0x18,
-	0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x41, 0x64, 0x64, 0x72, 0x12, 0x2c, 0x0a, 0x04, 0x49,
-	0x74, 0x65, 0x6d, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x18, 0x2e, 0x63, 0x6c, 0x75, 0x73,
-	0x74, 0x65, 0x72, 0x70, 0x62, 0x2e, 0x53, 0x74, 0x61, 0x74, 0x69, 0x73, 0x74, 0x69, 0x63, 0x49,
-	0x74, 0x65, 0x6d, 0x52, 0x04, 0x49, 0x74, 0x65, 0x6d, 0x12, 0x39, 0x0a, 0x0a, 0x52, 0x6f, 0x75,
-	0x74, 0x65, 0x49, 0x74, 0x65, 0x6d, 0x73, 0x18, 0x04, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x19, 0x2e,
-	0x63, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x70, 0x62, 0x2e, 0x52, 0x6f, 0x75, 0x74, 0x65, 0x53,
-	0x74, 0x61, 0x74, 0x69, 0x73, 0x74, 0x69, 0x63, 0x52, 0x0a, 0x52, 0x6f, 0x75, 0x74, 0x65, 0x49,
-	0x74, 0x65, 0x6d, 0x73, 0x12, 0x36, 0x0a, 0x09, 0x54, 0x79, 0x70, 0x65, 0x49, 0x74, 0x65, 0x6d,
-	0x73, 0x18, 0x05, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x18, 0x2e, 0x63, 0x6c, 0x75, 0x73, 0x74, 0x65,
-	0x72, 0x70, 0x62, 0x2e, 0x54, 0x79, 0x70, 0x65, 0x53, 0x74, 0x61, 0x74, 0x69, 0x73, 0x74, 0x69,
-	0x63, 0x52, 0x09, 0x54, 0x79, 0x70, 0x65, 0x49, 0x74, 0x65, 0x6d, 0x73, 0x22, 0xc1, 0x01, 0x0a,
-	0x0d, 0x53, 0x74, 0x61, 0x74, 0x69, 0x73, 0x74, 0x69, 0x63, 0x49, 0x74, 0x65, 0x6d, 0x12, 0x1a,
-	0x0a, 0x08, 0x52, 0x65, 0x71, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03,
-	0x52, 0x08, 0x52, 0x65, 0x71, 0x43, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x1e, 0x0a, 0x0a, 0x54, 0x6f,
-	0x74, 0x61, 0x6c, 0x42, 0x79, 0x74, 0x65, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x0a,
-	0x54, 0x6f, 0x74, 0x61, 0x6c, 0x42, 0x79, 0x74, 0x65, 0x73, 0x12, 0x20, 0x0a, 0x0b, 0x42, 0x79,
-	0x74, 0x65, 0x73, 0x50, 0x65, 0x72, 0x52, 0x65, 0x71, 0x18, 0x03, 0x20, 0x01, 0x28, 0x01, 0x52,
-	0x0b, 0x42, 0x79, 0x74, 0x65, 0x73, 0x50, 0x65, 0x72, 0x52, 0x65, 0x71, 0x12, 0x2a, 0x0a, 0x10,
-	0x54, 0x6f, 0x74, 0x61, 0x6c, 0x50, 0x72, 0x6f, 0x63, 0x65, 0x73, 0x73, 0x54, 0x69, 0x6d, 0x65,
-	0x18, 0x04, 0x20, 0x01, 0x28, 0x03, 0x52, 0x10, 0x54, 0x6f, 0x74, 0x61, 0x6c, 0x50, 0x72, 0x6f,
-	0x63, 0x65, 0x73, 0x73, 0x54, 0x69, 0x6d, 0x65, 0x12, 0x26, 0x0a, 0x0e, 0x41, 0x76, 0x67, 0x50,
-	0x72, 0x6f, 0x63, 0x65, 0x73, 0x73, 0x54, 0x69, 0x6d, 0x65, 0x18, 0x05, 0x20, 0x01, 0x28, 0x01,
-	0x52, 0x0e, 0x41, 0x76, 0x67, 0x50, 0x72, 0x6f, 0x63, 0x65, 0x73, 0x73, 0x54, 0x69, 0x6d, 0x65,
-	0x22, 0x54, 0x0a, 0x0e, 0x52, 0x6f, 0x75, 0x74, 0x65, 0x53, 0x74, 0x61, 0x74, 0x69, 0x73, 0x74,
-	0x69, 0x63, 0x12, 0x14, 0x0a, 0x05, 0x52, 0x6f, 0x75, 0x74, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28,
-	0x09, 0x52, 0x05, 0x52, 0x6f, 0x75, 0x74, 0x65, 0x12, 0x2c, 0x0a, 0x04, 0x69, 0x74, 0x65, 0x6d,
-	0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x18, 0x2e, 0x63, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72,
-	0x70, 0x62, 0x2e, 0x53, 0x74, 0x61, 0x74, 0x69, 0x73, 0x74, 0x69, 0x63, 0x49, 0x74, 0x65, 0x6d,
-	0x52, 0x04, 0x69, 0x74, 0x65, 0x6d, 0x22, 0x51, 0x0a, 0x0d, 0x54, 0x79, 0x70, 0x65, 0x53, 0x74,
-	0x61, 0x74, 0x69, 0x73, 0x74, 0x69, 0x63, 0x12, 0x12, 0x0a, 0x04, 0x54, 0x79, 0x70, 0x65, 0x18,
-	0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x04, 0x54, 0x79, 0x70, 0x65, 0x12, 0x2c, 0x0a, 0x04, 0x69,
-	0x74, 0x65, 0x6d, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x18, 0x2e, 0x63, 0x6c, 0x75, 0x73,
-	0x74, 0x65, 0x72, 0x70, 0x62, 0x2e, 0x53, 0x74, 0x61, 0x74, 0x69, 0x73, 0x74, 0x69, 0x63, 0x49,
-	0x74, 0x65, 0x6d, 0x52, 0x04, 0x69, 0x74, 0x65, 0x6d, 0x22, 0xfe, 0x06, 0x0a, 0x08, 0x4d, 0x65,
-	0x6d, 0x53, 0x74, 0x61, 0x74, 0x73, 0x12, 0x14, 0x0a, 0x05, 0x41, 0x6c, 0x6c, 0x6f, 0x63, 0x18,
-	0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x05, 0x41, 0x6c, 0x6c, 0x6f, 0x63, 0x12, 0x1e, 0x0a, 0x0a,
-	0x54, 0x6f, 0x74, 0x61, 0x6c, 0x41, 0x6c, 0x6c, 0x6f, 0x63, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03,
-	0x52, 0x0a, 0x54, 0x6f, 0x74, 0x61, 0x6c, 0x41, 0x6c, 0x6c, 0x6f, 0x63, 0x12, 0x10, 0x0a, 0x03,
-	0x53, 0x79, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x03, 0x52, 0x03, 0x53, 0x79, 0x73, 0x12, 0x18,
-	0x0a, 0x07, 0x4c, 0x6f, 0x6f, 0x6b, 0x75, 0x70, 0x73, 0x18, 0x04, 0x20, 0x01, 0x28, 0x03, 0x52,
-	0x07, 0x4c, 0x6f, 0x6f, 0x6b, 0x75, 0x70, 0x73, 0x12, 0x18, 0x0a, 0x07, 0x4d, 0x61, 0x6c, 0x6c,
-	0x6f, 0x63, 0x73, 0x18, 0x05, 0x20, 0x01, 0x28, 0x03, 0x52, 0x07, 0x4d, 0x61, 0x6c, 0x6c, 0x6f,
-	0x63, 0x73, 0x12, 0x14, 0x0a, 0x05, 0x46, 0x72, 0x65, 0x65, 0x73, 0x18, 0x06, 0x20, 0x01, 0x28,
-	0x03, 0x52, 0x05, 0x46, 0x72, 0x65, 0x65, 0x73, 0x12, 0x1c, 0x0a, 0x09, 0x48, 0x65, 0x61, 0x70,
-	0x41, 0x6c, 0x6c, 0x6f, 0x63, 0x18, 0x07, 0x20, 0x01, 0x28, 0x03, 0x52, 0x09, 0x48, 0x65, 0x61,
-	0x70, 0x41, 0x6c, 0x6c, 0x6f, 0x63, 0x12, 0x18, 0x0a, 0x07, 0x48, 0x65, 0x61, 0x70, 0x53, 0x79,
-	0x73, 0x18, 0x08, 0x20, 0x01, 0x28, 0x03, 0x52, 0x07, 0x48, 0x65, 0x61, 0x70, 0x53, 0x79, 0x73,
-	0x12, 0x1a, 0x0a, 0x08, 0x48, 0x65, 0x61, 0x70, 0x49, 0x64, 0x6c, 0x65, 0x18, 0x09, 0x20, 0x01,
-	0x28, 0x03, 0x52, 0x08, 0x48, 0x65, 0x61, 0x70, 0x49, 0x64, 0x6c, 0x65, 0x12, 0x1c, 0x0a, 0x09,
-	0x48, 0x65, 0x61, 0x70, 0x49, 0x6e, 0x75, 0x73, 0x65, 0x18, 0x0a, 0x20, 0x01, 0x28, 0x03, 0x52,
-	0x09, 0x48, 0x65, 0x61, 0x70, 0x49, 0x6e, 0x75, 0x73, 0x65, 0x12, 0x22, 0x0a, 0x0c, 0x48, 0x65,
-	0x61, 0x70, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x64, 0x18, 0x0b, 0x20, 0x01, 0x28, 0x03,
-	0x52, 0x0c, 0x48, 0x65, 0x61, 0x70, 0x52, 0x65, 0x6c, 0x65, 0x61, 0x73, 0x65, 0x64, 0x12, 0x20,
-	0x0a, 0x0b, 0x48, 0x65, 0x61, 0x70, 0x4f, 0x62, 0x6a, 0x65, 0x63, 0x74, 0x73, 0x18, 0x0c, 0x20,
-	0x01, 0x28, 0x03, 0x52, 0x0b, 0x48, 0x65, 0x61, 0x70, 0x4f, 0x62, 0x6a, 0x65, 0x63, 0x74, 0x73,
-	0x12, 0x1e, 0x0a, 0x0a, 0x53, 0x74, 0x61, 0x63, 0x6b, 0x49, 0x6e, 0x75, 0x73, 0x65, 0x18, 0x0d,
-	0x20, 0x01, 0x28, 0x03, 0x52, 0x0a, 0x53, 0x74, 0x61, 0x63, 0x6b, 0x49, 0x6e, 0x75, 0x73, 0x65,
-	0x12, 0x1a, 0x0a, 0x08, 0x53, 0x74, 0x61, 0x63, 0x6b, 0x53, 0x79, 0x73, 0x18, 0x0e, 0x20, 0x01,
-	0x28, 0x03, 0x52, 0x08, 0x53, 0x74, 0x61, 0x63, 0x6b, 0x53, 0x79, 0x73, 0x12, 0x1e, 0x0a, 0x0a,
-	0x4d, 0x53, 0x70, 0x61, 0x6e, 0x49, 0x6e, 0x75, 0x73, 0x65, 0x18, 0x0f, 0x20, 0x01, 0x28, 0x03,
-	0x52, 0x0a, 0x4d, 0x53, 0x70, 0x61, 0x6e, 0x49, 0x6e, 0x75, 0x73, 0x65, 0x12, 0x1a, 0x0a, 0x08,
-	0x4d, 0x53, 0x70, 0x61, 0x6e, 0x53, 0x79, 0x73, 0x18, 0x10, 0x20, 0x01, 0x28, 0x03, 0x52, 0x08,
-	0x4d, 0x53, 0x70, 0x61, 0x6e, 0x53, 0x79, 0x73, 0x12, 0x20, 0x0a, 0x0b, 0x4d, 0x43, 0x61, 0x63,
-	0x68, 0x65, 0x49, 0x6e, 0x75, 0x73, 0x65, 0x18, 0x11, 0x20, 0x01, 0x28, 0x03, 0x52, 0x0b, 0x4d,
-	0x43, 0x61, 0x63, 0x68, 0x65, 0x49, 0x6e, 0x75, 0x73, 0x65, 0x12, 0x1c, 0x0a, 0x09, 0x4d, 0x43,
-	0x61, 0x63, 0x68, 0x65, 0x53, 0x79, 0x73, 0x18, 0x12, 0x20, 0x01, 0x28, 0x03, 0x52, 0x09, 0x4d,
-	0x43, 0x61, 0x63, 0x68, 0x65, 0x53, 0x79, 0x73, 0x12, 0x20, 0x0a, 0x0b, 0x42, 0x75, 0x63, 0x6b,
-	0x48, 0x61, 0x73, 0x68, 0x53, 0x79, 0x73, 0x18, 0x13, 0x20, 0x01, 0x28, 0x03, 0x52, 0x0b, 0x42,
-	0x75, 0x63, 0x6b, 0x48, 0x61, 0x73, 0x68, 0x53, 0x79, 0x73, 0x12, 0x14, 0x0a, 0x05, 0x47, 0x43,
-	0x53, 0x79, 0x73, 0x18, 0x14, 0x20, 0x01, 0x28, 0x03, 0x52, 0x05, 0x47, 0x43, 0x53, 0x79, 0x73,
-	0x12, 0x1a, 0x0a, 0x08, 0x4f, 0x74, 0x68, 0x65, 0x72, 0x53, 0x79, 0x73, 0x18, 0x15, 0x20, 0x01,
-	0x28, 0x03, 0x52, 0x08, 0x4f, 0x74, 0x68, 0x65, 0x72, 0x53, 0x79, 0x73, 0x12, 0x16, 0x0a, 0x06,
-	0x4e, 0x65, 0x78, 0x74, 0x47, 0x43, 0x18, 0x16, 0x20, 0x01, 0x28, 0x03, 0x52, 0x06, 0x4e, 0x65,
-	0x78, 0x74, 0x47, 0x43, 0x12, 0x16, 0x0a, 0x06, 0x4c, 0x61, 0x73, 0x74, 0x47, 0x43, 0x18, 0x17,
-	0x20, 0x01, 0x28, 0x03, 0x52, 0x06, 0x4c, 0x61, 0x73, 0x74, 0x47, 0x43, 0x12, 0x22, 0x0a, 0x0c,
-	0x50, 0x61, 0x75, 0x73, 0x65, 0x54, 0x6f, 0x74, 0x61, 0x6c, 0x4e, 0x73, 0x18, 0x18, 0x20, 0x01,
-	0x28, 0x03, 0x52, 0x0c, 0x50, 0x61, 0x75, 0x73, 0x65, 0x54, 0x6f, 0x74, 0x61, 0x6c, 0x4e, 0x73,
-	0x12, 0x18, 0x0a, 0x07, 0x50, 0x61, 0x75, 0x73, 0x65, 0x4e, 0x73, 0x18, 0x19, 0x20, 0x03, 0x28,
-	0x03, 0x52, 0x07, 0x50, 0x61, 0x75, 0x73, 0x65, 0x4e, 0x73, 0x12, 0x1a, 0x0a, 0x08, 0x50, 0x61,
-	0x75, 0x73, 0x65, 0x45, 0x6e, 0x64, 0x18, 0x1a, 0x20, 0x03, 0x28, 0x03, 0x52, 0x08, 0x50, 0x61,
-	0x75, 0x73, 0x65, 0x45, 0x6e, 0x64, 0x12, 0x14, 0x0a, 0x05, 0x4e, 0x75, 0x6d, 0x47, 0x43, 0x18,
-	0x1b, 0x20, 0x01, 0x28, 0x03, 0x52, 0x05, 0x4e, 0x75, 0x6d, 0x47, 0x43, 0x12, 0x20, 0x0a, 0x0b,
-	0x4e, 0x75, 0x6d, 0x46, 0x6f, 0x72, 0x63, 0x65, 0x64, 0x47, 0x43, 0x18, 0x1c, 0x20, 0x01, 0x28,
-	0x03, 0x52, 0x0b, 0x4e, 0x75, 0x6d, 0x46, 0x6f, 0x72, 0x63, 0x65, 0x64, 0x47, 0x43, 0x12, 0x24,
-	0x0a, 0x0d, 0x47, 0x43, 0x43, 0x50, 0x55, 0x46, 0x72, 0x61, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x18,
-	0x1d, 0x20, 0x01, 0x28, 0x03, 0x52, 0x0d, 0x47, 0x43, 0x43, 0x50, 0x55, 0x46, 0x72, 0x61, 0x63,
-	0x74, 0x69, 0x6f, 0x6e, 0x12, 0x1a, 0x0a, 0x08, 0x45, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x47, 0x43,
-	0x18, 0x1e, 0x20, 0x01, 0x28, 0x03, 0x52, 0x08, 0x45, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x47, 0x43,
-	0x12, 0x18, 0x0a, 0x07, 0x44, 0x65, 0x62, 0x75, 0x67, 0x47, 0x43, 0x18, 0x1f, 0x20, 0x01, 0x28,
-	0x03, 0x52, 0x07, 0x44, 0x65, 0x62, 0x75, 0x67, 0x47, 0x43, 0x22, 0x94, 0x01, 0x0a, 0x0b, 0x50,
-	0x72, 0x6f, 0x63, 0x65, 0x73, 0x73, 0x49, 0x6e, 0x66, 0x6f, 0x12, 0x16, 0x0a, 0x06, 0x4e, 0x75,
-	0x6d, 0x43, 0x50, 0x55, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x06, 0x4e, 0x75, 0x6d, 0x43,
-	0x50, 0x55, 0x12, 0x22, 0x0a, 0x0c, 0x4e, 0x75, 0x6d, 0x47, 0x6f, 0x72, 0x6f, 0x75, 0x74, 0x69,
-	0x6e, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x0c, 0x4e, 0x75, 0x6d, 0x47, 0x6f, 0x72,
-	0x6f, 0x75, 0x74, 0x69, 0x6e, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x56, 0x65, 0x72, 0x73, 0x69, 0x6f,
-	0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x56, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e,
-	0x12, 0x2f, 0x0a, 0x08, 0x4d, 0x65, 0x6d, 0x53, 0x74, 0x61, 0x74, 0x73, 0x18, 0x04, 0x20, 0x01,
-	0x28, 0x0b, 0x32, 0x13, 0x2e, 0x63, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x70, 0x62, 0x2e, 0x4d,
-	0x65, 0x6d, 0x53, 0x74, 0x61, 0x74, 0x73, 0x52, 0x08, 0x4d, 0x65, 0x6d, 0x53, 0x74, 0x61, 0x74,
-	0x73, 0x22, 0x13, 0x0a, 0x11, 0x51, 0x75, 0x65, 0x72, 0x79, 0x53, 0x74, 0x61, 0x74, 0x73, 0x52,
-	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22, 0x7f, 0x0a, 0x12, 0x51, 0x75, 0x65, 0x72, 0x79, 0x53,
-	0x74, 0x61, 0x74, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x2f, 0x0a, 0x08,
-	0x50, 0x69, 0x70, 0x65, 0x49, 0x6e, 0x66, 0x6f, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x13,
-	0x2e, 0x63, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x70, 0x62, 0x2e, 0x50, 0x69, 0x70, 0x65, 0x49,
-	0x6e, 0x66, 0x6f, 0x52, 0x08, 0x50, 0x69, 0x70, 0x65, 0x49, 0x6e, 0x66, 0x6f, 0x12, 0x38, 0x0a,
-	0x0b, 0x50, 0x72, 0x6f, 0x63, 0x65, 0x73, 0x73, 0x49, 0x6e, 0x66, 0x6f, 0x18, 0x02, 0x20, 0x01,
-	0x28, 0x0b, 0x32, 0x16, 0x2e, 0x63, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x70, 0x62, 0x2e, 0x50,
-	0x72, 0x6f, 0x63, 0x65, 0x73, 0x73, 0x49, 0x6e, 0x66, 0x6f, 0x52, 0x0b, 0x50, 0x72, 0x6f, 0x63,
-	0x65, 0x73, 0x73, 0x49, 0x6e, 0x66, 0x6f, 0x32, 0x9c, 0x01, 0x0a, 0x06, 0x4d, 0x61, 0x73, 0x74,
+	0x6f, 0x6e, 0x73, 0x65, 0x22, 0x40, 0x0a, 0x18, 0x50, 0x65, 0x72, 0x66, 0x6f, 0x72, 0x6d, 0x43,
+	0x6f, 0x6e, 0x76, 0x65, 0x6e, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x12, 0x10, 0x0a, 0x03, 0x73, 0x69, 0x67, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x03, 0x73,
+	0x69, 0x67, 0x12, 0x12, 0x0a, 0x04, 0x64, 0x61, 0x74, 0x61, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0c,
+	0x52, 0x04, 0x64, 0x61, 0x74, 0x61, 0x22, 0x2f, 0x0a, 0x19, 0x50, 0x65, 0x72, 0x66, 0x6f, 0x72,
+	0x6d, 0x43, 0x6f, 0x6e, 0x76, 0x65, 0x6e, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x64, 0x61, 0x74, 0x61, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x0c, 0x52, 0x04, 0x64, 0x61, 0x74, 0x61, 0x32, 0x9c, 0x01, 0x0a, 0x06, 0x4d, 0x61, 0x73, 0x74,
 	0x65, 0x72, 0x12, 0x45, 0x0a, 0x08, 0x52, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x12, 0x1a,
 	0x2e, 0x63, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x70, 0x62, 0x2e, 0x52, 0x65, 0x67, 0x69, 0x73,
 	0x74, 0x65, 0x72, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x1b, 0x2e, 0x63, 0x6c, 0x75,
@@ -1983,7 +1262,7 @@ var file_cluster_proto_rawDesc = []byte{
 	0x72, 0x70, 0x62, 0x2e, 0x55, 0x6e, 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x52, 0x65,
 	0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x1d, 0x2e, 0x63, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x70,
 	0x62, 0x2e, 0x55, 0x6e, 0x72, 0x65, 0x67, 0x69, 0x73, 0x74, 0x65, 0x72, 0x52, 0x65, 0x73, 0x70,
-	0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x32, 0xc8, 0x05, 0x0a, 0x06, 0x4d, 0x65, 0x6d, 0x62, 0x65,
+	0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x32, 0xdd, 0x05, 0x0a, 0x06, 0x4d, 0x65, 0x6d, 0x62, 0x65,
 	0x72, 0x12, 0x4d, 0x0a, 0x0d, 0x48, 0x61, 0x6e, 0x64, 0x6c, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65,
 	0x73, 0x74, 0x12, 0x19, 0x2e, 0x63, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x70, 0x62, 0x2e, 0x52,
 	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x4d, 0x65, 0x73, 0x73, 0x61, 0x67, 0x65, 0x1a, 0x1f, 0x2e,
@@ -2023,13 +1302,14 @@ var file_cluster_proto_rawDesc = []byte{
 	0x6f, 0x73, 0x65, 0x53, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
 	0x74, 0x1a, 0x1f, 0x2e, 0x63, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x70, 0x62, 0x2e, 0x43, 0x6c,
 	0x6f, 0x73, 0x65, 0x53, 0x65, 0x73, 0x73, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x22, 0x00, 0x12, 0x4b, 0x0a, 0x0a, 0x51, 0x75, 0x65, 0x72, 0x79, 0x53, 0x74, 0x61,
-	0x74, 0x73, 0x12, 0x1c, 0x2e, 0x63, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x70, 0x62, 0x2e, 0x51,
-	0x75, 0x65, 0x72, 0x79, 0x53, 0x74, 0x61, 0x74, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x1a, 0x1d, 0x2e, 0x63, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x70, 0x62, 0x2e, 0x51, 0x75, 0x65,
-	0x72, 0x79, 0x53, 0x74, 0x61, 0x74, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22,
-	0x00, 0x42, 0x0d, 0x5a, 0x0b, 0x2e, 0x3b, 0x63, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x70, 0x62,
-	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x73, 0x65, 0x22, 0x00, 0x12, 0x60, 0x0a, 0x11, 0x50, 0x65, 0x72, 0x66, 0x6f, 0x72, 0x6d, 0x43,
+	0x6f, 0x6e, 0x76, 0x65, 0x6e, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x23, 0x2e, 0x63, 0x6c, 0x75, 0x73,
+	0x74, 0x65, 0x72, 0x70, 0x62, 0x2e, 0x50, 0x65, 0x72, 0x66, 0x6f, 0x72, 0x6d, 0x43, 0x6f, 0x6e,
+	0x76, 0x65, 0x6e, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x24,
+	0x2e, 0x63, 0x6c, 0x75, 0x73, 0x74, 0x65, 0x72, 0x70, 0x62, 0x2e, 0x50, 0x65, 0x72, 0x66, 0x6f,
+	0x72, 0x6d, 0x43, 0x6f, 0x6e, 0x76, 0x65, 0x6e, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x42, 0x0d, 0x5a, 0x0b, 0x2e, 0x3b, 0x63, 0x6c, 0x75, 0x73,
+	0x74, 0x65, 0x72, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -2044,76 +1324,62 @@ func file_cluster_proto_rawDescGZIP() []byte {
 	return file_cluster_proto_rawDescData
 }
 
-var file_cluster_proto_msgTypes = make([]protoimpl.MessageInfo, 27)
+var file_cluster_proto_msgTypes = make([]protoimpl.MessageInfo, 21)
 var file_cluster_proto_goTypes = []interface{}{
-	(*DictionaryItem)(nil),        // 0: clusterpb.DictionaryItem
-	(*MemberInfo)(nil),            // 1: clusterpb.MemberInfo
-	(*RegisterRequest)(nil),       // 2: clusterpb.RegisterRequest
-	(*RegisterResponse)(nil),      // 3: clusterpb.RegisterResponse
-	(*UnregisterRequest)(nil),     // 4: clusterpb.UnregisterRequest
-	(*UnregisterResponse)(nil),    // 5: clusterpb.UnregisterResponse
-	(*RequestMessage)(nil),        // 6: clusterpb.RequestMessage
-	(*NotifyMessage)(nil),         // 7: clusterpb.NotifyMessage
-	(*ResponseMessage)(nil),       // 8: clusterpb.ResponseMessage
-	(*PushMessage)(nil),           // 9: clusterpb.PushMessage
-	(*MemberHandleResponse)(nil),  // 10: clusterpb.MemberHandleResponse
-	(*NewMemberRequest)(nil),      // 11: clusterpb.NewMemberRequest
-	(*NewMemberResponse)(nil),     // 12: clusterpb.NewMemberResponse
-	(*DelMemberRequest)(nil),      // 13: clusterpb.DelMemberRequest
-	(*DelMemberResponse)(nil),     // 14: clusterpb.DelMemberResponse
-	(*SessionClosedRequest)(nil),  // 15: clusterpb.SessionClosedRequest
-	(*SessionClosedResponse)(nil), // 16: clusterpb.SessionClosedResponse
-	(*CloseSessionRequest)(nil),   // 17: clusterpb.CloseSessionRequest
-	(*CloseSessionResponse)(nil),  // 18: clusterpb.CloseSessionResponse
-	(*PipeInfo)(nil),              // 19: clusterpb.PipeInfo
-	(*StatisticItem)(nil),         // 20: clusterpb.StatisticItem
-	(*RouteStatistic)(nil),        // 21: clusterpb.RouteStatistic
-	(*TypeStatistic)(nil),         // 22: clusterpb.TypeStatistic
-	(*MemStats)(nil),              // 23: clusterpb.MemStats
-	(*ProcessInfo)(nil),           // 24: clusterpb.ProcessInfo
-	(*QueryStatsRequest)(nil),     // 25: clusterpb.QueryStatsRequest
-	(*QueryStatsResponse)(nil),    // 26: clusterpb.QueryStatsResponse
+	(*DictionaryItem)(nil),            // 0: clusterpb.DictionaryItem
+	(*MemberInfo)(nil),                // 1: clusterpb.MemberInfo
+	(*RegisterRequest)(nil),           // 2: clusterpb.RegisterRequest
+	(*RegisterResponse)(nil),          // 3: clusterpb.RegisterResponse
+	(*UnregisterRequest)(nil),         // 4: clusterpb.UnregisterRequest
+	(*UnregisterResponse)(nil),        // 5: clusterpb.UnregisterResponse
+	(*RequestMessage)(nil),            // 6: clusterpb.RequestMessage
+	(*NotifyMessage)(nil),             // 7: clusterpb.NotifyMessage
+	(*ResponseMessage)(nil),           // 8: clusterpb.ResponseMessage
+	(*PushMessage)(nil),               // 9: clusterpb.PushMessage
+	(*MemberHandleResponse)(nil),      // 10: clusterpb.MemberHandleResponse
+	(*NewMemberRequest)(nil),          // 11: clusterpb.NewMemberRequest
+	(*NewMemberResponse)(nil),         // 12: clusterpb.NewMemberResponse
+	(*DelMemberRequest)(nil),          // 13: clusterpb.DelMemberRequest
+	(*DelMemberResponse)(nil),         // 14: clusterpb.DelMemberResponse
+	(*SessionClosedRequest)(nil),      // 15: clusterpb.SessionClosedRequest
+	(*SessionClosedResponse)(nil),     // 16: clusterpb.SessionClosedResponse
+	(*CloseSessionRequest)(nil),       // 17: clusterpb.CloseSessionRequest
+	(*CloseSessionResponse)(nil),      // 18: clusterpb.CloseSessionResponse
+	(*PerformConventionRequest)(nil),  // 19: clusterpb.PerformConventionRequest
+	(*PerformConventionResponse)(nil), // 20: clusterpb.PerformConventionResponse
 }
 var file_cluster_proto_depIdxs = []int32{
 	0,  // 0: clusterpb.MemberInfo.dictionary:type_name -> clusterpb.DictionaryItem
 	1,  // 1: clusterpb.RegisterRequest.memberInfo:type_name -> clusterpb.MemberInfo
 	1,  // 2: clusterpb.RegisterResponse.members:type_name -> clusterpb.MemberInfo
 	1,  // 3: clusterpb.NewMemberRequest.memberInfo:type_name -> clusterpb.MemberInfo
-	20, // 4: clusterpb.PipeInfo.Item:type_name -> clusterpb.StatisticItem
-	21, // 5: clusterpb.PipeInfo.RouteItems:type_name -> clusterpb.RouteStatistic
-	22, // 6: clusterpb.PipeInfo.TypeItems:type_name -> clusterpb.TypeStatistic
-	20, // 7: clusterpb.RouteStatistic.item:type_name -> clusterpb.StatisticItem
-	20, // 8: clusterpb.TypeStatistic.item:type_name -> clusterpb.StatisticItem
-	23, // 9: clusterpb.ProcessInfo.MemStats:type_name -> clusterpb.MemStats
-	19, // 10: clusterpb.QueryStatsResponse.PipeInfo:type_name -> clusterpb.PipeInfo
-	24, // 11: clusterpb.QueryStatsResponse.ProcessInfo:type_name -> clusterpb.ProcessInfo
-	2,  // 12: clusterpb.Master.Register:input_type -> clusterpb.RegisterRequest
-	4,  // 13: clusterpb.Master.Unregister:input_type -> clusterpb.UnregisterRequest
-	6,  // 14: clusterpb.Member.HandleRequest:input_type -> clusterpb.RequestMessage
-	7,  // 15: clusterpb.Member.HandleNotify:input_type -> clusterpb.NotifyMessage
-	9,  // 16: clusterpb.Member.HandlePush:input_type -> clusterpb.PushMessage
-	8,  // 17: clusterpb.Member.HandleResponse:input_type -> clusterpb.ResponseMessage
-	11, // 18: clusterpb.Member.NewMember:input_type -> clusterpb.NewMemberRequest
-	13, // 19: clusterpb.Member.DelMember:input_type -> clusterpb.DelMemberRequest
-	15, // 20: clusterpb.Member.SessionClosed:input_type -> clusterpb.SessionClosedRequest
-	17, // 21: clusterpb.Member.CloseSession:input_type -> clusterpb.CloseSessionRequest
-	25, // 22: clusterpb.Member.QueryStats:input_type -> clusterpb.QueryStatsRequest
-	3,  // 23: clusterpb.Master.Register:output_type -> clusterpb.RegisterResponse
-	5,  // 24: clusterpb.Master.Unregister:output_type -> clusterpb.UnregisterResponse
-	10, // 25: clusterpb.Member.HandleRequest:output_type -> clusterpb.MemberHandleResponse
-	10, // 26: clusterpb.Member.HandleNotify:output_type -> clusterpb.MemberHandleResponse
-	10, // 27: clusterpb.Member.HandlePush:output_type -> clusterpb.MemberHandleResponse
-	10, // 28: clusterpb.Member.HandleResponse:output_type -> clusterpb.MemberHandleResponse
-	12, // 29: clusterpb.Member.NewMember:output_type -> clusterpb.NewMemberResponse
-	14, // 30: clusterpb.Member.DelMember:output_type -> clusterpb.DelMemberResponse
-	16, // 31: clusterpb.Member.SessionClosed:output_type -> clusterpb.SessionClosedResponse
-	18, // 32: clusterpb.Member.CloseSession:output_type -> clusterpb.CloseSessionResponse
-	26, // 33: clusterpb.Member.QueryStats:output_type -> clusterpb.QueryStatsResponse
-	23, // [23:34] is the sub-list for method output_type
-	12, // [12:23] is the sub-list for method input_type
-	12, // [12:12] is the sub-list for extension type_name
-	12, // [12:12] is the sub-list for extension extendee
-	0,  // [0:12] is the sub-list for field type_name
+	2,  // 4: clusterpb.Master.Register:input_type -> clusterpb.RegisterRequest
+	4,  // 5: clusterpb.Master.Unregister:input_type -> clusterpb.UnregisterRequest
+	6,  // 6: clusterpb.Member.HandleRequest:input_type -> clusterpb.RequestMessage
+	7,  // 7: clusterpb.Member.HandleNotify:input_type -> clusterpb.NotifyMessage
+	9,  // 8: clusterpb.Member.HandlePush:input_type -> clusterpb.PushMessage
+	8,  // 9: clusterpb.Member.HandleResponse:input_type -> clusterpb.ResponseMessage
+	11, // 10: clusterpb.Member.NewMember:input_type -> clusterpb.NewMemberRequest
+	13, // 11: clusterpb.Member.DelMember:input_type -> clusterpb.DelMemberRequest
+	15, // 12: clusterpb.Member.SessionClosed:input_type -> clusterpb.SessionClosedRequest
+	17, // 13: clusterpb.Member.CloseSession:input_type -> clusterpb.CloseSessionRequest
+	19, // 14: clusterpb.Member.PerformConvention:input_type -> clusterpb.PerformConventionRequest
+	3,  // 15: clusterpb.Master.Register:output_type -> clusterpb.RegisterResponse
+	5,  // 16: clusterpb.Master.Unregister:output_type -> clusterpb.UnregisterResponse
+	10, // 17: clusterpb.Member.HandleRequest:output_type -> clusterpb.MemberHandleResponse
+	10, // 18: clusterpb.Member.HandleNotify:output_type -> clusterpb.MemberHandleResponse
+	10, // 19: clusterpb.Member.HandlePush:output_type -> clusterpb.MemberHandleResponse
+	10, // 20: clusterpb.Member.HandleResponse:output_type -> clusterpb.MemberHandleResponse
+	12, // 21: clusterpb.Member.NewMember:output_type -> clusterpb.NewMemberResponse
+	14, // 22: clusterpb.Member.DelMember:output_type -> clusterpb.DelMemberResponse
+	16, // 23: clusterpb.Member.SessionClosed:output_type -> clusterpb.SessionClosedResponse
+	18, // 24: clusterpb.Member.CloseSession:output_type -> clusterpb.CloseSessionResponse
+	20, // 25: clusterpb.Member.PerformConvention:output_type -> clusterpb.PerformConventionResponse
+	15, // [15:26] is the sub-list for method output_type
+	4,  // [4:15] is the sub-list for method input_type
+	4,  // [4:4] is the sub-list for extension type_name
+	4,  // [4:4] is the sub-list for extension extendee
+	0,  // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_cluster_proto_init() }
@@ -2351,7 +1617,7 @@ func file_cluster_proto_init() {
 			}
 		}
 		file_cluster_proto_msgTypes[19].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*PipeInfo); i {
+			switch v := v.(*PerformConventionRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2363,79 +1629,7 @@ func file_cluster_proto_init() {
 			}
 		}
 		file_cluster_proto_msgTypes[20].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*StatisticItem); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_cluster_proto_msgTypes[21].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*RouteStatistic); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_cluster_proto_msgTypes[22].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*TypeStatistic); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_cluster_proto_msgTypes[23].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MemStats); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_cluster_proto_msgTypes[24].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ProcessInfo); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_cluster_proto_msgTypes[25].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryStatsRequest); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_cluster_proto_msgTypes[26].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryStatsResponse); i {
+			switch v := v.(*PerformConventionResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2453,7 +1647,7 @@ func file_cluster_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_cluster_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   27,
+			NumMessages:   21,
 			NumExtensions: 0,
 			NumServices:   2,
 		},
@@ -2595,7 +1789,7 @@ type MemberClient interface {
 	DelMember(ctx context.Context, in *DelMemberRequest, opts ...grpc.CallOption) (*DelMemberResponse, error)
 	SessionClosed(ctx context.Context, in *SessionClosedRequest, opts ...grpc.CallOption) (*SessionClosedResponse, error)
 	CloseSession(ctx context.Context, in *CloseSessionRequest, opts ...grpc.CallOption) (*CloseSessionResponse, error)
-	QueryStats(ctx context.Context, in *QueryStatsRequest, opts ...grpc.CallOption) (*QueryStatsResponse, error)
+	PerformConvention(ctx context.Context, in *PerformConventionRequest, opts ...grpc.CallOption) (*PerformConventionResponse, error)
 }
 
 type memberClient struct {
@@ -2678,9 +1872,9 @@ func (c *memberClient) CloseSession(ctx context.Context, in *CloseSessionRequest
 	return out, nil
 }
 
-func (c *memberClient) QueryStats(ctx context.Context, in *QueryStatsRequest, opts ...grpc.CallOption) (*QueryStatsResponse, error) {
-	out := new(QueryStatsResponse)
-	err := c.cc.Invoke(ctx, "/clusterpb.Member/QueryStats", in, out, opts...)
+func (c *memberClient) PerformConvention(ctx context.Context, in *PerformConventionRequest, opts ...grpc.CallOption) (*PerformConventionResponse, error) {
+	out := new(PerformConventionResponse)
+	err := c.cc.Invoke(ctx, "/clusterpb.Member/PerformConvention", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -2697,7 +1891,7 @@ type MemberServer interface {
 	DelMember(context.Context, *DelMemberRequest) (*DelMemberResponse, error)
 	SessionClosed(context.Context, *SessionClosedRequest) (*SessionClosedResponse, error)
 	CloseSession(context.Context, *CloseSessionRequest) (*CloseSessionResponse, error)
-	QueryStats(context.Context, *QueryStatsRequest) (*QueryStatsResponse, error)
+	PerformConvention(context.Context, *PerformConventionRequest) (*PerformConventionResponse, error)
 }
 
 // UnimplementedMemberServer can be embedded to have forward compatible implementations.
@@ -2728,8 +1922,8 @@ func (*UnimplementedMemberServer) SessionClosed(context.Context, *SessionClosedR
 func (*UnimplementedMemberServer) CloseSession(context.Context, *CloseSessionRequest) (*CloseSessionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CloseSession not implemented")
 }
-func (*UnimplementedMemberServer) QueryStats(context.Context, *QueryStatsRequest) (*QueryStatsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method QueryStats not implemented")
+func (*UnimplementedMemberServer) PerformConvention(context.Context, *PerformConventionRequest) (*PerformConventionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PerformConvention not implemented")
 }
 
 func RegisterMemberServer(s *grpc.Server, srv MemberServer) {
@@ -2880,20 +2074,20 @@ func _Member_CloseSession_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Member_QueryStats_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryStatsRequest)
+func _Member_PerformConvention_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PerformConventionRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MemberServer).QueryStats(ctx, in)
+		return srv.(MemberServer).PerformConvention(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/clusterpb.Member/QueryStats",
+		FullMethod: "/clusterpb.Member/PerformConvention",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MemberServer).QueryStats(ctx, req.(*QueryStatsRequest))
+		return srv.(MemberServer).PerformConvention(ctx, req.(*PerformConventionRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2935,8 +2129,8 @@ var _Member_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Member_CloseSession_Handler,
 		},
 		{
-			MethodName: "QueryStats",
-			Handler:    _Member_QueryStats_Handler,
+			MethodName: "PerformConvention",
+			Handler:    _Member_PerformConvention_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
