@@ -28,7 +28,6 @@ import (
 
 	"github.com/lonng/nano/serialize"
 	"github.com/lonng/nano/serialize/protobuf"
-	"github.com/urfave/cli"
 	"google.golang.org/grpc"
 )
 
@@ -60,9 +59,6 @@ var (
 
 	// GrpcOptions is options for grpc
 	GrpcOptions = []grpc.DialOption{grpc.WithInsecure()}
-
-	// Context stores flags info
-	Context *cli.Context
 )
 
 func init() {
