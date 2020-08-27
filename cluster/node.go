@@ -217,9 +217,14 @@ func (n *Node) Info() ([]*clusterpb.QueryStatsResponse, error) {
 		result = append(result, resp)
 	}
 
-	selfInfo := pipeline.PipeInfo.ToProto()
+	selfInfo := &clusterpb.QueryStatsResponse{
+		PipeInfo:    pipeline.PipeInfo.ToProto(),
+		ProcessInfo: nil,
+	}
 	selfInfo.PipeInfo.Addr = n.ServiceAddr
 	selfInfo.PipeInfo.Label = n.Options.Label
+	selfInfo.ProcessInfo = n.generateProcessInfo()
+
 	result = append(result, selfInfo)
 
 	return result, nil
@@ -442,12 +447,7 @@ func (n *Node) DelMember(_ context.Context, req *clusterpb.DelMemberRequest) (*c
 	return &clusterpb.DelMemberResponse{}, nil
 }
 
-// QueryStats is called by grpc `QueryStats`
-func (n *Node) QueryStats(_ context.Context, req *clusterpb.QueryStatsRequest) (*clusterpb.QueryStatsResponse, error) {
-	result := pipeline.PipeInfo.ToProto()
-	result.PipeInfo.Label = n.Options.Label
-	result.PipeInfo.Addr = n.ServiceAddr
-
+func (n *Node) generateProcessInfo() *clusterpb.ProcessInfo {
 	var memStats runtime.MemStats
 	runtime.ReadMemStats(&memStats)
 	enableGC := 0
@@ -466,8 +466,7 @@ func (n *Node) QueryStats(_ context.Context, req *clusterpb.QueryStatsRequest) (
 	for _, item := range memStats.PauseEnd {
 		pauseEnd = append(pauseEnd, int64(item))
 	}
-
-	result.ProcessInfo = &clusterpb.ProcessInfo{
+	processInfo := &clusterpb.ProcessInfo{
 		NumCPU:       int64(runtime.NumCPU()),
 		NumGoroutine: int64(runtime.NumGoroutine()),
 		Version:      runtime.Version(),
@@ -505,6 +504,19 @@ func (n *Node) QueryStats(_ context.Context, req *clusterpb.QueryStatsRequest) (
 			DebugGC:       int64(debugGC),
 		},
 	}
+	return processInfo
+}
+
+// QueryStats is called by grpc `QueryStats`
+func (n *Node) QueryStats(_ context.Context, req *clusterpb.QueryStatsRequest) (*clusterpb.QueryStatsResponse, error) {
+	result := &clusterpb.QueryStatsResponse{
+		PipeInfo:    pipeline.PipeInfo.ToProto(),
+		ProcessInfo: nil,
+	}
+	result.PipeInfo.Label = n.Options.Label
+	result.PipeInfo.Addr = n.ServiceAddr
+	result.ProcessInfo = n.generateProcessInfo()
+
 	return result, nil
 }
 

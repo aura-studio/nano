@@ -114,22 +114,21 @@ func (p *pipelineChannel) Process(s *session.Session, msg *message.Message) erro
 	return nil
 }
 
-func (info *Info) ToProto() *clusterpb.QueryStatsResponse {
-	result := &clusterpb.QueryStatsResponse{
-		PipeInfo: &clusterpb.PipeInfo{
-			Item:       &clusterpb.StatisticItem{
-				ReqCount:         info.Statistic.Summary.ReqCount,
-				TotalBytes:       info.Statistic.Summary.TotalBytes,
-				BytesPerReq:      info.Statistic.Summary.BytesPerReq,
-				TotalProcessTime: info.Statistic.Summary.TotalProcessTime,
-				AvgProcessTime:   info.Statistic.Summary.AvgProcessTime,
-			},
-			RouteItems: make([]*clusterpb.RouteStatistic, 0),
-			TypeItems:  make([]*clusterpb.TypeStatistic, 0),
+func (info *Info) ToProto() *clusterpb.PipeInfo {
+	result := &clusterpb.PipeInfo{
+		Item:       &clusterpb.StatisticItem{
+			ReqCount:         info.Statistic.Summary.ReqCount,
+			TotalBytes:       info.Statistic.Summary.TotalBytes,
+			BytesPerReq:      info.Statistic.Summary.BytesPerReq,
+			TotalProcessTime: info.Statistic.Summary.TotalProcessTime,
+			AvgProcessTime:   info.Statistic.Summary.AvgProcessTime,
 		},
+		RouteItems: make([]*clusterpb.RouteStatistic, 0),
+		TypeItems:  make([]*clusterpb.TypeStatistic, 0),
 	}
+
 	for route, item := range info.Statistic.RouteStatistic {
-		result.PipeInfo.RouteItems = append(result.PipeInfo.RouteItems, &clusterpb.RouteStatistic{
+		result.RouteItems = append(result.RouteItems, &clusterpb.RouteStatistic{
 			Route: route,
 			Item:  &clusterpb.StatisticItem{
 				ReqCount:         item.ReqCount,
@@ -141,7 +140,7 @@ func (info *Info) ToProto() *clusterpb.QueryStatsResponse {
 		})
 	}
 	for tp, item := range info.Statistic.TypeStatistic {
-		result.PipeInfo.TypeItems = append(result.PipeInfo.TypeItems, &clusterpb.TypeStatistic{
+		result.TypeItems = append(result.TypeItems, &clusterpb.TypeStatistic{
 			Type: int64(tp),
 			Item: &clusterpb.StatisticItem{
 				ReqCount:         item.ReqCount,
