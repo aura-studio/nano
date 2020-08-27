@@ -109,8 +109,8 @@ func (s *Session) ID() int64 {
 
 // Version returns current session version
 func (s *Session) Version() string {
-	s.Lock()
-	defer s.Unlock()
+	s.RLock()
+	defer s.RUnlock()
 
 	return s.version
 }
