@@ -112,9 +112,7 @@ func (c *cluster) Register(_ context.Context, req *clusterpb.RegisterRequest) (*
 
 	log.Infoln("New peer register to cluster", req.MemberInfo.ServiceAddr)
 
-	// Register services to current node
-	c.currentNode.handler.addRemoteService(req.MemberInfo)
-	c.currentNode.handler.addRemoteDictionary(req.MemberInfo)
+	c.currentNode.handler.addMember(req.MemberInfo)
 
 	c.mu.Lock()
 	c.members = append(c.members, &Member{isMaster: false, memberInfo: req.MemberInfo})

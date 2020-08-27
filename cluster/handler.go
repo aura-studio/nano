@@ -94,41 +94,31 @@ func (h *LocalHandler) Register(comp component.Component, opts []component.Optio
 	return nil
 }
 
-func (h *LocalHandler) initRemoteService(members []*clusterpb.MemberInfo) {
+func (h *LocalHandler) initMembers(members []*clusterpb.MemberInfo) {
 	for _, m := range members {
-		h.addRemoteService(m)
+		h.addMember(m)
 	}
 }
 
-func (h *LocalHandler) initRemoteDictionary(members []*clusterpb.MemberInfo) {
-	for _, m := range members {
-		h.addRemoteDictionary(m)
-	}
-}
-
-func (h *LocalHandler) addRemoteService(member *clusterpb.MemberInfo) {
+func (h *LocalHandler) addMember(member *clusterpb.MemberInfo) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
 	v := member.Version
+	l := member.Label
 	for _, s := range member.Services {
 		if member.Version != "" {
-			log.Infof("Register remote service %s(%s)", s, v)
+			log.Infof("Register remote service %s(%s) from %s", s, v, l)
 		} else {
-			log.Infof("Register remote service %s", s)
+			log.Infof("Register remote service %s from %s", s, l)
 		}
 		if _, ok := h.remoteServices[s]; !ok {
 			h.remoteServices[s] = make(map[string][]*clusterpb.MemberInfo)
 		}
 		h.remoteServices[s][v] = append(h.remoteServices[s][v], member)
 	}
-}
 
-func (h *LocalHandler) addRemoteDictionary(member *clusterpb.MemberInfo) {
-	h.mu.Lock()
-	defer h.mu.Unlock()
-
-	var dictionary = make(map[string]uint16)
+	dictionary := make(map[string]uint16)
 	for _, d := range member.Dictionary {
 		dictionary[d.Route] = uint16(d.Code)
 	}
@@ -139,25 +129,32 @@ func (h *LocalHandler) delMember(addr string) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
-	for name, versionServices := range h.remoteServices {
-		for version, members := range versionServices {
-			for i, maddr := range members {
-				if addr == maddr.ServiceAddr {
+	for s, versionServices := range h.remoteServices {
+		for v, members := range versionServices {
+			for i, member := range members {
+				l := member.Label
+				if addr == member.ServiceAddr {
 					if i == len(members)-1 {
 						members = members[:i]
 					} else {
 						members = append(members[:i], members[i+1:]...)
 					}
+
+					if member.Version != "" {
+						log.Infof("Deregister remote service %s(%s) from %s", s, v, l)
+					} else {
+						log.Infof("Deregister remote service %s from %s", s, l)
+					}
 				}
 			}
-			if len(h.remoteServices[name][version]) == 0 {
-				delete(h.remoteServices[name], version)
+			if len(h.remoteServices[s][v]) == 0 {
+				delete(h.remoteServices[s], v)
 			} else {
-				h.remoteServices[name][version] = members
+				h.remoteServices[s][v] = members
 			}
 		}
-		if len(h.remoteServices[name]) == 0 {
-			delete(h.remoteServices, name)
+		if len(h.remoteServices[s]) == 0 {
+			delete(h.remoteServices, s)
 		}
 	}
 }
