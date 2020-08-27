@@ -12,7 +12,8 @@ func HandlerStatistic(s *session.Session, msg *message.Message) error {
 	if !msg.Compressed() {
 		dataLen += len(msg.Route)//if not compressed len(msg.Route) bytes for msg.Route
 	}
-
+	PipeInfoMutex.Lock()
+	defer PipeInfoMutex.Unlock()
 	PipeInfo.Statistic.Summary.ReqCount++
 	PipeInfo.Statistic.Summary.TotalBytes += int64(dataLen)
 

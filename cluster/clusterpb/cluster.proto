@@ -12,8 +12,9 @@ message DictionaryItem{
 message MemberInfo {
     string label = 1;
     string serviceAddr = 2;
-    repeated string services = 3;
-    repeated DictionaryItem dictionary = 4;
+    string version = 3;
+    repeated string services = 4;
+    repeated DictionaryItem dictionary = 5;
 }
 
 message RegisterRequest {
@@ -38,17 +39,21 @@ service Master {
 message RequestMessage {
     string gateAddr = 1;
     int64 sessionID = 2;
-    uint64 ID = 3;
-    string route = 4;
-    bytes data = 5;
+    string version = 3;
+    uint64 ID = 4;
+    int64 UID = 5;
+    string route = 6;
+    bytes data = 7;
 }
 
 message NotifyMessage {
     string gateAddr = 1;
     int64 sessionID = 2;
-    uint64 ID = 3;
-    string route = 4;
-    bytes data = 5;
+    string version = 3;
+    uint64 ID = 4;
+    int64 UID = 5;
+    string route = 6;
+    bytes data = 7;
 }
 
 message ResponseMessage {
@@ -116,10 +121,52 @@ message TypeStatistic {
     StatisticItem item = 2;
 }
 
+message MemStats {
+    int64 Alloc = 1;
+    int64 TotalAlloc = 2;
+    int64 Sys = 3;
+    int64 Lookups = 4;
+    int64 Mallocs = 5;
+    int64 Frees = 6;
+    int64 HeapAlloc = 7;
+    int64 HeapSys = 8;
+    int64 HeapIdle = 9;
+    int64 HeapInuse = 10;
+    int64 HeapReleased = 11;
+    int64 HeapObjects = 12;
+    int64 StackInuse = 13;
+    int64 StackSys = 14;
+    int64 MSpanInuse = 15;
+    int64 MSpanSys = 16;
+    int64 MCacheInuse = 17;
+    int64 MCacheSys = 18;
+    int64 BuckHashSys = 19;
+    int64 GCSys = 20;
+    int64 OtherSys = 21;
+    int64 NextGC = 22;
+    int64 LastGC = 23;
+    int64 PauseTotalNs = 24;
+    repeated int64 PauseNs = 25;
+    repeated int64 PauseEnd = 26;
+    int64 NumGC = 27;
+    int64 NumForcedGC = 28;
+    int64 GCCPUFraction = 29;
+    int64 EnableGC = 30;
+    int64 DebugGC = 31;
+}
+
+message ProcessInfo {
+    int64 NumCPU = 1;
+    int64 NumGoroutine = 2;
+    string Version = 3;
+    MemStats MemStats = 4;
+}
+
 message QueryStatsRequest {}
 
 message QueryStatsResponse {
     PipeInfo PipeInfo = 1;
+    ProcessInfo ProcessInfo = 2;
 }
 
 service Member {

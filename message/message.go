@@ -31,16 +31,15 @@ type Type byte
 
 // Message types
 const (
-	Request  Type = 0x00
-	Notify        = 0x01
-	Response      = 0x02
-	Push          = 0x03
+	Request Type = iota
+	Notify
+	Response
+	Push
 )
 
 const (
 	msgRouteNotCompressMask = 0x08
 	msgTypeMask             = 0x07
-	msgRouteLengthMask      = 0xFF
 	msgHeadLength           = 0x02
 )
 
@@ -119,17 +118,14 @@ func Encode(m *Message, routes map[string]uint16) ([]byte, error) {
 	if compressed {
 		// encode compressed route ID
 		binary.BigEndian.PutUint16(buf[offset:], code)
-		offset += 2
 	} else {
 		rl := uint16(len(m.Route))
 
 		// encode route string length
 		binary.BigEndian.PutUint16(buf[offset:], rl)
-		offset += 2
 
 		// encode route string
 		buf = append(buf, []byte(m.Route)...)
-		offset += uint64(rl)
 	}
 
 	buf = append(buf, m.Data...)

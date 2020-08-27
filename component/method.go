@@ -31,7 +31,7 @@ import (
 var (
 	typeOfError   = reflect.TypeOf((*error)(nil)).Elem()
 	typeOfBytes   = reflect.TypeOf(([]byte)(nil))
-	typeOfSession = reflect.TypeOf(session.New(nil))
+	typeOfSession = reflect.TypeOf(session.New(nil, 0))
 )
 
 func isExported(name string) bool {

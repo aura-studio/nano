@@ -54,6 +54,7 @@ type (
 )
 
 var PipeInfo *Info
+var PipeInfoMutex sync.Mutex
 
 func init() {
 	PipeInfo = &Info{

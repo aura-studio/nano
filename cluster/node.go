@@ -26,6 +26,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -51,6 +52,7 @@ type Options struct {
 	ClientAddr     string
 	Components     *component.Components
 	Label          string
+	Version        string
 	IsWebsocket    bool
 	TSLCertificate string
 	TSLKey         string
@@ -158,6 +160,7 @@ func (n *Node) initNode() error {
 			isMaster: true,
 			memberInfo: &clusterpb.MemberInfo{
 				Label:       n.Label,
+				Version:     n.Version,
 				ServiceAddr: n.ServiceAddr,
 				Services:    n.handler.LocalService(),
 				Dictionary:  n.handler.LocalDictionary(),
@@ -174,6 +177,7 @@ func (n *Node) initNode() error {
 		request := &clusterpb.RegisterRequest{
 			MemberInfo: &clusterpb.MemberInfo{
 				Label:       n.Label,
+				Version:     n.Version,
 				ServiceAddr: n.ServiceAddr,
 				Services:    n.handler.LocalService(),
 				Dictionary:  n.handler.LocalDictionary(),
@@ -337,7 +341,7 @@ func (n *Node) findSession(sid int64) *session.Session {
 	return s
 }
 
-func (n *Node) findOrCreateSession(sid int64, gateAddr string) (*session.Session, error) {
+func (n *Node) findOrCreateSession(sid int64, gateAddr string, version string, uid int64) (*session.Session, error) {
 	n.mu.RLock()
 	s, found := n.sessions[sid]
 	n.mu.RUnlock()
@@ -352,8 +356,9 @@ func (n *Node) findOrCreateSession(sid int64, gateAddr string) (*session.Session
 			rpcHandler: n.handler.processMessage,
 			gateAddr:   gateAddr,
 		}
-		s = session.New(ac)
-		s.SetID(sid)
+		s = session.New(ac, sid)
+		s.BindVersion(version)
+		s.BindUID(uid)
 		ac.session = s
 		n.mu.Lock()
 		n.sessions[sid] = s
@@ -370,7 +375,7 @@ func (n *Node) HandleRequest(_ context.Context, req *clusterpb.RequestMessage) (
 	if !found {
 		return nil, fmt.Errorf("service not found in current node: %v", req.Route)
 	}
-	s, err := n.findOrCreateSession(req.SessionID, req.GateAddr)
+	s, err := n.findOrCreateSession(req.SessionID, req.GateAddr, req.Version, req.UID)
 	if err != nil {
 		return nil, err
 	}
@@ -390,7 +395,7 @@ func (n *Node) HandleNotify(_ context.Context, req *clusterpb.NotifyMessage) (*c
 	if !found {
 		return nil, fmt.Errorf("service not found in current node: %v", req.Route)
 	}
-	s, err := n.findOrCreateSession(req.SessionID, req.GateAddr)
+	s, err := n.findOrCreateSession(req.SessionID, req.GateAddr, req.Version, req.UID)
 	if err != nil {
 		return nil, err
 	}
@@ -442,6 +447,64 @@ func (n *Node) QueryStats(_ context.Context, req *clusterpb.QueryStatsRequest) (
 	result := pipeline.PipeInfo.ToProto()
 	result.PipeInfo.Label = n.Options.Label
 	result.PipeInfo.Addr = n.ServiceAddr
+
+	var memStats runtime.MemStats
+	runtime.ReadMemStats(&memStats)
+	enableGC := 0
+	if memStats.EnableGC {
+		enableGC = 1
+	}
+	debugGC := 0
+	if memStats.DebugGC {
+		debugGC = 1
+	}
+	var pauseNs []int64
+	for _, item := range memStats.PauseNs {
+		pauseNs = append(pauseNs, int64(item))
+	}
+	var pauseEnd []int64
+	for _, item := range memStats.PauseEnd {
+		pauseEnd = append(pauseEnd, int64(item))
+	}
+
+	result.ProcessInfo = &clusterpb.ProcessInfo{
+		NumCPU:       int64(runtime.NumCPU()),
+		NumGoroutine: int64(runtime.NumGoroutine()),
+		Version:      runtime.Version(),
+		MemStats:     &clusterpb.MemStats{
+			Alloc:         int64(memStats.Alloc),
+			TotalAlloc:    int64(memStats.TotalAlloc),
+			Sys:           int64(memStats.Sys),
+			Lookups:       int64(memStats.Lookups),
+			Mallocs:       int64(memStats.Mallocs),
+			Frees:         int64(memStats.Frees),
+			HeapAlloc:     int64(memStats.HeapAlloc),
+			HeapSys:       int64(memStats.HeapSys),
+			HeapIdle:      int64(memStats.HeapIdle),
+			HeapInuse:     int64(memStats.HeapInuse),
+			HeapReleased:  int64(memStats.HeapReleased),
+			HeapObjects:   int64(memStats.HeapObjects),
+			StackInuse:    int64(memStats.StackInuse),
+			StackSys:      int64(memStats.StackSys),
+			MSpanInuse:    int64(memStats.MSpanInuse),
+			MSpanSys:      int64(memStats.MSpanSys),
+			MCacheInuse:   int64(memStats.MCacheInuse),
+			MCacheSys:     int64(memStats.MCacheSys),
+			BuckHashSys:   int64(memStats.BuckHashSys),
+			GCSys:         int64(memStats.GCSys),
+			OtherSys:      int64(memStats.OtherSys),
+			NextGC:        int64(memStats.NextGC),
+			LastGC:        int64(memStats.LastGC),
+			PauseTotalNs:  int64(memStats.PauseTotalNs),
+			PauseNs:       pauseNs,
+			PauseEnd:      pauseEnd,
+			NumGC:         int64(memStats.NumGC),
+			NumForcedGC:   int64(memStats.NumForcedGC),
+			GCCPUFraction: int64(memStats.GCCPUFraction),
+			EnableGC:      int64(enableGC),
+			DebugGC:       int64(debugGC),
+		},
+	}
 	return result, nil
 }
 
