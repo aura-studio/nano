@@ -185,8 +185,7 @@ func (n *Node) initNode() error {
 		for {
 			resp, err := client.Register(context.Background(), request)
 			if err == nil {
-				n.handler.initRemoteService(resp.Members)
-				n.handler.initRemoteDictionary(resp.Members)
+				n.handler.initMembers(resp.Members)
 				n.cluster.initMembers(resp.Members)
 				break
 			}
@@ -403,8 +402,7 @@ func (n *Node) HandleResponse(_ context.Context, req *clusterpb.ResponseMessage)
 
 // NewMember is called by grpc `NewMember`
 func (n *Node) NewMember(_ context.Context, req *clusterpb.NewMemberRequest) (*clusterpb.NewMemberResponse, error) {
-	n.handler.addRemoteService(req.MemberInfo)
-	n.handler.addRemoteDictionary(req.MemberInfo)
+	n.handler.addMember(req.MemberInfo)
 	n.cluster.addMember(req.MemberInfo)
 	return &clusterpb.NewMemberResponse{}, nil
 }
