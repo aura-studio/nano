@@ -10,6 +10,7 @@ import (
 type (
 	// Transmitter unicasts & multicasts msg to
 	Transmitter interface {
+		Label() string
 		Unicast(label string, sig int64, msg []byte) ([]byte, error)
 		Multicast(sig int64, msg []byte) ([]string, [][]byte, error)
 	}
