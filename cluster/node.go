@@ -45,7 +45,7 @@ import (
 // Options contains some configurations for current node
 type Options struct {
 	Pipeline       pipeline.Pipeline
-	Conventioner   Conventioner
+	Convention     Convention
 	IsMaster       bool
 	AdvertiseAddr  string
 	RetryInterval  time.Duration
@@ -66,28 +66,25 @@ type Node struct {
 	Options            // current node options
 	ServiceAddr string // current server service address (RPC)
 
-	cluster   *cluster
-	handler   *LocalHandler
-	server    *grpc.Server
-	rpcClient *rpcClient
+	cluster      *cluster
+	handler      *LocalHandler
+	server       *grpc.Server
+	rpcClient    *rpcClient
+	conventioner *conventioner
 
 	mu       sync.RWMutex
 	sessions map[int64]*session.Session
 }
 
-// CurrentNode is the running node.
-var CurrentNode *Node
-
 // Startup bootstraps a start up.
 func (n *Node) Startup() error {
-	CurrentNode = n
-
 	if n.ServiceAddr == "" {
 		return errors.New("service address cannot be empty in master node")
 	}
 	n.sessions = map[int64]*session.Session{}
 	n.cluster = newCluster(n)
-	n.handler = NewHandler(n, n.Pipeline)
+	n.handler = newHandler(n)
+	n.conventioner = newConventioner(n)
 	components := n.Components.List()
 	for _, c := range components {
 		err := n.handler.Register(c.Comp, c.Opts)
@@ -235,8 +232,6 @@ EXIT:
 	if n.server != nil {
 		n.server.GracefulStop()
 	}
-
-	CurrentNode = nil
 }
 
 // Enable current server accept connection
@@ -441,12 +436,12 @@ func (n *Node) CloseSession(_ context.Context, req *clusterpb.CloseSessionReques
 
 // PerformConvention implements the MemberServer interface
 func (n *Node) PerformConvention(_ context.Context, req *clusterpb.PerformConventionRequest) (*clusterpb.PerformConventionResponse, error) {
-	if n.Conventioner.Acceptor != nil {
-		data, err := n.Conventioner.Acceptor.React(req.Sig, req.Data)
+	if n.conventioner.acceptor != nil {
+		data, err := n.conventioner.acceptor.React(req.Sig, req.Data)
 		if err != nil {
 			return &clusterpb.PerformConventionResponse{}, fmt.Errorf("member %s react error %s", n.Label, err.Error())
 		}
-		return &clusterpb.PerformConventionResponse{Data: data}, nil
+		return &clusterpb.PerformConventionResponse{Label: n.Label, Data: data}, nil
 	}
 	return &clusterpb.PerformConventionResponse{}, nil
 }

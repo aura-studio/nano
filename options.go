@@ -26,7 +26,7 @@ func WithPipeline(pipeline pipeline.Pipeline) Option {
 // WithConvention sets the convention between
 func WithConvention(convention cluster.Convention) Option {
 	return func(opt *cluster.Options) {
-		opt.Conventioner = cluster.NewConventioner(convention)
+		opt.Convention = convention
 	}
 }
 

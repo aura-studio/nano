@@ -101,7 +101,8 @@ message PerformConventionRequest {
 }
 
 message PerformConventionResponse {
-    bytes data = 1;
+    string label = 1;
+    bytes data = 2;
 }
 
 service Member {

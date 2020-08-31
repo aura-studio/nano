@@ -58,14 +58,25 @@ type LocalHandler struct {
 	currentNode *Node
 }
 
-// NewHandler creates a new LocalHandler
-func NewHandler(currentNode *Node, pipeline pipeline.Pipeline) *LocalHandler {
+// newHandler creates a new LocalHandler
+func newHandler(currentNode *Node) *LocalHandler {
 	h := &LocalHandler{
 		localServices:  make(map[string]*component.Service),
 		localHandlers:  make(map[string]*component.Handler),
 		remoteServices: map[string]map[string][]*clusterpb.MemberInfo{},
-		pipeline:       pipeline,
+		pipeline:       currentNode.Pipeline,
 		currentNode:    currentNode,
+	}
+
+	return h
+}
+
+// NewHandler creates a new handler without node
+func NewHandler() *LocalHandler {
+	h := &LocalHandler{
+		localServices:  make(map[string]*component.Service),
+		localHandlers:  make(map[string]*component.Handler),
+		remoteServices: map[string]map[string][]*clusterpb.MemberInfo{},
 	}
 
 	return h

@@ -11,7 +11,7 @@ type (
 	// Transmitter unicasts & multicasts msg to
 	Transmitter interface {
 		Unicast(label string, sig int64, msg []byte) ([]byte, error)
-		Multicast(sig int64, msg []byte) ([][]byte, error)
+		Multicast(sig int64, msg []byte) ([]string, [][]byte, error)
 	}
 
 	// Acceptor
@@ -25,23 +25,26 @@ type (
 	}
 
 	// transmitter is to implement Transmitter
-	transmitter struct{}
+	transmitter struct {
+		node *Node
+	}
 
-	// Conventioner contains a transmitter & a acceptor
-	Conventioner struct {
-		Transmitter Transmitter
-		Acceptor    Acceptor
+	// conventioner contains a transmitter & a acceptor
+	conventioner struct {
+		transmitter Transmitter
+		acceptor    Acceptor
 	}
 )
 
-// NewConventioner creates a new conventioner
-func NewConventioner(convention Convention) Conventioner {
-	var transmitter = &transmitter{}
-	acceptor := convention.Establish(transmitter)
-
-	return Conventioner{
-		Transmitter: transmitter,
-		Acceptor:    acceptor,
+// newConventioner creates a new conventioner
+func newConventioner(node *Node) *conventioner {
+	transmitter := &transmitter{
+		node: node,
+	}
+	acceptor := node.Convention.Establish(transmitter)
+	return &conventioner{
+		transmitter: transmitter,
+		acceptor:    acceptor,
 	}
 }
 
@@ -49,12 +52,12 @@ func NewConventioner(convention Convention) Conventioner {
 func (t *transmitter) Unicast(label string, sig int64, msg []byte) ([]byte, error) {
 	request := &clusterpb.PerformConventionRequest{Sig: sig, Data: msg}
 
-	members := CurrentNode.cluster.remoteMemebers()
+	members := t.node.cluster.remoteMemebers()
 	remote, ok := members[label]
 	if !ok {
 		return nil, fmt.Errorf("member not found by label %s", label)
 	}
-	pool, err := CurrentNode.rpcClient.getConnPool(remote)
+	pool, err := t.node.rpcClient.getConnPool(remote)
 	if err != nil {
 		return nil, fmt.Errorf("cannot retrieve connection pool for address %s %v", remote, err)
 	}
@@ -68,21 +71,23 @@ func (t *transmitter) Unicast(label string, sig int64, msg []byte) ([]byte, erro
 }
 
 // Unicast implements Transmitter.Multicast
-func (t *transmitter) Multicast(sig int64, msg []byte) ([][]byte, error) {
-	var data [][]byte
+func (t *transmitter) Multicast(sig int64, msg []byte) ([]string, [][]byte, error) {
+	var labels []string
+	var datas [][]byte
 	request := &clusterpb.PerformConventionRequest{Sig: sig, Data: msg}
-	members := CurrentNode.cluster.remoteMemebers()
+	members := t.node.cluster.remoteMemebers()
 	for _, remote := range members {
-		pool, err := CurrentNode.rpcClient.getConnPool(remote)
+		pool, err := t.node.rpcClient.getConnPool(remote)
 		if err != nil {
-			return nil, fmt.Errorf("cannot retrieve connection pool for address %s %v", remote, err)
+			return nil, nil, fmt.Errorf("cannot retrieve connection pool for address %s %v", remote, err)
 		}
 		client := clusterpb.NewMemberClient(pool.Get())
 		resp, err := client.PerformConvention(context.Background(), request)
 		if err != nil {
-			return nil, fmt.Errorf("cannot perform convention in remote address %s %v", remote, err)
+			return nil, nil, fmt.Errorf("cannot perform convention in remote address %s %v", remote, err)
 		}
-		data = append(data, resp.Data)
+		labels = append(labels, resp.Label)
+		datas = append(datas, resp.Data)
 	}
-	return data, nil
+	return labels, datas, nil
 }
