@@ -10,7 +10,7 @@ import (
 type (
 	// Transmitter unicasts & multicasts msg to
 	Transmitter interface {
-		Label() string
+		Node() *Node
 		Unicast(label string, sig int64, msg []byte) ([]byte, error)
 		Multicast(sig int64, msg []byte) ([]string, [][]byte, error)
 	}
@@ -39,22 +39,22 @@ type (
 
 // newConventioner creates a new conventioner
 func newConventioner(node *Node) *conventioner {
-	if node.Convention == nil {
-		return nil
-	}
 	transmitter := &transmitter{
 		node: node,
 	}
-	acceptor := node.Convention.Establish(transmitter)
+	var acceptor Acceptor
+	if node.Convention != nil {
+		acceptor = node.Convention.Establish(transmitter)
+	}
 	return &conventioner{
 		transmitter: transmitter,
 		acceptor:    acceptor,
 	}
 }
 
-// Label returns current node label
-func (t *transmitter) Label() string {
-	return t.node.Label
+// Node returns current node
+func (t *transmitter) Node() *Node {
+	return t.node
 }
 
 // Unicast implements Transmitter.Unicast

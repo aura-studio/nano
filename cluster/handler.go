@@ -170,6 +170,47 @@ func (h *LocalHandler) delMember(addr string) {
 	}
 }
 
+// FindVersions finds all versions for one service in cluster
+func (h *LocalHandler) FindVersions(service string) []string {
+	var versions []string
+
+	// Only lock remote services when read services
+	h.mu.RLock()
+	if s, ok := h.remoteServices[service]; ok {
+		for version := range s {
+			var found bool
+			for _, v := range versions {
+				if version == v {
+					found = true
+					break
+				}
+			}
+			if !found {
+				versions = append(versions, version)
+			}
+		}
+	}
+	h.mu.RUnlock()
+
+	if _, ok := h.localServices[service]; ok {
+		version := h.currentNode.Version
+		var found bool
+		for _, v := range versions {
+			if version == v {
+				found = true
+				break
+			}
+		}
+		fmt.Println(found, version)
+		if !found {
+			versions = append(versions, version)
+		}
+	}
+
+	sort.Strings(versions)
+	return versions
+}
+
 // LocalService transforms local services info from map to slice
 func (h *LocalHandler) LocalService() []string {
 	var result []string
