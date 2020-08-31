@@ -38,6 +38,9 @@ type (
 
 // newConventioner creates a new conventioner
 func newConventioner(node *Node) *conventioner {
+	if node.Convention == nil {
+		return nil
+	}
 	transmitter := &transmitter{
 		node: node,
 	}
@@ -73,7 +76,7 @@ func (t *transmitter) Unicast(label string, sig int64, msg []byte) ([]byte, erro
 // Unicast implements Transmitter.Multicast
 func (t *transmitter) Multicast(sig int64, msg []byte) ([]string, [][]byte, error) {
 	var labels []string
-	var datas [][]byte
+	var data [][]byte
 	request := &clusterpb.PerformConventionRequest{Sig: sig, Data: msg}
 	members := t.node.cluster.remoteMemebers()
 	for _, remote := range members {
@@ -87,7 +90,7 @@ func (t *transmitter) Multicast(sig int64, msg []byte) ([]string, [][]byte, erro
 			return nil, nil, fmt.Errorf("cannot perform convention in remote address %s %v", remote, err)
 		}
 		labels = append(labels, resp.Label)
-		datas = append(datas, resp.Data)
+		data = append(data, resp.Data)
 	}
-	return labels, datas, nil
+	return labels, data, nil
 }
