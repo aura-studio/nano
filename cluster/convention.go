@@ -51,6 +51,11 @@ func newConventioner(node *Node) *conventioner {
 	}
 }
 
+// Label returns current node label
+func (t *transmitter) Label() string {
+	return t.node.Label
+}
+
 // Unicast implements Transmitter.Unicast
 func (t *transmitter) Unicast(label string, sig int64, msg []byte) ([]byte, error) {
 	request := &clusterpb.PerformConventionRequest{Sig: sig, Data: msg}
