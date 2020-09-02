@@ -32,7 +32,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gorilla/websocket"
 	"github.com/lonng/nano/cluster/clusterpb"
 	"github.com/lonng/nano/component"
 	"github.com/lonng/nano/env"
@@ -466,15 +465,6 @@ func (h *LocalHandler) processMessage(s *session.Session, msg *message.Message, 
 	} else {
 		h.localProcess(handler, lastMid, s, msg)
 	}
-}
-
-func (h *LocalHandler) handleWS(conn *websocket.Conn) {
-	c, err := NewWSConn(conn)
-	if err != nil {
-		log.Errorln(err)
-		return
-	}
-	go h.handle(c)
 }
 
 func (h *LocalHandler) localProcess(handler *component.Handler, lastMid uint64, session *session.Session, msg *message.Message) {

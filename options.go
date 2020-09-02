@@ -1,7 +1,6 @@
 package nano
 
 import (
-	"net/http"
 	"time"
 
 	"github.com/lonng/nano/cluster"
@@ -10,6 +9,7 @@ import (
 	"github.com/lonng/nano/log"
 	"github.com/lonng/nano/pipeline"
 	"github.com/lonng/nano/serialize"
+	"github.com/lonng/nano/upgrader"
 	"google.golang.org/grpc"
 )
 
@@ -71,24 +71,10 @@ func WithComponents(components *component.Components) Option {
 	}
 }
 
-// WithCheckOriginFunc sets the function that check `Origin` in http headers
-func WithCheckOriginFunc(fn func(*http.Request) bool) Option {
-	return func(opt *cluster.Options) {
-		env.CheckOrigin = fn
-	}
-}
-
 // WithDebugMode makes 'nano' run under Debug mode.
 func WithDebugMode() Option {
 	return func(_ *cluster.Options) {
 		env.Debug = true
-	}
-}
-
-// WithWSPath sets root path for ws
-func WithWSPath(path string) Option {
-	return func(_ *cluster.Options) {
-		env.WSPath = path
 	}
 }
 
@@ -126,10 +112,17 @@ func WithVersion(version string) Option {
 	}
 }
 
-// WithIsWebsocket indicates whether current node WebSocket is enabled
-func WithIsWebsocket(enableWs bool) Option {
+// WithHttpUpgrader sets the http upgrader for socket
+func WithHttpUpgrader(upgrader upgrader.Upgrader) Option {
 	return func(opt *cluster.Options) {
-		opt.IsWebsocket = enableWs
+		opt.HttpUpgrader = upgrader
+	}
+}
+
+// WithHttpAddr sets the independent http address
+func WithHttpAddr(httpAddr string) Option {
+	return func(opt *cluster.Options) {
+		opt.HttpAddr = httpAddr
 	}
 }
 

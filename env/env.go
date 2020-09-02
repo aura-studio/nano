@@ -23,7 +23,6 @@
 package env
 
 import (
-	"net/http"
 	"time"
 
 	"github.com/lonng/nano/serialize"
@@ -38,14 +37,8 @@ var (
 	// Die waits for end application
 	Die chan bool
 
-	// CheckOrigin checks origin when websocket enabled
-	CheckOrigin func(*http.Request) bool
-
 	// Debug enables Debug mode
 	Debug bool
-
-	// WSPath is WebSocket path(eg: ws://127.0.0.1/WSPath)
-	WSPath string
 
 	// TimerPrecision indicates the precision of timer, default is time.Second
 	TimerPrecision = time.Second
@@ -64,6 +57,5 @@ var (
 func init() {
 	Die = make(chan bool)
 	Debug = false
-	CheckOrigin = func(_ *http.Request) bool { return true }
 	Serializer = protobuf.NewSerializer()
 }

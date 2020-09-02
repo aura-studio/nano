@@ -97,8 +97,16 @@ func Listen(addr string, opts ...Option) {
 	}
 
 	if node.ClientAddr != "" {
-		log.Infof("Startup *Nano gate server* %s, client address: %v, service address: %s",
-			app.name, node.ClientAddr, node.ServiceAddr)
+		if node.HttpUpgrader == nil {
+			log.Infof("Startup *Nano gate server* %s, client address: %v, service address: %s",
+				app.name, node.ClientAddr, node.ServiceAddr)
+		} else if node.HttpAddr == "" {
+			log.Infof("Startup *Nano gate server* %s, client http address: %v, service address: %s",
+				app.name, node.ClientAddr, node.ServiceAddr)
+		} else {
+			log.Infof("Startup *Nano gate server* %s, client address: %v, client http address: %v, service address: %s",
+				app.name, node.ClientAddr, node.HttpAddr, node.ServiceAddr)
+		}
 	} else {
 		log.Infof("Startup *Nano backend server* %s, service address %s",
 			app.name, node.ServiceAddr)

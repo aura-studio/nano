@@ -4,6 +4,7 @@ go 1.12
 
 require (
 	github.com/golang/protobuf v1.4.2
+	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/websocket v1.4.0
 	github.com/pingcap/check v0.0.0-20190102082844-67f458068fc8
 	github.com/urfave/cli v1.22.4
