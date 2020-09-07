@@ -200,7 +200,6 @@ func (h *LocalHandler) FindVersions(service string) []string {
 				break
 			}
 		}
-		fmt.Println(found, version)
 		if !found {
 			versions = append(versions, version)
 		}
