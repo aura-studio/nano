@@ -157,7 +157,7 @@ func (h *LocalHandler) delMember(addr string) {
 					}
 				}
 			}
-			if len(h.remoteServices[s][v]) == 0 {
+			if len(members) == 0 {
 				delete(h.remoteServices[s], v)
 			} else {
 				h.remoteServices[s][v] = members
