@@ -279,7 +279,6 @@ func (h *LocalHandler) handle(conn net.Conn) {
 
 		members := h.currentNode.cluster.remoteAddrs()
 		for _, remote := range members {
-			log.Infoln("Notify remote server success", remote)
 			pool, err := h.currentNode.rpcClient.getConnPool(remote)
 			if err != nil {
 				log.Errorln("Cannot retrieve connection pool for address", remote, err)
@@ -292,7 +291,7 @@ func (h *LocalHandler) handle(conn net.Conn) {
 				continue
 			}
 			if env.Debug {
-				log.Infoln("Notify remote server success", remote)
+				log.Infoln("Session Closed notify remote server success", remote)
 			}
 		}
 
