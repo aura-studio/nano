@@ -115,8 +115,22 @@ func (c *cluster) Register(_ context.Context, req *clusterpb.RegisterRequest) (*
 	c.currentNode.handler.addMember(req.MemberInfo)
 
 	c.mu.Lock()
+	defer c.mu.Unlock()
 	c.members = append(c.members, &Member{isMaster: false, memberInfo: req.MemberInfo})
-	c.mu.Unlock()
+
+	if c.currentNode.MasterPersist != nil {
+		var memberInfos []*clusterpb.MemberInfo
+		for _, member := range c.members {
+			if member.isMaster {
+				continue
+			}
+			memberInfos = append(memberInfos, member.MemberInfo())
+		}
+		if err := c.currentNode.MasterPersist.Set(memberInfos); err != nil {
+			return nil, err
+		}
+	}
+
 	return resp, nil
 }
 
@@ -159,13 +173,29 @@ func (c *cluster) Unregister(_ context.Context, req *clusterpb.UnregisterRequest
 
 	// Register services to current node
 	c.currentNode.handler.delMember(req.ServiceAddr)
+
 	c.mu.Lock()
+	defer c.mu.Unlock()
+
 	if index == len(c.members)-1 {
 		c.members = c.members[:index]
 	} else {
 		c.members = append(c.members[:index], c.members[index+1:]...)
 	}
-	c.mu.Unlock()
+
+	if c.currentNode.MasterPersist != nil {
+		var memberInfos []*clusterpb.MemberInfo
+		for _, member := range c.members {
+			if member.isMaster {
+				continue
+			}
+			memberInfos = append(memberInfos, member.MemberInfo())
+		}
+		if err := c.currentNode.MasterPersist.Set(memberInfos); err != nil {
+			return nil, err
+		}
+	}
+
 	return resp, nil
 }
 

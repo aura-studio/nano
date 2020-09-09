@@ -7,6 +7,7 @@ import (
 	"github.com/lonng/nano/component"
 	"github.com/lonng/nano/env"
 	"github.com/lonng/nano/log"
+	"github.com/lonng/nano/persistence"
 	"github.com/lonng/nano/pipeline"
 	"github.com/lonng/nano/serialize"
 	"github.com/lonng/nano/upgrader"
@@ -123,6 +124,13 @@ func WithHttpUpgrader(upgrader upgrader.Upgrader) Option {
 func WithHttpAddr(httpAddr string) Option {
 	return func(opt *cluster.Options) {
 		opt.HttpAddr = httpAddr
+	}
+}
+
+// WithMasterPersist sets the persistence of cluster
+func WithMasterPersist(persistence persistence.Persistence) Option {
+	return func(opt *cluster.Options) {
+		opt.MasterPersist = persistence
 	}
 }
 

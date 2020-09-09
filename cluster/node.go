@@ -34,6 +34,7 @@ import (
 	"github.com/lonng/nano/component"
 	"github.com/lonng/nano/log"
 	"github.com/lonng/nano/message"
+	"github.com/lonng/nano/persistence"
 	"github.com/lonng/nano/pipeline"
 	"github.com/lonng/nano/scheduler"
 	"github.com/lonng/nano/session"
@@ -45,6 +46,7 @@ import (
 type Options struct {
 	Pipeline       pipeline.Pipeline
 	Convention     Convention
+	MasterPersist    persistence.Persistence
 	IsMaster       bool
 	AdvertiseAddr  string
 	RetryInterval  time.Duration
@@ -162,6 +164,16 @@ func (n *Node) initNode() error {
 		}
 		n.cluster.members = append(n.cluster.members, member)
 		n.cluster.setRPCClient(n.rpcClient)
+		if n.MasterPersist != nil {
+			var memberInfos []*clusterpb.MemberInfo
+			if err := n.MasterPersist.Get(&memberInfos); err != nil {
+				return err
+			}
+			for _, memberInfo := range memberInfos {
+				n.cluster.members = append(n.cluster.members, &Member{isMaster: false, memberInfo: memberInfo})
+				n.handler.addMember(memberInfo)
+			}
+		}
 	} else {
 		pool, err := n.rpcClient.getConnPool(n.AdvertiseAddr)
 		if err != nil {
