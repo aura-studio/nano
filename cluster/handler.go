@@ -339,12 +339,14 @@ func (h *LocalHandler) processPacket(agent *agent, p *packet.Packet) error {
 
 	if agent.recvPckCnt == 1 {
 		agent.compressed = compressed
-		if compressed {
-			log.Printf("Use compressed router mode for agent, SessionID=%d",
-				agent.session.ID())
-		} else {
-			log.Printf("Use uncompressed router mode for agent, SessionID=%d",
-				agent.session.ID())
+		if env.Debug {
+			if compressed {
+				log.Printf("Use compressed router mode for agent, SessionID=%d",
+					agent.session.ID())
+			} else {
+				log.Printf("Use uncompressed router mode for agent, SessionID=%d",
+					agent.session.ID())
+			}
 		}
 	}
 
