@@ -73,9 +73,9 @@ func WithComponents(components *component.Components) Option {
 }
 
 // WithDebugMode makes 'nano' run under Debug mode.
-func WithDebugMode() Option {
+func WithDebugMode(debug bool) Option {
 	return func(_ *cluster.Options) {
-		env.Debug = true
+		env.Debug = debug
 	}
 }
 
