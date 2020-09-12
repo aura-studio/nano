@@ -155,6 +155,7 @@ func (h *LocalHandler) delMember(addr string) {
 					} else {
 						log.Infof("Deregister remote service %s from %s", s, l)
 					}
+					break
 				}
 			}
 			if len(members) == 0 {
