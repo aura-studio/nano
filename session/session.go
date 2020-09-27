@@ -41,23 +41,22 @@ type NetworkEntity interface {
 }
 
 // EventCallback is the func called after event trigged
-type EventCallback func()
+type EventCallback func(*Session, ...interface{})
 
 // Session represents a client session which could storage temp data during low-level
 // keep connected, all data will be released when the low-level connection was broken.
 // Session instance related to the client will be passed to Handler method as the first
 // parameter.
 type Session struct {
-	sync.RWMutex                                  // protect data
-	id           int64                            // session global unique id
-	version      string                           // version
-	uid          int64                            // binding user id
-	lastTime     int64                            // last heartbeat time
-	entity       NetworkEntity                    // low-level network entity
-	data         map[string]interface{}           // session data store
-	router       *Router                          // store remote addr
-	onEvents     map[interface{}][]func(*Session) // call EventCallback after event trigged
-	eventData    []interface{}                    // event passing args data
+	sync.RWMutex                                 // protect data
+	id           int64                           // session global unique id
+	version      string                          // version
+	uid          int64                           // binding user id
+	lastTime     int64                           // last heartbeat time
+	entity       NetworkEntity                   // low-level network entity
+	data         map[string]interface{}          // session data store
+	router       *Router                         // store remote addr
+	onEvents     map[interface{}][]EventCallback // call EventCallback after event trigged
 }
 
 // New returns a new session instance
@@ -70,7 +69,7 @@ func New(entity NetworkEntity, id int64) *Session {
 		data:     make(map[string]interface{}),
 		lastTime: time.Now().Unix(),
 		router:   newRouter(),
-		onEvents: make(map[interface{}][]func(*Session)),
+		onEvents: make(map[interface{}][]EventCallback),
 	}
 }
 
@@ -432,21 +431,21 @@ func (s *Session) Clear() {
 
 // On is to register callback on events
 func (s *Session) On(ev string, f func(s *Session)) {
+	s.onEvents[ev] = append(s.onEvents[ev], func(s *Session, i ...interface{}) {
+		f(s)
+	})
+}
+
+// OnData is to register callback on events
+func (s *Session) OnData(ev string, f func(s *Session, i ...interface{})) {
 	s.onEvents[ev] = append(s.onEvents[ev], f)
 }
 
 // Trigger is to trigger an event with args
-func (s *Session) Trigger(ev string, eventData ...interface{}) {
-	s.eventData = eventData
-	defer func() {
-		s.eventData = nil
-	}()
-
+func (s *Session) Trigger(ev string, i ...interface{}) {
+	data := deepcopy.Copy(i).([]interface{})
 	for _, f := range s.onEvents[ev] {
-		f(s)
+		copyData := deepcopy.Copy(data).([]interface{})
+		f(s, copyData...)
 	}
-}
-
-func (s *Session) EventData() []interface{} {
-	return deepcopy.Copy(s.eventData).([]interface{})
 }
