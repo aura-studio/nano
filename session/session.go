@@ -25,6 +25,8 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/mohae/deepcopy"
 )
 
 // NetworkEntity represent low-level network instance
@@ -55,6 +57,7 @@ type Session struct {
 	data         map[string]interface{}           // session data store
 	router       *Router                          // store remote addr
 	onEvents     map[interface{}][]func(*Session) // call EventCallback after event trigged
+	eventData    []interface{}                    // event passing args data
 }
 
 // New returns a new session instance
@@ -433,8 +436,17 @@ func (s *Session) On(ev string, f func(s *Session)) {
 }
 
 // Trigger is to trigger an event with args
-func (s *Session) Trigger(ev string) {
+func (s *Session) Trigger(ev string, eventData ...interface{}) {
+	s.eventData = eventData
+	defer func() {
+		s.eventData = nil
+	}()
+
 	for _, f := range s.onEvents[ev] {
 		f(s)
 	}
+}
+
+func (s *Session) EventData() []interface{} {
+	return deepcopy.Copy(s.eventData).([]interface{})
 }
