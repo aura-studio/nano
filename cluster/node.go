@@ -36,7 +36,6 @@ import (
 	"github.com/lonng/nano/message"
 	"github.com/lonng/nano/persistence"
 	"github.com/lonng/nano/pipeline"
-	"github.com/lonng/nano/scheduler"
 	"github.com/lonng/nano/session"
 	"github.com/lonng/nano/upgrader"
 	"google.golang.org/grpc"
@@ -46,7 +45,7 @@ import (
 type Options struct {
 	Pipeline       pipeline.Pipeline
 	Convention     Convention
-	MasterPersist    persistence.Persistence
+	MasterPersist  persistence.Persistence
 	IsMaster       bool
 	AdvertiseAddr  string
 	RetryInterval  time.Duration
@@ -329,7 +328,7 @@ func (n *Node) findOrCreateSession(sid int64, gateAddr string, version string, u
 		n.sessions[sid] = s
 		n.mu.Unlock()
 
-		scheduler.PushTask(func() { session.Inited(s) })
+		session.Inited(s)
 	}
 	return s, nil
 }
@@ -413,7 +412,7 @@ func (n *Node) SessionClosed(_ context.Context, req *clusterpb.SessionClosedRequ
 	delete(n.sessions, req.SessionID)
 	n.mu.Unlock()
 	if found {
-		scheduler.PushTask(func() { session.Closed(s) })
+		session.Closed(s)
 	}
 	return &clusterpb.SessionClosedResponse{}, nil
 }

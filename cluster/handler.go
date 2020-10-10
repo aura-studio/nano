@@ -39,7 +39,6 @@ import (
 	"github.com/lonng/nano/message"
 	"github.com/lonng/nano/packet"
 	"github.com/lonng/nano/pipeline"
-	"github.com/lonng/nano/scheduler"
 	"github.com/lonng/nano/session"
 )
 
@@ -266,7 +265,7 @@ func (h *LocalHandler) handle(conn net.Conn) {
 	if env.Debug {
 		log.Infof("New session established: %s", agent.String())
 	}
-	scheduler.PushTask(func() { session.Inited(agent.session) })
+	session.Inited(agent.session)
 
 	// guarantee agent related resource be destroyed
 	defer func() {

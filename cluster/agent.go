@@ -33,7 +33,6 @@ import (
 	"github.com/lonng/nano/log"
 	"github.com/lonng/nano/message"
 	"github.com/lonng/nano/pipeline"
-	"github.com/lonng/nano/scheduler"
 	"github.com/lonng/nano/service"
 	"github.com/lonng/nano/session"
 )
@@ -228,7 +227,7 @@ func (a *agent) Close() error {
 		// expect
 	default:
 		close(a.chDie)
-		scheduler.PushTask(func() { session.Closed(a.session) })
+		session.Closed(a.session)
 	}
 
 	return a.conn.Close()
