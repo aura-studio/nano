@@ -24,7 +24,6 @@ import (
 	"net"
 	"sync"
 	"sync/atomic"
-	"time"
 
 	"github.com/mohae/deepcopy"
 )
@@ -52,7 +51,6 @@ type Session struct {
 	id           int64                           // session global unique id
 	version      string                          // version
 	uid          int64                           // binding user id
-	lastTime     int64                           // last heartbeat time
 	entity       NetworkEntity                   // low-level network entity
 	data         map[string]interface{}          // session data store
 	router       *Router                         // store remote addr
@@ -67,7 +65,6 @@ func New(entity NetworkEntity, id int64) *Session {
 		version:  "",
 		entity:   entity,
 		data:     make(map[string]interface{}),
-		lastTime: time.Now().Unix(),
 		router:   newRouter(),
 		onEvents: make(map[interface{}][]EventCallback),
 	}
