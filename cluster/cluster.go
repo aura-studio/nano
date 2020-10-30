@@ -61,7 +61,7 @@ func (c *cluster) Register(_ context.Context, req *clusterpb.RegisterRequest) (*
 	}
 
 	if index >= 0 {
-		log.Warnf("address %s repeatedly registered, it will be unregistered before register", req.MemberInfo.ServiceAddr)
+		log.Warnf("Address %s repeatedly registered, it will be unregistered before register", req.MemberInfo.ServiceAddr)
 		// Notify registered node to update remote services
 		delMember := &clusterpb.DelMemberRequest{ServiceAddr: req.MemberInfo.ServiceAddr}
 		for _, m := range c.members {
@@ -75,7 +75,7 @@ func (c *cluster) Register(_ context.Context, req *clusterpb.RegisterRequest) (*
 			client := clusterpb.NewMemberClient(pool.Get())
 			_, err = client.DelMember(context.Background(), delMember)
 			if err != nil {
-				return nil, err
+				log.Warnln("Delete member failed", err)
 			}
 		}
 
@@ -106,7 +106,7 @@ func (c *cluster) Register(_ context.Context, req *clusterpb.RegisterRequest) (*
 		client := clusterpb.NewMemberClient(pool.Get())
 		_, err = client.NewMember(context.Background(), newMember)
 		if err != nil {
-			return nil, err
+			log.Warnln("New member failed", err)
 		}
 	}
 
@@ -165,7 +165,7 @@ func (c *cluster) Unregister(_ context.Context, req *clusterpb.UnregisterRequest
 		client := clusterpb.NewMemberClient(pool.Get())
 		_, err = client.DelMember(context.Background(), delMember)
 		if err != nil {
-			return nil, err
+			log.Warnln("Delete member failed", err)
 		}
 	}
 
