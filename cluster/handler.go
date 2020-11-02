@@ -308,7 +308,7 @@ func (h *LocalHandler) handle(conn net.Conn) {
 	for {
 		n, err := conn.Read(buf)
 		if err != nil {
-			log.Infof("Read %s, session will be closed immediately", err.Error())
+			log.Infof("Read [%s], session will be closed immediately", err.Error())
 			return
 		}
 
@@ -341,14 +341,20 @@ func (h *LocalHandler) processPacket(agent *agent, p *packet.Packet) error {
 	}
 
 	if agent.recvPckCnt == 1 {
+		h.mu.RLock()
+		version := h.versionDict[msg.ShortVer]
+		h.mu.RUnlock()
+		agent.session.BindShortVer(msg.ShortVer)
+		agent.session.BindVersion(version)
+
 		agent.compressed = compressed
 		if env.Debug {
 			if compressed {
-				log.Printf("Use compressed router mode for agent, SessionID=%d",
-					agent.session.ID())
+				log.Printf("Use compressed router mode for agent, SessionID=%d, Version=%s",
+					agent.session.ID(), agent.session.Version())
 			} else {
-				log.Printf("Use uncompressed router mode for agent, SessionID=%d",
-					agent.session.ID())
+				log.Printf("Use uncompressed router mode for agent, SessionID=%d, Version=%s",
+					agent.session.ID(), agent.session.Version())
 			}
 		}
 	}
@@ -370,7 +376,7 @@ func (h *LocalHandler) findMembers(service string, shortVer uint32) (string, []*
 	return version, h.remoteServices[service][""]
 }
 
-func (h *LocalHandler) remoteProcess(session *session.Session, msg *message.Message, noCopy bool) {
+func (h *LocalHandler) remoteProcess(s *session.Session, msg *message.Message, noCopy bool) {
 	index := strings.LastIndex(msg.Route, ".")
 	if index < 0 {
 		log.Errorf("nano/handler: invalid route %s", msg.Route)
@@ -386,18 +392,18 @@ func (h *LocalHandler) remoteProcess(session *session.Session, msg *message.Mess
 
 	if env.Debug {
 		log.Infof("Type=%s, Route=%s, ID=%d, Version=%s, UID=%d, Mid=%d, Data=%dbytes",
-			msg.Type.String(), msg.Route, session.ID(), env.Version, session.UID(), msg.ID, len(msg.Data))
+			msg.Type.String(), msg.Route, s.ID(), s.Version(), s.UID(), msg.ID, len(msg.Data))
 	}
 
 	// Select a remote service address
 	// 1. Use the service address directly if the router contains binding item
 	// 2. Select a remote service address randomly and bind to router
 	var remoteAddr string
-	if addr, found := session.Router().Find(service); found {
+	if addr, found := s.Router().Find(service); found {
 		remoteAddr = addr
 	} else {
 		remoteAddr = members[rand.Intn(len(members))].ServiceAddr
-		session.Router().Bind(service, remoteAddr)
+		s.Router().Bind(service, remoteAddr)
 	}
 	pool, err := h.currentNode.rpcClient.getConnPool(remoteAddr)
 	if err != nil {
@@ -412,8 +418,8 @@ func (h *LocalHandler) remoteProcess(session *session.Session, msg *message.Mess
 
 	// Retrieve gate address and session ID
 	gateAddr := h.currentNode.ServiceAddr
-	sessionID := session.ID()
-	switch v := session.NetworkEntity().(type) {
+	sessionID := s.ID()
+	switch v := s.NetworkEntity().(type) {
 	case *acceptor:
 		gateAddr = v.gateAddr
 		sessionID = v.sid
@@ -425,8 +431,9 @@ func (h *LocalHandler) remoteProcess(session *session.Session, msg *message.Mess
 		request := &clusterpb.RequestMessage{
 			GateAddr:  gateAddr,
 			SessionID: sessionID,
+			ShortVer:  s.ShortVer(),
 			ID:        msg.ID,
-			UID:       session.UID(),
+			UID:       s.UID(),
 			Route:     msg.Route,
 			Data:      data,
 		}
@@ -435,8 +442,9 @@ func (h *LocalHandler) remoteProcess(session *session.Session, msg *message.Mess
 		request := &clusterpb.NotifyMessage{
 			GateAddr:  gateAddr,
 			SessionID: sessionID,
+			ShortVer:  s.ShortVer(),
 			ID:        msg.ID,
-			UID:       session.UID(),
+			UID:       s.UID(),
 			Route:     msg.Route,
 			Data:      data,
 		}
@@ -468,9 +476,9 @@ func (h *LocalHandler) processMessage(s *session.Session, msg *message.Message, 
 	}
 }
 
-func (h *LocalHandler) localProcess(handler *component.Handler, lastMid uint64, session *session.Session, msg *message.Message) {
+func (h *LocalHandler) localProcess(handler *component.Handler, lastMid uint64, s *session.Session, msg *message.Message) {
 	if pipe := h.pipeline; pipe != nil {
-		err := pipe.Inbound().Process(session, msg)
+		err := pipe.Inbound().Process(s, msg)
 		if err != nil {
 			log.Errorln("Pipeline process failed: " + err.Error())
 			return
@@ -494,17 +502,17 @@ func (h *LocalHandler) localProcess(handler *component.Handler, lastMid uint64, 
 		switch d := data.(type) {
 		case []byte:
 			log.Infof("Type=%s, Route=%s, ID=%d, Version=%s, UID=%d, Mid=%d, Data=%dbytes",
-				msg.Type.String(), msg.Route, session.ID(), env.Version, session.UID(), msg.ID, len(d))
+				msg.Type.String(), msg.Route, s.ID(), s.Version(), s.UID(), msg.ID, len(d))
 		default:
 			log.Infof("Type=%s, Route=%s, ID=%d, Version=%s, UID=%d, Mid=%d, Data=%+v",
-				msg.Type.String(), msg.Route, session.ID(), env.Version, session.UID(), msg.ID, data)
+				msg.Type.String(), msg.Route, s.ID(), s.Version(), s.UID(), msg.ID, data)
 		}
 	}
 
-	args := []reflect.Value{handler.Receiver, reflect.ValueOf(session), reflect.ValueOf(data)}
+	args := []reflect.Value{handler.Receiver, reflect.ValueOf(s), reflect.ValueOf(data)}
 	task := func() {
 		if lastMid > 0 {
-			switch v := session.NetworkEntity().(type) {
+			switch v := s.NetworkEntity().(type) {
 			case *agent:
 				v.lastMid = lastMid
 			case *acceptor:
@@ -533,5 +541,5 @@ func (h *LocalHandler) localProcess(handler *component.Handler, lastMid uint64, 
 		log.Errorf("Service not found: %+v", serviceName)
 	}
 
-	service.Schedule(session, data, task)
+	service.Schedule(s, data, task)
 }

@@ -39,32 +39,36 @@ service Master {
 message RequestMessage {
     string gateAddr = 1;
     int64 sessionID = 2;
-    uint64 ID = 3;
-    int64 UID = 4;
-    string route = 5;
-    bytes data = 6;
+    uint32 shortVer = 3;
+    uint64 ID = 4;
+    int64 UID = 5;
+    string route = 6;
+    bytes data = 7;
 }
 
 message NotifyMessage {
     string gateAddr = 1;
     int64 sessionID = 2;
-    uint64 ID = 3;
-    int64 UID = 4;
-    string route = 5;
-    bytes data = 6;
+    uint32 shortVer = 3;
+    uint64 ID = 4;
+    int64 UID = 5;
+    string route = 6;
+    bytes data = 7;
 }
 
 message ResponseMessage {
     int64 sessionID = 1;
-    uint64 ID = 2;
-    string route = 3;
-    bytes data = 4;
+    uint32 shortVer = 2;
+    uint64 ID = 3;
+    string route = 4;
+    bytes data = 5;
 }
 
 message PushMessage {
     int64 sessionID = 1;
-    string route = 2;
-    bytes data = 3;
+    uint32 shortVer = 2;
+    string route = 3;
+    bytes data = 4;
 }
 
 message MemberHandleResponse {}

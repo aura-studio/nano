@@ -305,7 +305,7 @@ func (n *Node) findSession(sid int64) *session.Session {
 	return s
 }
 
-func (n *Node) findOrCreateSession(sid int64, gateAddr string, uid int64) (*session.Session, error) {
+func (n *Node) findOrCreateSession(sid int64, gateAddr string, uid int64, shortVer uint32) (*session.Session, error) {
 	n.mu.RLock()
 	s, found := n.sessions[sid]
 	n.mu.RUnlock()
@@ -321,6 +321,13 @@ func (n *Node) findOrCreateSession(sid int64, gateAddr string, uid int64) (*sess
 			gateAddr:   gateAddr,
 		}
 		s = session.New(ac, sid)
+
+		n.handler.mu.RLock()
+		version := n.handler.versionDict[shortVer]
+		n.handler.mu.RUnlock()
+		s.BindShortVer(shortVer)
+		s.BindVersion(version)
+
 		s.BindUID(uid)
 		ac.session = s
 		n.mu.Lock()
@@ -338,13 +345,13 @@ func (n *Node) HandleRequest(_ context.Context, req *clusterpb.RequestMessage) (
 	if !found {
 		return nil, fmt.Errorf("service not found in current node: %v", req.Route)
 	}
-	s, err := n.findOrCreateSession(req.SessionID, req.GateAddr, req.UID)
+	s, err := n.findOrCreateSession(req.SessionID, req.GateAddr, req.UID, req.ShortVer)
 	if err != nil {
 		return nil, err
 	}
 	msg := &message.Message{
 		Type:     message.Request,
-		ShortVer: env.ShortVersion,
+		ShortVer: s.ShortVer(),
 		ID:       req.ID,
 		Route:    req.Route,
 		Data:     req.Data,
@@ -359,13 +366,13 @@ func (n *Node) HandleNotify(_ context.Context, req *clusterpb.NotifyMessage) (*c
 	if !found {
 		return nil, fmt.Errorf("service not found in current node: %v", req.Route)
 	}
-	s, err := n.findOrCreateSession(req.SessionID, req.GateAddr, req.UID)
+	s, err := n.findOrCreateSession(req.SessionID, req.GateAddr, req.UID, req.ShortVer)
 	if err != nil {
 		return nil, err
 	}
 	msg := &message.Message{
 		Type:     message.Notify,
-		ShortVer: env.ShortVersion,
+		ShortVer: s.ShortVer(),
 		ID:       req.ID,
 		Route:    req.Route,
 		Data:     req.Data,

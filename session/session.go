@@ -49,6 +49,8 @@ type EventCallback func(*Session, ...interface{})
 type Session struct {
 	sync.RWMutex                                 // protect data
 	id           int64                           // session global unique id
+	shortVer     uint32                          // session short version
+	version      string                          // session version
 	uid          int64                           // binding user id
 	entity       NetworkEntity                   // low-level network entity
 	data         map[string]interface{}          // session data store
@@ -107,6 +109,22 @@ func (s *Session) ID() int64 {
 // UID returns uid that bind to current session
 func (s *Session) UID() int64 {
 	return atomic.LoadInt64(&s.uid)
+}
+
+func (s *Session) Version() string {
+	return s.version
+}
+
+func (s *Session) BindVersion(version string) {
+	s.version = version
+}
+
+func (s *Session) ShortVer() uint32 {
+	return s.shortVer
+}
+
+func (s *Session) BindShortVer(shortVer uint32) {
+	s.shortVer = shortVer
 }
 
 // LastMid returns the last message id

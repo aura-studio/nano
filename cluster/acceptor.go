@@ -32,15 +32,16 @@ func (a *acceptor) Push(route string, v interface{}) error {
 		switch d := v.(type) {
 		case []byte:
 			log.Infof("Type=Push, Route=%s, ID=%d, Version=%s, UID=%d, MID=%d, Data=%dbytes",
-				route, a.session.ID(), env.Version, a.session.UID(), 0, len(d))
+				route, a.session.ID(), a.session.Version(), a.session.UID(), 0, len(d))
 		default:
 			log.Infof("Type=Push, Route=%s, ID=%d, Version=%s, UID=%d, Mid=%d, Data=%+v",
-				route, a.session.ID(), env.Version, a.session.UID(), 0, v)
+				route, a.session.ID(), a.session.Version(), a.session.UID(), 0, v)
 		}
 	}
 
 	request := &clusterpb.PushMessage{
 		SessionID: a.sid,
+		ShortVer:  a.session.ShortVer(),
 		Route:     route,
 		Data:      data,
 	}
@@ -59,16 +60,16 @@ func (a *acceptor) RPC(route string, v interface{}) error {
 		switch d := v.(type) {
 		case []byte:
 			log.Infof("Type=RPC, Route=%s, ID=%d, Version=%s, UID=%d,  MID=%d, Data=%dbytes",
-				route, a.session.ID(), env.Version, a.session.UID(), a.lastMid, len(d))
+				route, a.session.ID(), a.session.Version(), a.session.UID(), a.lastMid, len(d))
 		default:
 			log.Infof("Type=RPC, Route=%s, ID=%d, Version=%s, UID=%d,  Mid=%d, Data=%+v",
-				route, a.session.ID(), env.Version, a.session.UID(), a.lastMid, v)
+				route, a.session.ID(), a.session.Version(), a.session.UID(), a.lastMid, v)
 		}
 	}
 
 	msg := &message.Message{
 		Type:     message.Notify,
-		ShortVer: env.ShortVersion,
+		ShortVer: a.session.ShortVer(),
 		ID:       a.lastMid,
 		Route:    route,
 		Data:     data,
@@ -99,15 +100,16 @@ func (a *acceptor) ResponseMid(mid uint64, route string, v interface{}) error {
 		switch d := v.(type) {
 		case []byte:
 			log.Infof("Type=Response, Route=%s, ID=%d, Version=%s, UID=%d,  MID=%d, Data=%dbytes",
-				route, a.session.ID(), env.Version, a.session.UID(), mid, len(d))
+				route, a.session.ID(), a.session.Version(), a.session.UID(), mid, len(d))
 		default:
 			log.Infof("Type=Response, Route=%s, ID=%d, Version=%s, UID=%d,  Mid=%d, Data=%+v",
-				route, a.session.ID(), env.Version, a.session.UID(), mid, v)
+				route, a.session.ID(), a.session.Version(), a.session.UID(), mid, v)
 		}
 	}
 
 	request := &clusterpb.ResponseMessage{
 		SessionID: a.sid,
+		ShortVer:  a.session.ShortVer(),
 		ID:        mid,
 		Route:     route,
 		Data:      data,
