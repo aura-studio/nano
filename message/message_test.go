@@ -18,7 +18,7 @@ func TestEncode(t *testing.T) {
 		ID:         100,
 		Route:      "test.test.test",
 		Data:       []byte(`hello world`),
-		compressed: true,
+		Compressed: true,
 	}
 	em1, err := Encode(m1, routes)
 	if err != nil {
@@ -104,7 +104,7 @@ func TestEncode(t *testing.T) {
 		Type:       Notify,
 		Route:      "test.test.test",
 		Data:       []byte(`hello world`),
-		compressed: true,
+		Compressed: true,
 	}
 	em5, err := Encode(m5, routes)
 	if err != nil {
@@ -168,7 +168,7 @@ func TestEncode(t *testing.T) {
 		Type:       Push,
 		Route:      "test.test.test3",
 		Data:       []byte(`hello world`),
-		compressed: true,
+		Compressed: true,
 	}
 	em8, err := Encode(m8, routes)
 	if err != nil {

@@ -52,6 +52,12 @@ var (
 
 	// GrpcOptions is options for grpc
 	GrpcOptions = []grpc.DialOption{grpc.WithInsecure()}
+
+	// Version
+	Version string
+
+	// ShortVersion is short for Version
+	ShortVersion uint32
 )
 
 func init() {

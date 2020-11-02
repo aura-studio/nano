@@ -7,6 +7,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/lonng/nano/env"
 	"github.com/lonng/nano/log"
 	"github.com/lonng/nano/serialize/protobuf"
 
@@ -171,10 +172,11 @@ func (c *Connector) Request(route string, v interface{}, callback Callback) erro
 	}
 
 	msg := &message.Message{
-		Type:  message.Request,
-		Route: route,
-		ID:    c.mid,
-		Data:  data,
+		Type:     message.Request,
+		ShortVer: env.ShortVersion,
+		Route:    route,
+		ID:       c.mid,
+		Data:     data,
 	}
 
 	c.setResponseHandler(c.mid, callback)
@@ -189,10 +191,11 @@ func (c *Connector) Request(route string, v interface{}, callback Callback) erro
 // RawRequest send a request []byte to server and register a callbck for the response
 func (c *Connector) RawRequest(route string, data []byte, callback Callback) error {
 	msg := &message.Message{
-		Type:  message.Request,
-		Route: route,
-		ID:    c.mid,
-		Data:  data,
+		Type:     message.Request,
+		ShortVer: env.ShortVersion,
+		Route:    route,
+		ID:       c.mid,
+		Data:     data,
 	}
 
 	c.setResponseHandler(c.mid, callback)
@@ -211,9 +214,10 @@ func (c *Connector) Notify(route string, v interface{}) error {
 		return err
 	}
 	msg := &message.Message{
-		Type:  message.Notify,
-		Route: route,
-		Data:  data,
+		Type:     message.Notify,
+		ShortVer: env.ShortVersion,
+		Route:    route,
+		Data:     data,
 	}
 	return c.sendMessage(msg)
 }
@@ -221,9 +225,10 @@ func (c *Connector) Notify(route string, v interface{}) error {
 // RawNotify send a []byte notification to server
 func (c *Connector) RawNotify(route string, data []byte) error {
 	msg := &message.Message{
-		Type:  message.Notify,
-		Route: route,
-		Data:  data,
+		Type:     message.Notify,
+		ShortVer: env.ShortVersion,
+		Route:    route,
+		Data:     data,
 	}
 	return c.sendMessage(msg)
 }

@@ -64,10 +64,11 @@ var (
 // Message represents a unmarshaled message or a message which to be marshaled
 type Message struct {
 	Type       Type   // message type
+	ShortVer   uint32 // message short version
 	ID         uint64 // unique id, zero while notify mode
 	Route      string // route for locating service
 	Data       []byte // payload
-	compressed bool   // is message compressed
+	Compressed bool   // is message compressed
 }
 
 // New returns a new message instance
@@ -82,7 +83,6 @@ func (m *Message) String() string {
 
 func invalidType(t Type) bool {
 	return t < Request || t > Push
-
 }
 
 // Encode marshals message to binary format. Different message types is corresponding to
@@ -95,7 +95,7 @@ func Encode(m *Message, routes map[string]uint16) ([]byte, error) {
 		return nil, ErrWrongMessageType
 	}
 	var offset uint64 = 0
-	buf := make([]byte, 11)
+	buf := make([]byte, 15)
 
 	// encode flag
 	flag := byte(m.Type)
@@ -105,6 +105,10 @@ func Encode(m *Message, routes map[string]uint16) ([]byte, error) {
 	}
 	buf[offset] = byte(flag)
 	offset++
+
+	// encode version ID
+	binary.BigEndian.PutUint32(buf[offset:], m.ShortVer)
+	offset += 4
 
 	// encode msg ID
 	binary.BigEndian.PutUint64(buf[offset:], m.ID)
@@ -140,17 +144,21 @@ func Decode(data []byte, codes map[uint16]string) (*Message, bool, error) {
 	flag := data[offset]
 	offset++
 	m.Type = Type(flag & msgTypeMask)
-	m.compressed = flag&msgRouteNotCompressMask == 0
+	m.Compressed = flag&msgRouteNotCompressMask == 0
 	if invalidType(m.Type) {
 		return nil, false, ErrWrongMessageType
 	}
+
+	// decode version ID
+	m.ShortVer = binary.BigEndian.Uint32(data[offset:])
+	offset += 4
 
 	// decode msg ID
 	m.ID = binary.BigEndian.Uint64(data[offset:])
 	offset += 8
 
 	// decode route
-	if m.compressed {
+	if m.Compressed {
 		// decode compressed route ID
 		code := binary.BigEndian.Uint16(data[offset:])
 		route, ok := codes[code]
@@ -171,5 +179,5 @@ func Decode(data []byte, codes map[uint16]string) (*Message, bool, error) {
 
 	// decode data
 	m.Data = data[offset:]
-	return m, m.compressed, nil
+	return m, m.Compressed, nil
 }

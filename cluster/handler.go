@@ -51,6 +51,7 @@ type LocalHandler struct {
 
 	mu             sync.RWMutex
 	remoteServices map[string]map[string][]*clusterpb.MemberInfo
+	versionDict    map[uint32]string
 
 	pipeline    pipeline.Pipeline
 	currentNode *Node
@@ -62,6 +63,7 @@ func newHandler(currentNode *Node) *LocalHandler {
 		localServices:  make(map[string]*component.Service),
 		localHandlers:  make(map[string]*component.Handler),
 		remoteServices: map[string]map[string][]*clusterpb.MemberInfo{},
+		versionDict:    map[uint32]string{},
 		pipeline:       currentNode.Pipeline,
 		currentNode:    currentNode,
 	}
@@ -125,6 +127,7 @@ func (h *LocalHandler) addMember(member *clusterpb.MemberInfo) {
 			h.remoteServices[s] = make(map[string][]*clusterpb.MemberInfo)
 		}
 		h.remoteServices[s][v] = append(h.remoteServices[s][v], member)
+		h.versionDict[message.ShortVersion(v)] = v
 	}
 
 	dictionary := make(map[string]uint16)
@@ -192,7 +195,7 @@ func (h *LocalHandler) FindVersions(service string) []string {
 	h.mu.RUnlock()
 
 	if _, ok := h.localServices[service]; ok {
-		version := h.currentNode.Version
+		version := env.Version
 		var found bool
 		for _, v := range versions {
 			if version == v {
@@ -356,14 +359,15 @@ func (h *LocalHandler) processPacket(agent *agent, p *packet.Packet) error {
 	return nil
 }
 
-func (h *LocalHandler) findMembers(service string, version string) []*clusterpb.MemberInfo {
+func (h *LocalHandler) findMembers(service string, shortVer uint32) (string, []*clusterpb.MemberInfo) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 
+	version := h.versionDict[shortVer]
 	if len(h.remoteServices[service][version]) > 0 {
-		return h.remoteServices[service][version]
+		return version, h.remoteServices[service][version]
 	}
-	return h.remoteServices[service][""]
+	return version, h.remoteServices[service][""]
 }
 
 func (h *LocalHandler) remoteProcess(session *session.Session, msg *message.Message, noCopy bool) {
@@ -374,8 +378,7 @@ func (h *LocalHandler) remoteProcess(session *session.Session, msg *message.Mess
 	}
 
 	service := msg.Route[:index]
-	version := session.Version()
-	members := h.findMembers(service, version)
+	version, members := h.findMembers(service, msg.ShortVer)
 	if len(members) == 0 {
 		log.Errorf("nano/handler: %s (version:%s) not found(forgot registered?)", msg.Route, version)
 		return
@@ -383,7 +386,7 @@ func (h *LocalHandler) remoteProcess(session *session.Session, msg *message.Mess
 
 	if env.Debug {
 		log.Infof("Type=%s, Route=%s, ID=%d, Version=%s, UID=%d, Mid=%d, Data=%dbytes",
-			msg.Type.String(), msg.Route, session.ID(), session.Version(), session.UID(), msg.ID, len(msg.Data))
+			msg.Type.String(), msg.Route, session.ID(), env.Version, session.UID(), msg.ID, len(msg.Data))
 	}
 
 	// Select a remote service address
@@ -422,7 +425,6 @@ func (h *LocalHandler) remoteProcess(session *session.Session, msg *message.Mess
 		request := &clusterpb.RequestMessage{
 			GateAddr:  gateAddr,
 			SessionID: sessionID,
-			Version:   version,
 			ID:        msg.ID,
 			UID:       session.UID(),
 			Route:     msg.Route,
@@ -433,7 +435,6 @@ func (h *LocalHandler) remoteProcess(session *session.Session, msg *message.Mess
 		request := &clusterpb.NotifyMessage{
 			GateAddr:  gateAddr,
 			SessionID: sessionID,
-			Version:   version,
 			ID:        msg.ID,
 			UID:       session.UID(),
 			Route:     msg.Route,
@@ -493,10 +494,10 @@ func (h *LocalHandler) localProcess(handler *component.Handler, lastMid uint64, 
 		switch d := data.(type) {
 		case []byte:
 			log.Infof("Type=%s, Route=%s, ID=%d, Version=%s, UID=%d, Mid=%d, Data=%dbytes",
-				msg.Type.String(), msg.Route, session.ID(), session.Version(), session.UID(), msg.ID, len(d))
+				msg.Type.String(), msg.Route, session.ID(), env.Version, session.UID(), msg.ID, len(d))
 		default:
 			log.Infof("Type=%s, Route=%s, ID=%d, Version=%s, UID=%d, Mid=%d, Data=%+v",
-				msg.Type.String(), msg.Route, session.ID(), session.Version(), session.UID(), msg.ID, data)
+				msg.Type.String(), msg.Route, session.ID(), env.Version, session.UID(), msg.ID, data)
 		}
 	}
 

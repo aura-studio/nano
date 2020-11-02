@@ -49,7 +49,6 @@ type EventCallback func(*Session, ...interface{})
 type Session struct {
 	sync.RWMutex                                 // protect data
 	id           int64                           // session global unique id
-	version      string                          // version
 	uid          int64                           // binding user id
 	entity       NetworkEntity                   // low-level network entity
 	data         map[string]interface{}          // session data store
@@ -62,7 +61,6 @@ type Session struct {
 func New(entity NetworkEntity, id int64) *Session {
 	return &Session{
 		id:       id,
-		version:  "",
 		entity:   entity,
 		data:     make(map[string]interface{}),
 		router:   newRouter(),
@@ -106,14 +104,6 @@ func (s *Session) ID() int64 {
 	return s.id
 }
 
-// Version returns current session version
-func (s *Session) Version() string {
-	s.RLock()
-	defer s.RUnlock()
-
-	return s.version
-}
-
 // UID returns uid that bind to current session
 func (s *Session) UID() int64 {
 	return atomic.LoadInt64(&s.uid)
@@ -122,13 +112,6 @@ func (s *Session) UID() int64 {
 // LastMid returns the last message id
 func (s *Session) LastMid() uint64 {
 	return s.entity.LastMid()
-}
-
-func (s *Session) BindVersion(version string) {
-	s.Lock()
-	defer s.Unlock()
-
-	s.version = version
 }
 
 // Bind bind UID to current session

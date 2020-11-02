@@ -7,6 +7,7 @@ import (
 	"github.com/lonng/nano/component"
 	"github.com/lonng/nano/env"
 	"github.com/lonng/nano/log"
+	"github.com/lonng/nano/message"
 	"github.com/lonng/nano/persistence"
 	"github.com/lonng/nano/pipeline"
 	"github.com/lonng/nano/serialize"
@@ -109,7 +110,8 @@ func WithLabel(label string) Option {
 // WithVersion sets the current node version in cluster
 func WithVersion(version string) Option {
 	return func(opt *cluster.Options) {
-		opt.Version = version
+		env.Version = version
+		env.ShortVersion = message.ShortVersion(version)
 	}
 }
 

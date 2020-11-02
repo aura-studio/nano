@@ -20,7 +20,12 @@
 
 package message
 
-import "github.com/lonng/nano/env"
+import (
+	"strconv"
+	"strings"
+
+	"github.com/lonng/nano/env"
+)
 
 func Serialize(v interface{}) ([]byte, error) {
 	if data, ok := v.([]byte); ok {
@@ -31,4 +36,17 @@ func Serialize(v interface{}) ([]byte, error) {
 		return nil, err
 	}
 	return data, nil
+}
+
+func ShortVersion(version string) uint32 {
+	if lastIndex := strings.LastIndex(version, "-"); lastIndex < 0 {
+		return 0
+	} else {
+		shortVer, err := strconv.ParseUint(version[lastIndex+1:], 16, 32)
+		if err != nil {
+			return 0
+		} else {
+			return uint32(shortVer)
+		}
+	}
 }

@@ -32,6 +32,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/lonng/nano/cluster/clusterpb"
 	"github.com/lonng/nano/component"
+	"github.com/lonng/nano/env"
 	"github.com/lonng/nano/log"
 	"github.com/lonng/nano/message"
 	"github.com/lonng/nano/persistence"
@@ -52,7 +53,6 @@ type Options struct {
 	ClientAddr     string
 	Components     *component.Components
 	Label          string
-	Version        string
 	HttpUpgrader   upgrader.Upgrader
 	HttpAddr       string
 	TSLCertificate string
@@ -155,7 +155,7 @@ func (n *Node) initNode() error {
 			isMaster: true,
 			memberInfo: &clusterpb.MemberInfo{
 				Label:       n.Label,
-				Version:     n.Version,
+				Version:     env.Version,
 				ServiceAddr: n.ServiceAddr,
 				Services:    n.handler.LocalService(),
 				Dictionary:  n.handler.LocalDictionary(),
@@ -182,7 +182,7 @@ func (n *Node) initNode() error {
 		request := &clusterpb.RegisterRequest{
 			MemberInfo: &clusterpb.MemberInfo{
 				Label:       n.Label,
-				Version:     n.Version,
+				Version:     env.Version,
 				ServiceAddr: n.ServiceAddr,
 				Services:    n.handler.LocalService(),
 				Dictionary:  n.handler.LocalDictionary(),
@@ -305,7 +305,7 @@ func (n *Node) findSession(sid int64) *session.Session {
 	return s
 }
 
-func (n *Node) findOrCreateSession(sid int64, gateAddr string, version string, uid int64) (*session.Session, error) {
+func (n *Node) findOrCreateSession(sid int64, gateAddr string, uid int64) (*session.Session, error) {
 	n.mu.RLock()
 	s, found := n.sessions[sid]
 	n.mu.RUnlock()
@@ -321,7 +321,6 @@ func (n *Node) findOrCreateSession(sid int64, gateAddr string, version string, u
 			gateAddr:   gateAddr,
 		}
 		s = session.New(ac, sid)
-		s.BindVersion(version)
 		s.BindUID(uid)
 		ac.session = s
 		n.mu.Lock()
@@ -339,15 +338,16 @@ func (n *Node) HandleRequest(_ context.Context, req *clusterpb.RequestMessage) (
 	if !found {
 		return nil, fmt.Errorf("service not found in current node: %v", req.Route)
 	}
-	s, err := n.findOrCreateSession(req.SessionID, req.GateAddr, req.Version, req.UID)
+	s, err := n.findOrCreateSession(req.SessionID, req.GateAddr, req.UID)
 	if err != nil {
 		return nil, err
 	}
 	msg := &message.Message{
-		Type:  message.Request,
-		ID:    req.ID,
-		Route: req.Route,
-		Data:  req.Data,
+		Type:     message.Request,
+		ShortVer: env.ShortVersion,
+		ID:       req.ID,
+		Route:    req.Route,
+		Data:     req.Data,
 	}
 	n.handler.localProcess(handler, req.ID, s, msg)
 	return &clusterpb.MemberHandleResponse{}, nil
@@ -359,15 +359,16 @@ func (n *Node) HandleNotify(_ context.Context, req *clusterpb.NotifyMessage) (*c
 	if !found {
 		return nil, fmt.Errorf("service not found in current node: %v", req.Route)
 	}
-	s, err := n.findOrCreateSession(req.SessionID, req.GateAddr, req.Version, req.UID)
+	s, err := n.findOrCreateSession(req.SessionID, req.GateAddr, req.UID)
 	if err != nil {
 		return nil, err
 	}
 	msg := &message.Message{
-		Type:  message.Notify,
-		ID:    req.ID,
-		Route: req.Route,
-		Data:  req.Data,
+		Type:     message.Notify,
+		ShortVer: env.ShortVersion,
+		ID:       req.ID,
+		Route:    req.Route,
+		Data:     req.Data,
 	}
 	n.handler.localProcess(handler, req.ID, s, msg)
 	return &clusterpb.MemberHandleResponse{}, nil
