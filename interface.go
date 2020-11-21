@@ -38,6 +38,8 @@ import (
 
 var running int32
 
+var chStart = make(chan struct{}, 1)
+
 var (
 	// app represents the current server process
 	app = &struct {
@@ -118,6 +120,8 @@ func Listen(addr string, opts ...Option) {
 	sg := make(chan os.Signal)
 	signal.Notify(sg, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGTERM)
 
+	chStart <- struct{}{}
+
 	select {
 	case <-env.Die:
 		log.Infoln("The app will shutdown in a few seconds")
@@ -135,4 +139,8 @@ func Listen(addr string, opts ...Option) {
 // Shutdown send a signal to let 'nano' shutdown itself.
 func Shutdown() {
 	close(env.Die)
+}
+
+func Started() <-chan struct{} {
+	return chStart
 }
