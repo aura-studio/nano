@@ -38,7 +38,7 @@ import (
 
 var running int32
 
-var chStart = make(chan struct{}, 1)
+var chReady = make(chan struct{}, 1)
 
 var (
 	// app represents the current server process
@@ -120,7 +120,7 @@ func Listen(addr string, opts ...Option) {
 	sg := make(chan os.Signal)
 	signal.Notify(sg, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGTERM)
 
-	chStart <- struct{}{}
+	chReady <- struct{}{}
 
 	select {
 	case <-env.Die:
@@ -141,6 +141,6 @@ func Shutdown() {
 	close(env.Die)
 }
 
-func Started() <-chan struct{} {
-	return chStart
+func Ready() <-chan struct{} {
+	return chReady
 }

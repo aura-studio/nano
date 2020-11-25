@@ -16,10 +16,9 @@ import (
 )
 
 const (
-	addr     = ":12345" // local address
-	conc     = 1000     // concurrent client count
-	duration = 5        // max test time
-	wait     = 1        // time to wait for server startup
+	addr    = ":12345" // local address
+	conc    = 1000     // concurrent client count
+	timeout = 5        // max test time
 )
 
 var (
@@ -29,20 +28,13 @@ var (
 func client(t *testing.T) {
 	c := connector.NewConnector()
 
-	chReady := make(chan struct{})
-	c.OnConnected(func() {
-		// t.Log("connected")
-		chReady <- struct{}{}
-	})
-
 	if err := c.Start(addr); err != nil {
 		panic(err)
 	}
-
 	c.On("pong", func(data interface{}) {
 		// t.Log("pong received")
 	})
-	<-chReady
+	<-c.Ready()
 	for {
 		err := c.Notify("TestHandler.Ping", &testdata.Ping{})
 		if err != nil {
@@ -65,7 +57,7 @@ func TestPingPong(t *testing.T) {
 	go server(t)
 
 	// wait server startup
-	time.Sleep(wait * time.Second)
+	<-nano.Ready()
 	for i := 0; i < conc; i++ {
 		go client(t)
 	}
@@ -76,7 +68,7 @@ func TestPingPong(t *testing.T) {
 	signal.Notify(sg, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL)
 
 	select {
-	case <-time.After(duration * time.Second):
+	case <-time.After(timeout * time.Second):
 	case <-sg:
 	}
 }

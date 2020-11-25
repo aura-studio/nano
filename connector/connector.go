@@ -26,12 +26,14 @@ type (
 	Connector struct {
 		Options
 
-		conn      net.Conn       // low-level connection
-		codec     *codec.Decoder // decoder
-		die       chan struct{}  // connector close channel
-		chSend    chan []byte    // send queue
-		mid       uint64         // message id
-		connected int32          // connected state 1: disconnected : 0
+		conn              net.Conn       // low-level connection
+		codec             *codec.Decoder // decoder
+		die               chan struct{}  // connector close channel
+		chSend            chan []byte    // send queue
+		mid               uint64         // message id
+		connected         int32          // connected state 1: disconnected : 0
+		connectedCallback func()         // connected callback
+		chReady           chan struct{}  // connector ready channel
 
 		// events handler
 		muEvents        sync.RWMutex
@@ -41,8 +43,6 @@ type (
 		// response handler
 		muResponses sync.RWMutex
 		responses   map[uint64]Callback
-
-		connectedCallback func() // connected callback
 
 		routes map[string]uint16 // copy system routes for agent
 		codes  map[uint16]string // copy system codes for agent
@@ -56,15 +56,17 @@ func NewConnector(opts ...Option) *Connector {
 			dictionary: make(map[string]uint16),
 			serializer: protobuf.NewSerializer(),
 		},
-		die:       make(chan struct{}),
-		codec:     codec.NewDecoder(),
-		chSend:    make(chan []byte, 256),
-		mid:       1,
-		connected: 0,
-		events:    map[string]Callback{},
-		responses: map[uint64]Callback{},
-		routes:    make(map[string]uint16),
-		codes:     make(map[uint16]string),
+		die:               make(chan struct{}),
+		codec:             codec.NewDecoder(),
+		chSend:            make(chan []byte, 256),
+		mid:               1,
+		connected:         0,
+		connectedCallback: func() {},
+		chReady:           make(chan struct{}, 1),
+		events:            map[string]Callback{},
+		responses:         map[uint64]Callback{},
+		routes:            make(map[string]uint16),
+		codes:             make(map[uint16]string),
 	}
 
 	for i := range opts {
@@ -95,6 +97,7 @@ func (c *Connector) StartWithTimeout(addr string, timeout time.Duration) error {
 
 	atomic.StoreInt32(&c.connected, 1)
 	go c.connectedCallback()
+	c.chReady <- struct{}{}
 
 	return nil
 }
@@ -114,40 +117,14 @@ func (c *Connector) Start(addr string) error {
 
 	atomic.StoreInt32(&c.connected, 1)
 	go c.connectedCallback()
+	c.chReady <- struct{}{}
 
 	return nil
 }
 
-// // StartWS connects to websocket server
-// func (c *Connector) StartWS(addr string) error {
-// 	u := url.URL{Scheme: "ws", Host: addr, Path: c.wsPath}
-// 	dialer := websocket.DefaultDialer
-// 	var conn *websocket.Conn
-// 	var err error
-// 	conn, _, err = dialer.Dial(u.String(), nil)
-// 	if err != nil {
-// 		u.Scheme = "wss"
-// 		dialer.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-// 		conn, _, err = dialer.Dial(u.String(), nil)
-// 		if err != nil {
-// 			return err
-// 		}
-// 	}
-
-// 	c.conn, err = cluster.NewWSConn(conn)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	go c.write()
-
-// 	go c.read()
-
-// 	atomic.StoreInt32(&c.connected, 1)
-// 	go c.connectedCallback()
-
-// 	return nil
-// }
+func (c *Connector) Ready() <-chan struct{} {
+	return c.chReady
+}
 
 // Name returns the name for connector
 func (c *Connector) Name() string {
@@ -166,30 +143,18 @@ func (c *Connector) GetMid() uint64 {
 
 // Request send a request to server and register a callbck for the response
 func (c *Connector) Request(route string, v interface{}, callback Callback) error {
-	data, err := c.Serialize(v)
-	if err != nil {
-		return err
+	var data []byte
+	switch v := v.(type) {
+	case []byte:
+		data = v
+	default:
+		var err error
+		data, err = c.Serialize(v)
+		if err != nil {
+			return err
+		}
 	}
 
-	msg := &message.Message{
-		Type:     message.Request,
-		ShortVer: env.ShortVersion,
-		Route:    route,
-		ID:       c.mid,
-		Data:     data,
-	}
-
-	c.setResponseHandler(c.mid, callback)
-	if err := c.sendMessage(msg); err != nil {
-		c.setResponseHandler(c.mid, nil)
-		return err
-	}
-
-	return nil
-}
-
-// RawRequest send a request []byte to server and register a callbck for the response
-func (c *Connector) RawRequest(route string, data []byte, callback Callback) error {
 	msg := &message.Message{
 		Type:     message.Request,
 		ShortVer: env.ShortVersion,
@@ -209,21 +174,18 @@ func (c *Connector) RawRequest(route string, data []byte, callback Callback) err
 
 // Notify send a notification to server
 func (c *Connector) Notify(route string, v interface{}) error {
-	data, err := c.Serialize(v)
-	if err != nil {
-		return err
+	var data []byte
+	switch v := v.(type) {
+	case []byte:
+		data = v
+	default:
+		var err error
+		data, err = c.Serialize(v)
+		if err != nil {
+			return err
+		}
 	}
-	msg := &message.Message{
-		Type:     message.Notify,
-		ShortVer: env.ShortVersion,
-		Route:    route,
-		Data:     data,
-	}
-	return c.sendMessage(msg)
-}
 
-// RawNotify send a []byte notification to server
-func (c *Connector) RawNotify(route string, data []byte) error {
 	msg := &message.Message{
 		Type:     message.Notify,
 		ShortVer: env.ShortVersion,
@@ -249,7 +211,7 @@ func (c *Connector) OnUnexpectedEvent(callback Callback) {
 // Close closes the connection, and shutdown the benchmark
 func (c *Connector) Close() {
 	defer func() {
-		recover()
+		_ = recover()
 	}()
 	c.conn.Close()
 	close(c.die)
