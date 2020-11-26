@@ -26,14 +26,14 @@ type (
 	Connector struct {
 		Options
 
-		conn              net.Conn       // low-level connection
-		codec             *codec.Decoder // decoder
-		die               chan struct{}  // connector close channel
-		chSend            chan []byte    // send queue
-		mid               uint64         // message id
-		connected         int32          // connected state 1: disconnected : 0
-		connectedCallback func()         // connected callback
-		chReady           chan struct{}  // connector ready channel
+		conn           net.Conn       // low-level connection
+		codec          *codec.Decoder // decoder
+		die            chan struct{}  // connector close channel
+		chSend         chan []byte    // send queue
+		mid            uint64         // message id
+		connected      int32          // connected state 1: disconnected : 0
+		connectedEvent Callback       // connected callback
+		chReady        chan struct{}  // connector ready channel
 
 		// events handler
 		muEvents        sync.RWMutex
@@ -56,17 +56,18 @@ func NewConnector(opts ...Option) *Connector {
 			dictionary: make(map[string]uint16),
 			serializer: protobuf.NewSerializer(),
 		},
-		die:               make(chan struct{}),
-		codec:             codec.NewDecoder(),
-		chSend:            make(chan []byte, 256),
-		mid:               1,
-		connected:         0,
-		connectedCallback: func() {},
-		chReady:           make(chan struct{}, 1),
-		events:            map[string]Callback{},
-		responses:         map[uint64]Callback{},
-		routes:            make(map[string]uint16),
-		codes:             make(map[uint16]string),
+		die:             make(chan struct{}),
+		codec:           codec.NewDecoder(),
+		chSend:          make(chan []byte, 256),
+		mid:             1,
+		connected:       0,
+		connectedEvent:  func(data interface{}) {},
+		chReady:         make(chan struct{}, 1),
+		events:          map[string]Callback{},
+		unexpectedEvent: func(data interface{}) {},
+		responses:       map[uint64]Callback{},
+		routes:          make(map[string]uint16),
+		codes:           make(map[uint16]string),
 	}
 
 	for i := range opts {
@@ -96,7 +97,7 @@ func (c *Connector) StartWithTimeout(addr string, timeout time.Duration) error {
 	go c.read()
 
 	atomic.StoreInt32(&c.connected, 1)
-	go c.connectedCallback()
+	go c.connectedEvent(nil)
 	c.chReady <- struct{}{}
 
 	return nil
@@ -116,7 +117,7 @@ func (c *Connector) Start(addr string) error {
 	go c.read()
 
 	atomic.StoreInt32(&c.connected, 1)
-	go c.connectedCallback()
+	go c.connectedEvent(nil)
 	c.chReady <- struct{}{}
 
 	return nil
@@ -132,8 +133,8 @@ func (c *Connector) Name() string {
 }
 
 // OnConnected set the callback which will be called when the client connected to the server
-func (c *Connector) OnConnected(callback func()) {
-	c.connectedCallback = callback
+func (c *Connector) OnConnected(callback Callback) {
+	c.connectedEvent = callback
 }
 
 // GetMid returns current message id
