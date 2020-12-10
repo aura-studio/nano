@@ -23,6 +23,7 @@ package cluster
 import (
 	"context"
 	"fmt"
+	"io"
 	"math/rand"
 	"net"
 	"reflect"
@@ -308,7 +309,9 @@ func (h *LocalHandler) handle(conn net.Conn) {
 	for {
 		n, err := conn.Read(buf)
 		if err != nil {
-			log.Infof("Read [%s], session will be closed immediately", err.Error())
+			if err != io.EOF {
+				log.Infof("Read [%s], session will be closed immediately", err.Error())
+			}
 			return
 		}
 
