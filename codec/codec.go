@@ -25,13 +25,14 @@ import (
 	"encoding/binary"
 	"errors"
 
+	"github.com/lonng/nano/env"
 	"github.com/lonng/nano/packet"
 )
 
 // Codec constants.
 const (
 	HeadLength    = 4
-	MaxPacketSize = 64 * 1024 * 1024
+	MaxPacketSize = 64 * 1024
 )
 
 // ErrPacketSizeExcced is the error used for encode/decode.
@@ -56,9 +57,10 @@ func (c *Decoder) forward() error {
 	c.size = int(binary.BigEndian.Uint32(header[:]))
 
 	// packet length limitation
-	if c.size > MaxPacketSize {
+	if !env.Debug && c.size > MaxPacketSize {
 		return ErrPacketSizeExcced
 	}
+
 	return nil
 }
 
