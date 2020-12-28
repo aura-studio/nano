@@ -31,7 +31,7 @@ import (
 // Codec constants.
 const (
 	HeadLength    = 4
-	MaxPacketSize = 64 * 1024
+	MaxPacketSize = 64 * 1024 * 1024
 )
 
 // ErrPacketSizeExcced is the error used for encode/decode.
