@@ -57,7 +57,7 @@ func (c *Decoder) forward() error {
 	c.size = int(binary.BigEndian.Uint32(header[:]))
 
 	// packet length limitation
-	if !env.Debug && c.size > MaxPacketSize {
+	if env.Safe && c.size > MaxPacketSize {
 		return ErrPacketSizeExcced
 	}
 

@@ -80,6 +80,13 @@ func WithDebugMode(debug bool) Option {
 	}
 }
 
+// WithSafeMode makes 'nano' run under Safe mode.
+func WithSafeMode(safe bool) Option {
+	return func(_ *cluster.Options) {
+		env.Safe = safe
+	}
+}
+
 // WithTimerPrecision sets the ticker precision, and time precision can not less
 // than a Millisecond, and can not change after application running. The default
 // precision is time.Second

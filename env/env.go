@@ -40,6 +40,9 @@ var (
 	// Debug enables Debug mode
 	Debug bool
 
+	// SafeMode enable Safe mode
+	Safe bool
+
 	// TimerPrecision indicates the precision of timer, default is time.Second
 	TimerPrecision = time.Second
 
@@ -63,5 +66,6 @@ var (
 func init() {
 	Die = make(chan bool)
 	Debug = false
+	Safe = true
 	Serializer = protobuf.NewSerializer()
 }
