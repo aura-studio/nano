@@ -10,6 +10,8 @@ import (
 
 // StdoutConfig stores the configuration of StdoutHook
 type StdoutConfig struct {
+	Level  string
+	Levels []string
 }
 
 // StdoutHook is for stdout
@@ -38,15 +40,25 @@ func NewStdoutHook(name string, processor *Processor, config []byte,
 		return nil, err
 	}
 
+	var logLevels []logrus.Level
+	switch {
+	case c.Level != "":
+		logLevels = aboveLevel(c.Level)
+	case len(c.Levels) > 0:
+		logLevels = parseLevels(c.Levels)
+	default:
+		logLevels = []logrus.Level{
+			logrus.InfoLevel,
+			logrus.DebugLevel,
+		}
+	}
+
 	w := writer.Hook{
 		Writer: &stdoutWriter{
 			processor: processor,
 			writer:    getStdout(),
 		},
-		LogLevels: []logrus.Level{
-			logrus.InfoLevel,
-			logrus.DebugLevel,
-		},
+		LogLevels: logLevels,
 	}
 	return &StdoutHook{w, processor}, nil
 }

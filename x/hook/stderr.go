@@ -10,6 +10,8 @@ import (
 
 // StderrConfig stores the configuration of StderrHook
 type StderrConfig struct {
+	Level  string
+	Levels []string
 }
 
 // StderrHook is for stdout
@@ -38,17 +40,27 @@ func NewStderrHook(name string, processor *Processor, config []byte,
 		return nil, err
 	}
 
+	var logLevels []logrus.Level
+	switch {
+	case c.Level != "":
+		logLevels = aboveLevel(c.Level)
+	case len(c.Levels) > 0:
+		logLevels = parseLevels(c.Levels)
+	default:
+		logLevels = []logrus.Level{
+			logrus.PanicLevel,
+			logrus.FatalLevel,
+			logrus.ErrorLevel,
+			logrus.WarnLevel,
+		}
+	}
+
 	w := writer.Hook{
 		Writer: &stderrWriter{
 			processor: processor,
 			writer:    getStderr(),
 		},
-		LogLevels: []logrus.Level{
-			logrus.PanicLevel,
-			logrus.FatalLevel,
-			logrus.ErrorLevel,
-			logrus.WarnLevel,
-		},
+		LogLevels: logLevels,
 	}
 	return &StderrHook{w, processor}, nil
 }

@@ -16,6 +16,8 @@ type SyslogConfig struct {
 	Network string
 	Addr    string
 	Tag     string
+	Level   string
+	Levels  []string
 }
 
 // SyslogHook to send logs via syslog.
@@ -23,6 +25,7 @@ type SyslogHook struct {
 	writer    *syslog.Writer
 	config    *SyslogConfig
 	processor *Processor
+	LogLevels []logrus.Level
 }
 
 // NewSyslogHook Creates a hook to be added to an instance of logger. This is called with
@@ -35,8 +38,18 @@ func NewSyslogHook(name string, processor *Processor, config []byte,
 		return nil, err
 	}
 
+	var logLevels []logrus.Level
+	switch {
+	case c.Level != "":
+		logLevels = aboveLevel(c.Level)
+	case len(c.Levels) > 0:
+		logLevels = parseLevels(c.Levels)
+	default:
+		logLevels = logrus.AllLevels
+	}
+
 	writer, err := syslog.Dial(c.Network, c.Addr, syslog.LOG_INFO, c.Tag)
-	return &SyslogHook{writer, c, processor}, err
+	return &SyslogHook{writer, c, processor, logLevels}, err
 }
 
 // Fire is called when a log event is fired.
@@ -71,5 +84,5 @@ func (hook *SyslogHook) Fire(entry *logrus.Entry) error {
 
 // Levels returns the available logging levels
 func (hook *SyslogHook) Levels() []logrus.Level {
-	return logrus.AllLevels
+	return hook.LogLevels
 }
