@@ -1,9 +1,10 @@
 package cluster_test
 
 import (
-	"github.com/lonng/nano/message"
 	"strings"
 	"testing"
+
+	"github.com/lonng/nano/message"
 
 	"github.com/lonng/nano/serialize/protobuf"
 
@@ -110,7 +111,7 @@ func (s *nodeSuite) TestNodeStartup(c *C) {
 	)
 
 	chWait := make(chan struct{})
-	connector.OnConnected(func() {
+	connector.OnConnected(func(data interface{}) {
 		chWait <- struct{}{}
 	})
 
