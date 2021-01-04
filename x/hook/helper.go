@@ -26,9 +26,9 @@ func parseLevel(level string) logrus.Level {
 		return logrus.FatalLevel
 	case "error":
 		return logrus.ErrorLevel
-	case "warn":
+	case "warn", "warning":
 		return logrus.WarnLevel
-	case "info":
+	case "info", "print":
 		return logrus.InfoLevel
 	case "debug":
 		return logrus.DebugLevel
