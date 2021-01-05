@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/shopspring/decimal"
+	"github.com/sirupsen/logrus"
 )
 
 // GetPackageFile gets package/file.go style return
@@ -106,4 +107,25 @@ func MustString(i interface{}) string {
 		panic(err)
 	}
 	return s
+}
+
+func parseLevel(level string) logrus.Level {
+	switch strings.ToLower(level) {
+	case "panic":
+		return logrus.PanicLevel
+	case "fatal":
+		return logrus.FatalLevel
+	case "error":
+		return logrus.ErrorLevel
+	case "warn", "warning":
+		return logrus.WarnLevel
+	case "info", "print":
+		return logrus.InfoLevel
+	case "debug":
+		return logrus.DebugLevel
+	case "trace":
+		return logrus.TraceLevel
+	default:
+		panic(fmt.Errorf("unknown type of log level %s", level))
+	}
 }

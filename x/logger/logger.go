@@ -2,6 +2,7 @@ package logger
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/lonng/nano/log"
 
@@ -27,8 +28,21 @@ func NewLogger() *Logger {
 	return &Logger{logrus.New(), nil}
 }
 
+func (l *Logger) ReadLevel(name string, c map[string]interface{}) error {
+	s, ok := c["level"]
+	if !ok {
+		return nil
+	}
+	level, ok := s.(string)
+	if !ok {
+		return fmt.Errorf("Logger %s Level %v is not string, ignoring it", name, s)
+	}
+	l.SetLevel(parseLevel(level))
+	return nil
+}
+
 // Hook creates all hooks for logger, and attaches hooks to it.
-func (l *Logger) Hook(name string, c map[string]interface{}, processors map[string]*hook.Processor) error {
+func (l *Logger) ReadHooks(name string, c map[string]interface{}, processors map[string]*hook.Processor) error {
 	for typ, v := range c {
 		s, err := json.Marshal(v)
 		if err != nil {
@@ -37,7 +51,7 @@ func (l *Logger) Hook(name string, c map[string]interface{}, processors map[stri
 
 		h, err := hook.New(name, typ, processors[typ], s)
 		if err != nil {
-			log.Warnf("Hook %s is not found, ignoring it.", typ)
+			log.Warnf("Logger %s Hook %s is not found, ignoring it", name, typ)
 			continue
 		}
 		l.Hooks.Add(h)

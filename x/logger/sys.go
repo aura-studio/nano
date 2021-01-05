@@ -16,6 +16,7 @@ import (
 // It is used before run logger is started
 func NewSysLogger(c map[string]interface{}) *Logger {
 	logger := NewLogger()
+
 	logger.SetReportCaller(true)
 	logger.SetFormatter(&CustomSysFormatter{logrus.TextFormatter{
 		ForceColors:            true,
@@ -28,7 +29,10 @@ func NewSysLogger(c map[string]interface{}) *Logger {
 		},
 	}})
 	logger.SetOutput(ioutil.Discard)
-	if err := logger.Hook(Sys, c, map[string]*hook.Processor{
+	if err := logger.ReadLevel(Sys, c); err != nil {
+		panic(err)
+	}
+	if err := logger.ReadHooks(Sys, c, map[string]*hook.Processor{
 		"lumberjack": {
 			Handler: func(s []byte) []byte {
 				return s[13:]

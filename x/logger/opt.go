@@ -34,7 +34,10 @@ func NewOptLogger(c map[string]interface{}) *Logger {
 		PrettyPrint: false,
 	}})
 	logger.SetOutput(ioutil.Discard)
-	if err := logger.Hook(Opt, c, nil); err != nil {
+	if err := logger.ReadLevel(Sys, c); err != nil {
+		panic(err)
+	}
+	if err := logger.ReadHooks(Opt, c, nil); err != nil {
 		panic(err)
 	}
 	return logger

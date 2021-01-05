@@ -17,7 +17,10 @@ func NewSpkLogger(c map[string]interface{}) *Logger {
 	logger.SetFormatter(&SpkFormatter{})
 	logger.SetOutput(ioutil.Discard)
 
-	if err := logger.Hook(Spk, c, nil); err != nil {
+	if err := logger.ReadLevel(Sys, c); err != nil {
+		panic(err)
+	}
+	if err := logger.ReadHooks(Spk, c, nil); err != nil {
 		panic(err)
 	}
 

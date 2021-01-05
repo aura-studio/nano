@@ -27,7 +27,10 @@ func NewRunLogger(c map[string]interface{}) *Logger {
 		},
 	}})
 	logger.SetOutput(ioutil.Discard)
-	if err := logger.Hook(Run, c, map[string]*hook.Processor{
+	if err := logger.ReadLevel(Sys, c); err != nil {
+		panic(err)
+	}
+	if err := logger.ReadHooks(Run, c, map[string]*hook.Processor{
 		"lumberjack": {
 			Handler: func(s []byte) []byte {
 				return s[13:]
