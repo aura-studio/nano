@@ -29,13 +29,13 @@ func NewLogger() *Logger {
 }
 
 func (l *Logger) ReadLevel(name string, c map[string]interface{}) error {
-	s, ok := c["level"]
+	v, ok := c["level"]
 	if !ok {
 		return nil
 	}
-	level, ok := s.(string)
+	level, ok := v.(string)
 	if !ok {
-		return fmt.Errorf("Logger %s Level %v is not string, ignoring it", name, s)
+		return fmt.Errorf("Logger %s level %v is not string, ignoring it", name, v)
 	}
 	l.SetLevel(parseLevel(level))
 	return nil
@@ -43,7 +43,16 @@ func (l *Logger) ReadLevel(name string, c map[string]interface{}) error {
 
 // Hook creates all hooks for logger, and attaches hooks to it.
 func (l *Logger) ReadHooks(name string, c map[string]interface{}, processors map[string]*hook.Processor) error {
-	for typ, v := range c {
+	v, ok := c["hooks"]
+	if !ok {
+		return nil
+	}
+	hooks, ok := v.(map[string]interface{})
+	if !ok {
+		return fmt.Errorf("Logger %s hooks %v is not string, ignoring it", name, v)
+	}
+
+	for typ, v := range hooks {
 		s, err := json.Marshal(v)
 		if err != nil {
 			return err
