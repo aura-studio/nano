@@ -49,8 +49,6 @@ func NewStdoutHook(name string, processor *Processor, config []byte,
 	default:
 		logLevels = []logrus.Level{
 			logrus.InfoLevel,
-			logrus.DebugLevel,
-			logrus.TraceLevel,
 		}
 	}
 
