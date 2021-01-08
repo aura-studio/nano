@@ -100,14 +100,30 @@ func Listen(addr string, opts ...Option) {
 
 	if node.ClientAddr != "" {
 		if node.HttpUpgrader == nil {
-			log.Infof("Startup *Nano gate server* %s, client address: %v, service address: %s",
-				app.name, node.ClientAddr, node.ServiceAddr)
+			if node.ServiceAddr != node.ClientAddr {
+				log.Infof("Startup *Nano gate server* %s, client address: %v, service address: %s",
+					app.name, node.ClientAddr, node.ServiceAddr)
+			} else {
+				log.Infof("Startup *Nano gate server* %s, client address: %v",
+					app.name, node.ClientAddr)
+			}
+
 		} else if node.HttpAddr == "" {
-			log.Infof("Startup *Nano gate server* %s, client http address: %v, service address: %s",
-				app.name, node.ClientAddr, node.ServiceAddr)
+			if node.ServiceAddr != node.ClientAddr {
+				log.Infof("Startup *Nano gate server* %s, client http address: %v, service address: %s",
+					app.name, node.ClientAddr, node.ServiceAddr)
+			} else {
+				log.Infof("Startup *Nano gate server* %s, client http address: %v",
+					app.name, node.ClientAddr)
+			}
 		} else {
-			log.Infof("Startup *Nano gate server* %s, client address: %v, client http address: %v, service address: %s",
-				app.name, node.ClientAddr, node.HttpAddr, node.ServiceAddr)
+			if node.ServiceAddr != node.ClientAddr {
+				log.Infof("Startup *Nano gate server* %s, client address: %v, client http address: %v, service address: %s",
+					app.name, node.ClientAddr, node.HttpAddr, node.ServiceAddr)
+			} else {
+				log.Infof("Startup *Nano gate server* %s, client address: %v, client http address: %v",
+					app.name, node.ClientAddr, node.HttpAddr)
+			}
 		}
 	} else {
 		log.Infof("Startup *Nano backend server* %s, service address %s",
