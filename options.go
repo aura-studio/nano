@@ -104,6 +104,7 @@ func WithTimerPrecision(precision time.Duration) Option {
 func WithSerializer(serializer serialize.Serializer) Option {
 	return func(opt *cluster.Options) {
 		env.Serializer = serializer
+		env.SerializerType = message.GetSerializerType(serializer)
 	}
 }
 

@@ -23,20 +23,7 @@ package message
 import (
 	"strconv"
 	"strings"
-
-	"github.com/lonng/nano/env"
 )
-
-func Serialize(v interface{}) ([]byte, error) {
-	if data, ok := v.([]byte); ok {
-		return data, nil
-	}
-	data, err := env.Serializer.Marshal(v)
-	if err != nil {
-		return nil, err
-	}
-	return data, nil
-}
 
 func ShortVersion(version string) uint32 {
 	if lastIndex := strings.LastIndex(version, "-"); lastIndex < 0 {

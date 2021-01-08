@@ -33,6 +33,7 @@ import (
 	"github.com/lonng/nano/log"
 	"github.com/lonng/nano/message"
 	"github.com/lonng/nano/pipeline"
+	"github.com/lonng/nano/serialize"
 	"github.com/lonng/nano/service"
 	"github.com/lonng/nano/session"
 )
@@ -63,13 +64,14 @@ type (
 		decoder  *codec.Decoder      // binary decoder
 		pipeline pipeline.Pipeline
 
-		rpcHandler rpcHandler
-		srv        reflect.Value     // cached session reflect.Value
-		routes     map[string]uint16 // copy system routes for agent
-		codes      map[uint16]string // copy system codes for agent
-		compressed bool              // whether to use compressed msg to client
-		recvPckCnt int64             // agent receive packet count
-		sendPckCnt int64             // agent send packet count
+		rpcHandler  rpcHandler
+		srv         reflect.Value                   // cached session reflect.Value
+		routes      map[string]uint16               // copy system routes for agent
+		codes       map[uint16]string               // copy system codes for agent
+		serializers map[string]serialize.Serializer // copy system serializers for agent
+		compressed  bool                            // whether to use compressed msg to client
+		recvPckCnt  int64                           // agent receive packet count
+		sendPckCnt  int64                           // agent send packet count
 	}
 
 	pendingMessage struct {
@@ -83,17 +85,19 @@ type (
 // Create new agent instance
 func newAgent(conn net.Conn, pipeline pipeline.Pipeline, rpcHandler rpcHandler) *agent {
 	routes, codes := message.ReadDictionary()
+	serializers := message.ReadSerializers()
 	a := &agent{
-		conn:       conn,
-		state:      statusStart,
-		chDie:      make(chan struct{}),
-		lastAt:     time.Now().Unix(),
-		chSend:     make(chan pendingMessage, agentWriteBacklog),
-		decoder:    codec.NewDecoder(),
-		pipeline:   pipeline,
-		rpcHandler: rpcHandler,
-		routes:     routes,
-		codes:      codes,
+		conn:        conn,
+		state:       statusStart,
+		chDie:       make(chan struct{}),
+		lastAt:      time.Now().Unix(),
+		chSend:      make(chan pendingMessage, agentWriteBacklog),
+		decoder:     codec.NewDecoder(),
+		pipeline:    pipeline,
+		rpcHandler:  rpcHandler,
+		routes:      routes,
+		codes:       codes,
+		serializers: serializers,
 	}
 
 	// binding session
@@ -150,7 +154,7 @@ func (a *agent) RPC(route string, v interface{}) error {
 		return ErrBrokenPipe
 	}
 
-	data, err := message.Serialize(v)
+	data, err := message.RouteSerialize(a.serializers, route, v)
 	if err != nil {
 		return err
 	}

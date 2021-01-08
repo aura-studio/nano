@@ -101,6 +101,7 @@ func (h *LocalHandler) Register(comp component.Component, opts []component.Optio
 		n := fmt.Sprintf("%s.%s", s.Name, name)
 		h.localHandlers[n] = handler
 		message.WriteDictionaryItem(n, handler.Code)
+		message.WriteSerializerItem(n, uint16(env.SerializerType))
 	}
 
 	return nil
@@ -132,10 +133,13 @@ func (h *LocalHandler) addMember(member *clusterpb.MemberInfo) {
 	}
 
 	dictionary := make(map[string]uint16)
+	serializers := make(map[string]uint16)
 	for _, d := range member.Dictionary {
 		dictionary[d.Route] = uint16(d.Code)
+		serializers[d.Route] = uint16(d.Serializer)
 	}
 	message.WriteDictionary(dictionary)
+	message.WriteSerializers(serializers)
 }
 
 func (h *LocalHandler) delMember(addr string) {
@@ -241,9 +245,10 @@ func (h *LocalHandler) LocalDictionary() []*clusterpb.DictionaryItem {
 	var result []*clusterpb.DictionaryItem
 	for name, handler := range h.localHandlers {
 		result = append(result, &clusterpb.DictionaryItem{
-			Route: name,
-			Code:  uint32(handler.Code),
-			Type:  handler.Type.String(),
+			Route:      name,
+			Code:       uint32(handler.Code),
+			Type:       handler.Type.String(),
+			Serializer: uint32(env.SerializerType),
 		})
 	}
 	return result

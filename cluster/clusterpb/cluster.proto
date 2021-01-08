@@ -7,6 +7,7 @@ message DictionaryItem{
     string route = 1;
     uint32 code = 2;
     string type = 3;
+    uint32 serializer = 4;
 };
 
 message MemberInfo {

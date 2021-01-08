@@ -24,6 +24,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"sync"
 )
 
 // Type represents the type of message, which could be Request/Notify/Response/Push
@@ -49,6 +50,8 @@ var types = map[Type]string{
 	Response: "Response",
 	Push:     "Push",
 }
+
+var rw sync.RWMutex
 
 func (t Type) String() string {
 	return types[t]

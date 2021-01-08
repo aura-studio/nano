@@ -1,15 +1,10 @@
 package message
 
-import (
-	"sync"
-)
-
 var (
 	// Routes is a map from route to code
 	Routes = make(map[string]uint16)
 	// Codes is a map from code to route
 	Codes = make(map[uint16]string)
-	rw    sync.RWMutex
 )
 
 // ReadDictionary returns dictionary for compressed route.

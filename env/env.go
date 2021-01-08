@@ -53,6 +53,9 @@ var (
 	// Serializer is message serializer, json or protobuf
 	Serializer serialize.Serializer
 
+	// Serializer is message serializer, json or protobuf
+	SerializerType uint16
+
 	// GrpcOptions is options for grpc
 	GrpcOptions = []grpc.DialOption{grpc.WithInsecure()}
 

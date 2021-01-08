@@ -9,16 +9,18 @@ import (
 	"github.com/lonng/nano/log"
 	"github.com/lonng/nano/message"
 	"github.com/lonng/nano/mock"
+	"github.com/lonng/nano/serialize"
 	"github.com/lonng/nano/session"
 )
 
 type acceptor struct {
-	sid        int64
-	gateClient clusterpb.MemberClient
-	session    *session.Session
-	lastMid    uint64
-	rpcHandler rpcHandler
-	gateAddr   string
+	sid         int64
+	gateClient  clusterpb.MemberClient
+	session     *session.Session
+	lastMid     uint64
+	rpcHandler  rpcHandler
+	gateAddr    string
+	serializers map[string]serialize.Serializer // copy system serializers for agent
 }
 
 // Push implements the session.NetworkEntity interface
@@ -51,7 +53,7 @@ func (a *acceptor) Push(route string, v interface{}) error {
 
 // RPC implements the session.NetworkEntity interface
 func (a *acceptor) RPC(route string, v interface{}) error {
-	data, err := message.Serialize(v)
+	data, err := message.RouteSerialize(a.serializers, route, v)
 	if err != nil {
 		return err
 	}
