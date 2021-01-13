@@ -1,7 +1,7 @@
 package coroutine
 
 var (
-	expire uint = 10
+	expire uint = 30
 )
 
 // SetExpire sets expire time for all coroutines
