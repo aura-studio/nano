@@ -19,7 +19,7 @@ func (defaultVirtualTime) Parse(s string) (time.Time, error) {
 }
 
 func (defaultVirtualTime) Format(tm time.Time) string {
-	return tm.Format("2006-1-2 15:04:05")
+	return tm.Format("2006-01-02 15:04:05")
 }
 
 func (defaultVirtualTime) Now() time.Time {
