@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"runtime"
+	"strings"
 
 	"github.com/lonng/nano/x/hook"
 	"github.com/lonng/nano/x/virtualtime"
@@ -33,7 +34,7 @@ func NewRunLogger(c map[string]interface{}) *Logger {
 	if err := logger.ReadHooks(Run, c, map[string]*hook.Processor{
 		"lumberjack": {
 			Handler: func(s []byte) []byte {
-				return s[13:]
+				return s[strings.Index(string(s), "[20"):]
 			},
 		},
 	}); err != nil {
