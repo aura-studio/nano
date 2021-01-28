@@ -75,6 +75,8 @@ func Listen(addr string, opts ...Option) {
 		option(&opt)
 	}
 
+	log.SetLogger(opt.Logger)
+
 	// Use listen address as client address in non-cluster mode
 	if !opt.IsMaster && opt.AdvertiseAddr == "" && opt.ClientAddr == "" {
 		log.Infoln("The current server running in singleton mode")
@@ -129,8 +131,6 @@ func Listen(addr string, opts ...Option) {
 		log.Infof("Startup *Nano backend server* %s, service address %s",
 			app.name, node.ServiceAddr)
 	}
-
-	log.SetLogger(node.Logger)
 
 	go scheduler.Digest()
 	sg := make(chan os.Signal)
