@@ -7,7 +7,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/lonng/nano/log"
+	"github.com/lonng/nano/x/log"
 	"github.com/lonng/nano/session"
 	"github.com/lonng/nano/x/virtualtime"
 )

@@ -1,7 +1,7 @@
 package sched
 
 import (
-	"github.com/lonng/nano/log"
+	"github.com/lonng/nano/x/log"
 	"github.com/lonng/nano/scheduler"
 )
 
