@@ -61,10 +61,10 @@ func (a *acceptor) RPC(route string, v interface{}) error {
 	if env.Debug {
 		switch d := v.(type) {
 		case []byte:
-			log.Infof("Type=RPC, Route=%s, ID=%d, Version=%s, UID=%d,  MID=%d, Data=%dbytes",
+			log.Infof("Type=Notify, Route=%s, ID=%d, Version=%s, UID=%d,  MID=%d, Data=%dbytes",
 				route, a.session.ID(), a.session.Version(), a.session.UID(), a.lastMid, len(d))
 		default:
-			log.Infof("Type=RPC, Route=%s, ID=%d, Version=%s, UID=%d,  Mid=%d, Data=%+v",
+			log.Infof("Type=Notify, Route=%s, ID=%d, Version=%s, UID=%d,  Mid=%d, Data=%+v",
 				route, a.session.ID(), a.session.Version(), a.session.UID(), a.lastMid, v)
 		}
 	}
