@@ -1,6 +1,0 @@
-syntax = "proto3";
-package testdata;
-
-message KickPush {
-    int64 Code = 1;
-}
