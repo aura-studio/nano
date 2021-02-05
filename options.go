@@ -52,6 +52,13 @@ func WithClientAddr(addr string) Option {
 	}
 }
 
+// WithDebugAddr works with debug http addr
+func WithDebugAddr(addr string) Option {
+	return func(opt *cluster.Options) {
+		opt.DebugAddr = addr
+	}
+}
+
 // WithMaster sets the option to indicate whether the current node is master node
 func WithMaster() Option {
 	return func(opt *cluster.Options) {

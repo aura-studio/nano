@@ -51,6 +51,7 @@ type Options struct {
 	AdvertiseAddr  string
 	RetryInterval  time.Duration
 	ClientAddr     string
+	DebugAddr      string
 	Components     *component.Components
 	Label          string
 	HttpUpgrader   upgrader.Upgrader
@@ -104,6 +105,10 @@ func (n *Node) Startup() error {
 	}
 	for _, c := range components {
 		c.Comp.AfterInit()
+	}
+
+	if n.DebugAddr != "" {
+		go n.ListenAndServeDebug()
 	}
 
 	if n.ClientAddr != "" {
@@ -289,6 +294,12 @@ func (n *Node) listenAndServeHttp() {
 		if err := http.ListenAndServe(addr, nil); err != nil {
 			log.Fatal(err.Error())
 		}
+	}
+}
+
+func (n *Node) ListenAndServeDebug() {
+	if err := http.ListenAndServe(n.DebugAddr, nil); err != nil {
+		log.Fatal(err.Error())
 	}
 }
 
