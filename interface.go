@@ -101,35 +101,28 @@ func Listen(addr string, opts ...Option) {
 	}
 
 	if node.ClientAddr != "" {
-		if node.HttpUpgrader == nil {
-			if node.ServiceAddr != node.ClientAddr {
-				log.Infof("Startup *Nano gate server* %s, client address: %v, service address: %s",
-					app.name, node.ClientAddr, node.ServiceAddr)
-			} else {
-				log.Infof("Startup *Nano gate server* %s, client address: %v",
-					app.name, node.ClientAddr)
-			}
-
-		} else if node.HttpAddr == "" {
-			if node.ServiceAddr != node.ClientAddr {
-				log.Infof("Startup *Nano gate server* %s, client http address: %v, service address: %s",
-					app.name, node.ClientAddr, node.ServiceAddr)
-			} else {
-				log.Infof("Startup *Nano gate server* %s, client http address: %v",
-					app.name, node.ClientAddr)
-			}
-		} else {
-			if node.ServiceAddr != node.ClientAddr {
-				log.Infof("Startup *Nano gate server* %s, client address: %v, client http address: %v, service address: %s",
-					app.name, node.ClientAddr, node.HttpAddr, node.ServiceAddr)
-			} else {
-				log.Infof("Startup *Nano gate server* %s, client address: %v, client http address: %v",
-					app.name, node.ClientAddr, node.HttpAddr)
-			}
-		}
+		log.Infof("Startup *Nano gate server* %s", app.name)
 	} else {
-		log.Infof("Startup *Nano backend server* %s, service address %s",
-			app.name, node.ServiceAddr)
+		log.Infof("Startup *Nano backend server* %s", app.name)
+	}
+
+	if node.DebugAddr != "" {
+		log.Infof("Debug address: %s", node.DebugAddr)
+	}
+
+	if node.ClientAddr != "" {
+		if node.HttpUpgrader == nil {
+			log.Infof("TCP address: %s", node.ClientAddr)
+		} else if node.HttpAddr == "" {
+			log.Infof("HTTP address: %s", node.ClientAddr)
+		} else {
+			log.Infof("TCP address: %s", node.ClientAddr)
+			log.Infof("HTTP address: %s", node.HttpAddr)
+		}
+	}
+
+	if node.ServiceAddr != node.ClientAddr {
+		log.Infof("service address %s", node.ServiceAddr)
 	}
 
 	go scheduler.Digest()
