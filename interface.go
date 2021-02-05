@@ -122,7 +122,7 @@ func Listen(addr string, opts ...Option) {
 	}
 
 	if node.ServiceAddr != node.ClientAddr {
-		log.Infof("service address %s", node.ServiceAddr)
+		log.Infof("Service address: %s", node.ServiceAddr)
 	}
 
 	go scheduler.Digest()
