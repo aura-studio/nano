@@ -59,9 +59,10 @@ func (t Type) String() string {
 
 // Errors that could be occurred in message codec
 var (
-	ErrWrongMessageType  = errors.New("wrong message type")
-	ErrInvalidMessage    = errors.New("invalid message")
-	ErrRouteInfoNotFound = errors.New("route info not found in dictionary")
+	ErrWrongMessageType   = errors.New("wrong message type")
+	ErrInvalidMessage     = errors.New("invalid message")
+	ErrRouteInfoNotFound  = errors.New("route info not found in dictionary")
+	ErrInvalidRouteLength = errors.New("invalid route length")
 )
 
 // Message represents a unmarshaled message or a message which to be marshaled
@@ -174,6 +175,10 @@ func Decode(data []byte, codes map[uint16]string) (*Message, bool, error) {
 		// decode route string length
 		rl := binary.BigEndian.Uint16(data[offset:])
 		offset += 2
+
+		if offset+uint64(rl) > uint64(len(data)) {
+			return nil, false, ErrInvalidRouteLength
+		}
 
 		// decode route string
 		m.Route = string(data[offset:(offset + uint64(rl))])
