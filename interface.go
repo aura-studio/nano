@@ -126,8 +126,8 @@ func Listen(addr string, opts ...Option) {
 	}
 
 	go scheduler.Digest()
-	sg := make(chan os.Signal)
-	signal.Notify(sg, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGKILL, syscall.SIGTERM)
+	sg := make(chan os.Signal, 1)
+	signal.Notify(sg, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)
 
 	chReady <- struct{}{}
 
