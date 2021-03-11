@@ -124,6 +124,7 @@ func Listen(addr string, opts ...Option) {
 	if node.ServiceAddr != node.ClientAddr {
 		log.Infof("Service address: %s", node.ServiceAddr)
 	}
+	log.Infof("Nano server is serving...")
 
 	go scheduler.Digest()
 	sg := make(chan os.Signal, 1)

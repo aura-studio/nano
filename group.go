@@ -24,7 +24,6 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/lonng/nano/env"
 	"github.com/lonng/nano/log"
 	"github.com/lonng/nano/message"
 	"github.com/lonng/nano/session"
@@ -95,9 +94,7 @@ func (c *Group) Multicast(route string, v interface{}, filter SessionFilter) err
 		return err
 	}
 
-	if env.Debug {
-		log.Infof("Multicast %s, Data=%+v", route, v)
-	}
+	log.Infof("Multicast %s, Data=%+v", route, v)
 
 	c.mu.RLock()
 	defer c.mu.RUnlock()
@@ -125,9 +122,7 @@ func (c *Group) Broadcast(route string, v interface{}) error {
 		return err
 	}
 
-	if env.Debug {
-		log.Infof("Broadcast %s, Data=%+v", route, v)
-	}
+	log.Infof("Broadcast %s, Data=%+v", route, v)
 
 	c.mu.RLock()
 	defer c.mu.RUnlock()
@@ -154,10 +149,8 @@ func (c *Group) Add(session *session.Session) error {
 		return ErrClosedGroup
 	}
 
-	if env.Debug {
-		log.Infof("Add session to group %s, ID=%d, UID=%d", c.name,
-			session.ID(), session.UID())
-	}
+	log.Infof("Add session to group %s, ID=%d, UID=%d", c.name,
+		session.ID(), session.UID())
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -178,10 +171,8 @@ func (c *Group) Leave(s *session.Session) error {
 		return ErrClosedGroup
 	}
 
-	if env.Debug {
-		log.Infof("Remove session from group %s, UID=%d",
-			c.name, s.UID())
-	}
+	log.Infof("Remove session from group %s, UID=%d",
+		c.name, s.UID())
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
