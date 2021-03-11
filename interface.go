@@ -53,7 +53,7 @@ var (
 // on incoming connections.
 func Listen(addr string, opts ...Option) {
 	if atomic.AddInt32(&running, 1) != 1 {
-		log.Infoln("Nano has running")
+		log.Infoln("Nano is running")
 		return
 	}
 
@@ -79,10 +79,10 @@ func Listen(addr string, opts ...Option) {
 
 	// Use listen address as client address in non-cluster mode
 	if !opt.IsMaster && opt.AdvertiseAddr == "" && opt.ClientAddr == "" {
-		log.Infoln("The current server running in singleton mode")
+		log.Infoln("Nano server running in singleton mode")
 		opt.ClientAddr = addr
 	} else {
-		log.Infoln("The current server running in cluster mode")
+		log.Infoln("Nano server running in cluster mode")
 	}
 
 	// Set the retry interval to 3 secondes if doesn't set by user
@@ -144,6 +144,7 @@ func Listen(addr string, opts ...Option) {
 	node.Shutdown()
 	scheduler.Close()
 	atomic.StoreInt32(&running, 0)
+	log.Infoln("Nano server stopped")
 }
 
 // Shutdown send a signal to let 'nano' shutdown itself.

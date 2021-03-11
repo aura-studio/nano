@@ -91,7 +91,6 @@ func Close() {
 	}
 	close(chDie)
 	<-chExit
-	log.Infoln("Scheduler stopped")
 }
 
 // Schedule is to fill the default func for Service.Schedule
