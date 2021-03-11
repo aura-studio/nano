@@ -36,15 +36,23 @@ import (
 	"github.com/lonng/nano/scheduler"
 )
 
-var running int32
+const (
+	Cluster   = "cluster"
+	Singleton = "singleton"
+	Frontend  = "frontend"
+	Backend   = "backend"
+)
 
 var chReady = make(chan struct{}, 1)
 
 var (
 	// app represents the current server process
 	app = &struct {
+		running int32
 		name    string    // current application name
 		startAt time.Time // startup time
+		mode    string    // cluster mode
+		typ     string    // frontend or backend
 	}{}
 )
 
@@ -52,8 +60,8 @@ var (
 // and then calls Serve with handler to handle requests
 // on incoming connections.
 func Listen(addr string, opts ...Option) {
-	if atomic.AddInt32(&running, 1) != 1 {
-		log.Infoln("Nano is running")
+	if atomic.AddInt32(&app.running, 1) != 1 {
+		log.Infoln("Nano server is running")
 		return
 	}
 
@@ -77,12 +85,14 @@ func Listen(addr string, opts ...Option) {
 
 	log.SetLogger(opt.Logger)
 
+	log.Infoln("Nano server is starting...")
+
 	// Use listen address as client address in non-cluster mode
 	if !opt.IsMaster && opt.AdvertiseAddr == "" && opt.ClientAddr == "" {
-		log.Infoln("Nano server running in singleton mode")
+		app.mode = Singleton
 		opt.ClientAddr = addr
 	} else {
-		log.Infoln("Nano server running in cluster mode")
+		app.mode = Cluster
 	}
 
 	// Set the retry interval to 3 secondes if doesn't set by user
@@ -97,14 +107,16 @@ func Listen(addr string, opts ...Option) {
 
 	err := node.Startup()
 	if err != nil {
-		log.Fatalf("Node startup failed: %v", err)
+		log.Fatalf("Nano server startup failed: %v", err)
 	}
 
 	if node.ClientAddr != "" {
-		log.Infof("Startup *Nano gate server* %s", app.name)
+		app.typ = Frontend
 	} else {
-		log.Infof("Startup *Nano backend server* %s", app.name)
+		app.typ = Backend
 	}
+
+	log.Infof("Startup %v as %v server in %v mode", app.name, app.typ, app.mode)
 
 	if node.DebugAddr != "" {
 		log.Infof("Debug address: %s", node.DebugAddr)
@@ -124,6 +136,7 @@ func Listen(addr string, opts ...Option) {
 	if node.ServiceAddr != node.ClientAddr {
 		log.Infof("Service address: %s", node.ServiceAddr)
 	}
+
 	log.Infof("Nano server is serving...")
 
 	go scheduler.Digest()
@@ -143,7 +156,7 @@ func Listen(addr string, opts ...Option) {
 
 	node.Shutdown()
 	scheduler.Close()
-	atomic.StoreInt32(&running, 0)
+	atomic.StoreInt32(&app.running, 0)
 	log.Infoln("Nano server stopped")
 }
 
