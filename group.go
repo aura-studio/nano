@@ -24,6 +24,7 @@ import (
 	"sync"
 	"sync/atomic"
 
+	"github.com/lonng/nano/env"
 	"github.com/lonng/nano/log"
 	"github.com/lonng/nano/message"
 	"github.com/lonng/nano/session"
@@ -149,8 +150,10 @@ func (c *Group) Add(session *session.Session) error {
 		return ErrClosedGroup
 	}
 
-	log.Infof("Add session to group %s, ID=%d, UID=%d", c.name,
-		session.ID(), session.UID())
+	if env.Debug {
+		log.Infof("Add session to group %s, ID=%d, UID=%d", c.name,
+			session.ID(), session.UID())
+	}
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -171,8 +174,10 @@ func (c *Group) Leave(s *session.Session) error {
 		return ErrClosedGroup
 	}
 
-	log.Infof("Remove session from group %s, UID=%d",
-		c.name, s.UID())
+	if env.Debug {
+		log.Infof("Remove session from group %s, UID=%d",
+			c.name, s.UID())
+	}
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
