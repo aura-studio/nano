@@ -2,6 +2,7 @@ package connector
 
 import (
 	"fmt"
+	"io"
 	"net"
 	"sync"
 	"sync/atomic"
@@ -331,7 +332,9 @@ func (c *Connector) read() {
 	for {
 		n, err := c.conn.Read(buf)
 		if err != nil {
-			log.Errorln(err)
+			if err != io.EOF {
+				log.Infof("Read [%s], connector will be closed immediately", err.Error())
+			}
 			c.Close()
 			return
 		}
