@@ -304,6 +304,7 @@ func (h *LocalHandler) handle(conn net.Conn) {
 		}
 
 		agent.Close()
+		h.currentNode.deleteSession(agent.session)
 		if env.Debug {
 			log.Infof("Session read goroutine exit, SessionID=%d, UID=%d", agent.session.ID(), agent.session.UID())
 		}
