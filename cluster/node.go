@@ -316,6 +316,15 @@ func (n *Node) findSession(sid int64) *session.Session {
 	return s
 }
 
+func (n *Node) deleteSession(s *session.Session) {
+	n.mu.Lock()
+	s, found := n.sessions[s.ID()]
+	if found {
+		delete(n.sessions, s.ID())
+	}
+	n.mu.Unlock()
+}
+
 func (n *Node) findOrCreateSession(sid int64, gateAddr string, uid int64, shortVer uint32, remoteAddr net.Addr) (*session.Session, error) {
 	n.mu.RLock()
 	s, found := n.sessions[sid]
