@@ -1,123 +1,131 @@
 syntax = "proto3";
 package clusterpb;
 
-option go_package = ".;clusterpb";
+option go_package = "../clusterpb";
 
-message DictionaryItem{
-    string route = 1;
-    uint32 code = 2;
-    string type = 3;
-    uint32 serializer = 4;
+message DictionaryItem {
+  string route = 1;
+  uint32 code = 2;
+  string type = 3;
+  uint32 serializer = 4;
 };
 
 message MemberInfo {
-    string label = 1;
-    string serviceAddr = 2;
-    string version = 3;
-    repeated string services = 4;
-    repeated DictionaryItem dictionary = 5;
+  string label = 1;
+  string serviceAddr = 2;
+  string version = 3;
+  repeated string services = 4;
+  repeated DictionaryItem dictionary = 5;
 }
 
 message RegisterRequest {
-    MemberInfo memberInfo = 1;
+  MemberInfo memberInfo = 1;
 }
 
 message RegisterResponse {
-    repeated MemberInfo members = 1;
+  repeated MemberInfo members = 1;
 }
 
 message UnregisterRequest {
-    string serviceAddr = 1;
+  string serviceAddr = 1;
 }
 
 message UnregisterResponse {}
 
 service Master {
-    rpc Register (RegisterRequest) returns (RegisterResponse) {}
-    rpc Unregister (UnregisterRequest) returns (UnregisterResponse) {}
+  rpc Register(RegisterRequest) returns (RegisterResponse) {}
+  rpc Unregister(UnregisterRequest) returns (UnregisterResponse) {}
+}
+
+message NetAddr {
+  string Network = 1;
+  string Addr = 2;
 }
 
 message RequestMessage {
-    string gateAddr = 1;
-    int64 sessionID = 2;
-    uint32 shortVer = 3;
-    uint64 ID = 4;
-    int64 UID = 5;
-    string route = 6;
-    bytes data = 7;
+  string gateAddr = 1;
+  int64 sessionID = 2;
+  uint32 shortVer = 3;
+  uint64 ID = 4;
+  int64 UID = 5;
+  string route = 6;
+  bytes data = 7;
+  NetAddr remoteAddr = 8;
 }
 
 message NotifyMessage {
-    string gateAddr = 1;
-    int64 sessionID = 2;
-    uint32 shortVer = 3;
-    uint64 ID = 4;
-    int64 UID = 5;
-    string route = 6;
-    bytes data = 7;
+  string gateAddr = 1;
+  int64 sessionID = 2;
+  uint32 shortVer = 3;
+  uint64 ID = 4;
+  int64 UID = 5;
+  string route = 6;
+  bytes data = 7;
+  NetAddr remoteAddr = 8;
 }
 
 message ResponseMessage {
-    int64 sessionID = 1;
-    uint32 shortVer = 2;
-    uint64 ID = 3;
-    string route = 4;
-    bytes data = 5;
+  int64 sessionID = 1;
+  uint32 shortVer = 2;
+  uint64 ID = 3;
+  string route = 4;
+  bytes data = 5;
 }
 
 message PushMessage {
-    int64 sessionID = 1;
-    uint32 shortVer = 2;
-    string route = 3;
-    bytes data = 4;
+  int64 sessionID = 1;
+  uint32 shortVer = 2;
+  string route = 3;
+  bytes data = 4;
 }
 
 message MemberHandleResponse {}
 
 message NewMemberRequest {
-    MemberInfo memberInfo = 1;
+  MemberInfo memberInfo = 1;
 }
 
 message NewMemberResponse {}
 
 message DelMemberRequest {
-    string serviceAddr = 1;
+  string serviceAddr = 1;
 }
 
 message DelMemberResponse {}
 
 message SessionClosedRequest {
-    int64 sessionID = 1;
+  int64 sessionID = 1;
 }
 
 message SessionClosedResponse {}
 
 message CloseSessionRequest {
-    int64 sessionID = 1;
+  int64 sessionID = 1;
 }
 
 message CloseSessionResponse {}
 
 message PerformConventionRequest {
-    int64 sig = 1;
-    bytes data = 2;
+  int64 sig = 1;
+  bytes data = 2;
 }
 
 message PerformConventionResponse {
-    string label = 1;
-    bytes data = 2;
+  string label = 1;
+  bytes data = 2;
 }
 
 service Member {
-    rpc HandleRequest (RequestMessage) returns (MemberHandleResponse) {}
-    rpc HandleNotify (NotifyMessage) returns (MemberHandleResponse) {}
-    rpc HandlePush (PushMessage) returns (MemberHandleResponse) {}
-    rpc HandleResponse (ResponseMessage) returns (MemberHandleResponse) {}
+  rpc HandleRequest(RequestMessage) returns (MemberHandleResponse) {}
+  rpc HandleNotify(NotifyMessage) returns (MemberHandleResponse) {}
+  rpc HandlePush(PushMessage) returns (MemberHandleResponse) {}
+  rpc HandleResponse(ResponseMessage) returns (MemberHandleResponse) {}
 
-    rpc NewMember (NewMemberRequest) returns (NewMemberResponse) {}
-    rpc DelMember (DelMemberRequest) returns (DelMemberResponse) {}
-    rpc SessionClosed(SessionClosedRequest) returns(SessionClosedResponse) {}
-    rpc CloseSession(CloseSessionRequest) returns(CloseSessionResponse) {}
+  rpc NewMember(NewMemberRequest) returns (NewMemberResponse) {}
+  rpc DelMember(DelMemberRequest) returns (DelMemberResponse) {}
+  rpc SessionClosed(SessionClosedRequest) returns (SessionClosedResponse) {}
+  rpc CloseSession(CloseSessionRequest) returns (CloseSessionResponse) {}
 
-    rpc PerformConvention (PerformConventionRequest) returns (PerformConventionResponse) {}
+  rpc PerformConvention(PerformConventionRequest)
+      returns (PerformConventionResponse) {}
 }

@@ -8,7 +8,6 @@ import (
 	"github.com/lonng/nano/env"
 	"github.com/lonng/nano/log"
 	"github.com/lonng/nano/message"
-	"github.com/lonng/nano/mock"
 	"github.com/lonng/nano/serialize"
 	"github.com/lonng/nano/session"
 )
@@ -21,6 +20,7 @@ type acceptor struct {
 	rpcHandler  rpcHandler
 	gateAddr    string
 	serializers map[string]serialize.Serializer // copy system serializers for agent
+	remoteAddr  net.Addr
 }
 
 // Push implements the session.NetworkEntity interface
@@ -130,6 +130,6 @@ func (a *acceptor) Close() error {
 }
 
 // RemoteAddr implements the session.NetworkEntity interface
-func (*acceptor) RemoteAddr() net.Addr {
-	return mock.NetAddr{}
+func (a *acceptor) RemoteAddr() net.Addr {
+	return a.remoteAddr
 }

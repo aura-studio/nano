@@ -444,6 +444,10 @@ func (h *LocalHandler) remoteProcess(s *session.Session, msg *message.Message, n
 			UID:       s.UID(),
 			Route:     msg.Route,
 			Data:      data,
+			RemoteAddr: &clusterpb.NetAddr{
+				Network: s.RemoteAddr().Network(),
+				Addr:    s.RemoteAddr().String(),
+			},
 		}
 		_, err = client.HandleRequest(context.Background(), request)
 	case message.Notify:
@@ -455,6 +459,10 @@ func (h *LocalHandler) remoteProcess(s *session.Session, msg *message.Message, n
 			UID:       s.UID(),
 			Route:     msg.Route,
 			Data:      data,
+			RemoteAddr: &clusterpb.NetAddr{
+				Network: s.RemoteAddr().Network(),
+				Addr:    s.RemoteAddr().String(),
+			},
 		}
 		_, err = client.HandleNotify(context.Background(), request)
 	}
