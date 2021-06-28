@@ -377,6 +377,23 @@ func (s *Session) Float64(key string) float64 {
 	return value
 }
 
+// Bool returns the value associated with the key as a boolean.
+func (s *Session) Bool(key string) bool {
+	s.RLock()
+	defer s.RUnlock()
+
+	v, ok := s.data[key]
+	if !ok {
+		return false
+	}
+
+	value, ok := v.(bool)
+	if !ok {
+		return false
+	}
+	return value
+}
+
 // String returns the value associated with the key as a string.
 func (s *Session) String(key string) string {
 	s.RLock()
