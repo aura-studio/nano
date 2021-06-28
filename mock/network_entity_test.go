@@ -23,7 +23,7 @@ package mock_test
 import (
 	"testing"
 
-	"github.com/lonng/nano/mock"
+	"github.com/aura-studio/nano/mock"
 	. "github.com/pingcap/check"
 )
 

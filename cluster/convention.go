@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/lonng/nano/cluster/clusterpb"
+	"github.com/aura-studio/nano/cluster/clusterpb"
 )
 
 type (

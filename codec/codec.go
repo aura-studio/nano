@@ -25,8 +25,8 @@ import (
 	"encoding/binary"
 	"errors"
 
-	"github.com/lonng/nano/env"
-	"github.com/lonng/nano/packet"
+	"github.com/aura-studio/nano/env"
+	"github.com/aura-studio/nano/packet"
 )
 
 // Codec constants.

@@ -27,7 +27,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/lonng/nano/log"
+	"github.com/aura-studio/nano/log"
 )
 
 const (

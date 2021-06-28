@@ -24,10 +24,10 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/lonng/nano/env"
-	"github.com/lonng/nano/log"
-	"github.com/lonng/nano/message"
-	"github.com/lonng/nano/session"
+	"github.com/aura-studio/nano/env"
+	"github.com/aura-studio/nano/log"
+	"github.com/aura-studio/nano/message"
+	"github.com/aura-studio/nano/session"
 )
 
 const (

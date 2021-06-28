@@ -5,10 +5,10 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/lonng/nano/benchmark/testdata"
-	"github.com/lonng/nano/session"
+	"github.com/aura-studio/nano/benchmark/testdata"
+	"github.com/aura-studio/nano/session"
 
-	"github.com/lonng/nano/component"
+	"github.com/aura-studio/nano/component"
 )
 
 //TestHandler is a component

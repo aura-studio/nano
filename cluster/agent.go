@@ -28,14 +28,14 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/lonng/nano/codec"
-	"github.com/lonng/nano/env"
-	"github.com/lonng/nano/log"
-	"github.com/lonng/nano/message"
-	"github.com/lonng/nano/pipeline"
-	"github.com/lonng/nano/serialize"
-	"github.com/lonng/nano/service"
-	"github.com/lonng/nano/session"
+	"github.com/aura-studio/nano/codec"
+	"github.com/aura-studio/nano/env"
+	"github.com/aura-studio/nano/log"
+	"github.com/aura-studio/nano/message"
+	"github.com/aura-studio/nano/pipeline"
+	"github.com/aura-studio/nano/serialize"
+	"github.com/aura-studio/nano/service"
+	"github.com/aura-studio/nano/session"
 )
 
 const (

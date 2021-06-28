@@ -1,11 +1,11 @@
 package message
 
 import (
-	"github.com/lonng/nano/env"
-	"github.com/lonng/nano/serialize"
-	"github.com/lonng/nano/serialize/json"
-	"github.com/lonng/nano/serialize/protobuf"
-	"github.com/lonng/nano/serialize/rawstring"
+	"github.com/aura-studio/nano/env"
+	"github.com/aura-studio/nano/serialize"
+	"github.com/aura-studio/nano/serialize/json"
+	"github.com/aura-studio/nano/serialize/protobuf"
+	"github.com/aura-studio/nano/serialize/rawstring"
 )
 
 const (

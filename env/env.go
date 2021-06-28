@@ -25,8 +25,8 @@ package env
 import (
 	"time"
 
-	"github.com/lonng/nano/serialize"
-	"github.com/lonng/nano/serialize/protobuf"
+	"github.com/aura-studio/nano/serialize"
+	"github.com/aura-studio/nano/serialize/protobuf"
 	"google.golang.org/grpc"
 )
 

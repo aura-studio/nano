@@ -3,15 +3,15 @@ package nano
 import (
 	"time"
 
-	"github.com/lonng/nano/cluster"
-	"github.com/lonng/nano/component"
-	"github.com/lonng/nano/env"
-	"github.com/lonng/nano/log"
-	"github.com/lonng/nano/message"
-	"github.com/lonng/nano/persistence"
-	"github.com/lonng/nano/pipeline"
-	"github.com/lonng/nano/serialize"
-	"github.com/lonng/nano/upgrader"
+	"github.com/aura-studio/nano/cluster"
+	"github.com/aura-studio/nano/component"
+	"github.com/aura-studio/nano/env"
+	"github.com/aura-studio/nano/log"
+	"github.com/aura-studio/nano/message"
+	"github.com/aura-studio/nano/persistence"
+	"github.com/aura-studio/nano/pipeline"
+	"github.com/aura-studio/nano/serialize"
+	"github.com/aura-studio/nano/upgrader"
 	"google.golang.org/grpc"
 )
 

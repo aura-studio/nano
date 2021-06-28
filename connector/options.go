@@ -1,8 +1,8 @@
 package connector
 
 import (
-	"github.com/lonng/nano/log"
-	"github.com/lonng/nano/serialize"
+	"github.com/aura-studio/nano/log"
+	"github.com/aura-studio/nano/serialize"
 )
 
 type (

@@ -4,16 +4,16 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/lonng/nano/message"
+	"github.com/aura-studio/nano/message"
 
-	"github.com/lonng/nano/serialize/protobuf"
+	"github.com/aura-studio/nano/serialize/protobuf"
 
-	"github.com/lonng/nano/benchmark/testdata"
-	"github.com/lonng/nano/cluster"
-	"github.com/lonng/nano/component"
-	"github.com/lonng/nano/connector"
-	"github.com/lonng/nano/scheduler"
-	"github.com/lonng/nano/session"
+	"github.com/aura-studio/nano/benchmark/testdata"
+	"github.com/aura-studio/nano/cluster"
+	"github.com/aura-studio/nano/component"
+	"github.com/aura-studio/nano/connector"
+	"github.com/aura-studio/nano/scheduler"
+	"github.com/aura-studio/nano/session"
 	. "github.com/pingcap/check"
 )
 

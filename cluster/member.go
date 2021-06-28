@@ -20,7 +20,7 @@
 
 package cluster
 
-import "github.com/lonng/nano/cluster/clusterpb"
+import "github.com/aura-studio/nano/cluster/clusterpb"
 
 // Member is a member of clusters
 type Member struct {

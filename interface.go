@@ -29,11 +29,11 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/lonng/nano/cluster"
-	"github.com/lonng/nano/component"
-	"github.com/lonng/nano/env"
-	"github.com/lonng/nano/log"
-	"github.com/lonng/nano/scheduler"
+	"github.com/aura-studio/nano/cluster"
+	"github.com/aura-studio/nano/component"
+	"github.com/aura-studio/nano/env"
+	"github.com/aura-studio/nano/log"
+	"github.com/aura-studio/nano/scheduler"
 )
 
 const (

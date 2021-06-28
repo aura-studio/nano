@@ -27,7 +27,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/lonng/nano/env"
+	"github.com/aura-studio/nano/env"
 	"google.golang.org/grpc"
 )
 

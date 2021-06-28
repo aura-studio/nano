@@ -8,13 +8,13 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/lonng/nano/env"
-	"github.com/lonng/nano/log"
-	"github.com/lonng/nano/serialize/protobuf"
+	"github.com/aura-studio/nano/env"
+	"github.com/aura-studio/nano/log"
+	"github.com/aura-studio/nano/serialize/protobuf"
 
-	"github.com/lonng/nano/codec"
-	"github.com/lonng/nano/message"
-	"github.com/lonng/nano/packet"
+	"github.com/aura-studio/nano/codec"
+	"github.com/aura-studio/nano/message"
+	"github.com/aura-studio/nano/packet"
 )
 
 type (

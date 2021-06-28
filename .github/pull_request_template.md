@@ -1,5 +1,5 @@
 <!--
-Thank you for contributing to Nano! Please read the [CONTRIBUTING](https://github.com/lonng/nano/blob/master/CONTRIBUTING.md) document **BEFORE** filing this PR.
+Thank you for contributing to Nano! Please read the [CONTRIBUTING](https://github.com/aura-studio/nano/blob/master/CONTRIBUTING.md) document **BEFORE** filing this PR.
 -->
 
 ### What problem does this PR solve? <!--add issue link with summary if exists-->

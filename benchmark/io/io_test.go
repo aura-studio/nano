@@ -8,11 +8,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/lonng/nano"
-	"github.com/lonng/nano/benchmark/testdata"
-	"github.com/lonng/nano/component"
-	"github.com/lonng/nano/connector"
-	"github.com/lonng/nano/serialize/protobuf"
+	"github.com/aura-studio/nano"
+	"github.com/aura-studio/nano/benchmark/testdata"
+	"github.com/aura-studio/nano/component"
+	"github.com/aura-studio/nano/connector"
+	"github.com/aura-studio/nano/serialize/protobuf"
 )
 
 const (

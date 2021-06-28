@@ -24,7 +24,7 @@ import (
 	"errors"
 	"reflect"
 
-	"github.com/lonng/nano/scheduler"
+	"github.com/aura-studio/nano/scheduler"
 )
 
 type (
