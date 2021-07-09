@@ -540,7 +540,7 @@ func (h *LocalHandler) localProcess(handler *component.Handler, lastMid uint64, 
 		result := handler.Method.Func.Call(args)
 		if len(result) > 0 {
 			if err := result[0].Interface(); err != nil {
-				log.Errorf("Service %s error: %+v", msg.Route, err)
+				log.Errorf("nano/hanlder: handler %s error: %+v", msg.Route, err)
 			}
 		}
 	}
