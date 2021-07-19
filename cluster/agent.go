@@ -80,7 +80,8 @@ type (
 )
 
 // Create new agent instance
-func newAgent(conn net.Conn, pipeline pipeline.Pipeline, rpcHandler rpcHandler, codec codec.Codec) *agent {
+func newAgent(conn net.Conn, pipeline pipeline.Pipeline, rpcHandler rpcHandler,
+	codec codec.Codec, serverID uint16) *agent {
 	serializers := message.ReadSerializers()
 	a := &agent{
 		conn:        conn,
@@ -95,7 +96,7 @@ func newAgent(conn net.Conn, pipeline pipeline.Pipeline, rpcHandler rpcHandler, 
 	}
 
 	// binding session
-	sid := service.Connections.SessionID()
+	sid := (int64(serverID)<<48 + service.Connections.SessionID())
 	s := session.New(a, sid)
 	a.session = s
 	a.srv = reflect.ValueOf(s)

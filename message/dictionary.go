@@ -42,16 +42,3 @@ func WriteDictionary(dict map[string]uint16) (map[string]uint16, map[uint16]stri
 
 	return Routes, Codes
 }
-
-// ParseDictionary parses dictionary into routes and codes independently
-func ParseDictionary(dict map[string]uint16) (map[string]uint16, map[uint16]string) {
-	routes := make(map[string]uint16)
-	codes := make(map[uint16]string)
-	for route, code := range dict {
-		if code > 0 {
-			routes[route] = code
-			codes[code] = route
-		}
-	}
-	return routes, codes
-}

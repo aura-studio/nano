@@ -23,14 +23,11 @@ const (
 )
 
 var (
-	ErrPacketSizeExcced = errors.New("codec: packet size exceed")
-)
-
-var (
-	ErrWrongMessageType   = errors.New("wrong message type")
-	ErrInvalidMessage     = errors.New("invalid message")
-	ErrRouteInfoNotFound  = errors.New("route info not found in dictionary")
-	ErrInvalidRouteLength = errors.New("invalid route length")
+	ErrPacketSizeExcced   = errors.New("codec: packet size exceed")
+	ErrWrongMessageType   = errors.New("codec: wrong message type")
+	ErrInvalidMessage     = errors.New("codec: invalid message")
+	ErrRouteInfoNotFound  = errors.New("codec: route info not found in dictionary")
+	ErrInvalidRouteLength = errors.New("codec: invalid route length")
 )
 
 type CodecEntity struct {
@@ -70,7 +67,7 @@ func (c *CodecEntity) EncodePacket(packets []*packet.Packet) ([]byte, error) {
 func (c *CodecEntity) DecodePacket(data []byte) ([]*packet.Packet, error) {
 	forward := func() error {
 		header := c.readBuf.Next(HeadLength)
-		c.size = int(binary.BigEndian.Uint32(header[:]))
+		c.size = int(binary.BigEndian.Uint32(header))
 
 		// packet length limitation
 		if env.Safe && c.size > MaxPacketSize {
@@ -80,19 +77,18 @@ func (c *CodecEntity) DecodePacket(data []byte) ([]*packet.Packet, error) {
 		return nil
 	}
 
-	c.readBuf.Write(data)
-
 	var (
 		packets []*packet.Packet
 		err     error
 	)
+
+	c.readBuf.Write(data)
 
 	// check length
 	if c.readBuf.Len() < HeadLength {
 		return nil, err
 	}
 
-	// first time
 	if c.size < 0 {
 		if err = forward(); err != nil {
 			return nil, err
@@ -112,7 +108,6 @@ func (c *CodecEntity) DecodePacket(data []byte) ([]*packet.Packet, error) {
 		if err = forward(); err != nil {
 			return nil, err
 		}
-
 	}
 
 	return packets, nil

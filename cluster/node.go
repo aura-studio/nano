@@ -26,6 +26,8 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -69,6 +71,7 @@ type Options struct {
 type Node struct {
 	Options            // current node options
 	ServiceAddr string // current server service address (RPC)
+	ServerID    uint16 // current server service ID
 
 	cluster      *cluster
 	handler      *LocalHandler
@@ -85,6 +88,11 @@ func (n *Node) Startup() error {
 	if n.ServiceAddr == "" {
 		return errors.New("service address cannot be empty in master node")
 	}
+	serverID, err := strconv.ParseUint(strings.Split(n.ServiceAddr, ":")[1], 10, 16)
+	if err != nil {
+		return err
+	}
+	n.ServerID = uint16(serverID)
 	n.sessions = map[int64]*session.Session{}
 	n.cluster = newCluster(n)
 	n.handler = newHandler(n)
