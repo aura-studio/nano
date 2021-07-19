@@ -96,7 +96,7 @@ func newAgent(conn net.Conn, pipeline pipeline.Pipeline, rpcHandler rpcHandler,
 	}
 
 	// binding session
-	sid := (int64(serverID)<<48 + service.Connections.SessionID())
+	sid := int64(serverID) + service.Connections.SessionID()<<16
 	s := session.New(a, sid)
 	a.session = s
 	a.srv = reflect.ValueOf(s)
