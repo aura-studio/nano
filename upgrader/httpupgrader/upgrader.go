@@ -18,23 +18,32 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package codec
+package httpupgrader
 
 import (
-	"github.com/aura-studio/nano/packet"
+	"bufio"
+	"fmt"
+	"net"
+	"net/http"
 )
 
-type (
-	Encoder interface {
-		Encode(...*packet.Packet) ([]byte, error)
+type Upgrader struct{}
+
+func NewUpgrader() *Upgrader {
+	return &Upgrader{}
+}
+
+func (u *Upgrader) Upgrade(w http.ResponseWriter, r *http.Request, params map[string]string) (net.Conn, error) {
+	h, ok := w.(http.Hijacker)
+	if !ok {
+		return nil, fmt.Errorf("wrong type of response writer")
+	}
+	var brw *bufio.ReadWriter
+	conn, brw, err := h.Hijack()
+	if err != nil {
+		return nil, err
 	}
 
-	Decoder interface {
-		Decode(data []byte) ([]*packet.Packet, error)
-	}
-
-	Codec interface {
-		Encoder() Encoder
-		Decoder() Decoder
-	}
-)
+	c := NewConn(w, r, conn, brw, params)
+	return c, nil
+}

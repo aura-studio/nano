@@ -32,6 +32,7 @@ import (
 	"github.com/aura-studio/nano/env"
 	"github.com/aura-studio/nano/log"
 	"github.com/aura-studio/nano/message"
+	"github.com/aura-studio/nano/packet"
 	"github.com/aura-studio/nano/pipeline"
 	"github.com/aura-studio/nano/serialize"
 	"github.com/aura-studio/nano/service"
@@ -61,7 +62,8 @@ type (
 		chDie    chan struct{}       // wait for close
 		chSend   chan pendingMessage // push message queue
 		lastAt   int64               // last heartbeat unix time stamp
-		decoder  *codec.Decoder      // binary decoder
+		encoder  codec.Encoder       // encoder
+		decoder  codec.Decoder       // decoder
 		pipeline pipeline.Pipeline
 
 		rpcHandler  rpcHandler
@@ -83,7 +85,7 @@ type (
 )
 
 // Create new agent instance
-func newAgent(conn net.Conn, pipeline pipeline.Pipeline, rpcHandler rpcHandler) *agent {
+func newAgent(conn net.Conn, pipeline pipeline.Pipeline, rpcHandler rpcHandler, codec codec.Codec) *agent {
 	routes, codes := message.ReadDictionary()
 	serializers := message.ReadSerializers()
 	a := &agent{
@@ -92,7 +94,8 @@ func newAgent(conn net.Conn, pipeline pipeline.Pipeline, rpcHandler rpcHandler) 
 		chDie:       make(chan struct{}),
 		lastAt:      time.Now().Unix(),
 		chSend:      make(chan pendingMessage, agentWriteBacklog),
-		decoder:     codec.NewDecoder(),
+		encoder:     codec.Encoder(),
+		decoder:     codec.Decoder(),
 		pipeline:    pipeline,
 		rpcHandler:  rpcHandler,
 		routes:      routes,
@@ -321,7 +324,7 @@ func (a *agent) write() {
 			}
 
 			// packet encode
-			p, err := codec.Encode(em)
+			p, err := a.encoder.Encode(&packet.Packet{Length: len(em), Data: em})
 			if err != nil {
 				log.Errorln(err)
 				break

@@ -30,6 +30,7 @@ import (
 	"time"
 
 	"github.com/aura-studio/nano/cluster/clusterpb"
+	"github.com/aura-studio/nano/codec"
 	"github.com/aura-studio/nano/component"
 	"github.com/aura-studio/nano/env"
 	"github.com/aura-studio/nano/log"
@@ -59,6 +60,7 @@ type Options struct {
 	TSLCertificate string
 	TSLKey         string
 	Logger         log.Logger
+	Codec          codec.Codec
 }
 
 // Node represents a node in nano cluster, which will contains a group of services.

@@ -1,21 +1,23 @@
-package codec
+package plain_test
 
 import (
 	"reflect"
 	"testing"
 
-	. "github.com/aura-studio/nano/packet"
+	"github.com/aura-studio/nano/codec/plain"
+	"github.com/aura-studio/nano/packet"
 )
 
 func TestPack(t *testing.T) {
+	var e = plain.NewEncoder()
 	data := []byte("hello world")
-	p1 := &Packet{Data: data, Length: len(data)}
-	pp1, err := Encode(data)
+	p1 := &packet.Packet{Data: data, Length: len(data)}
+	pp1, err := e.Encode(p1)
 	if err != nil {
 		t.Error(err.Error())
 	}
 
-	d1 := NewDecoder()
+	d1 := plain.NewDecoder()
 	packets, err := d1.Decode(pp1)
 	if err != nil {
 		t.Fatal(err.Error())
@@ -27,13 +29,13 @@ func TestPack(t *testing.T) {
 		t.Fatalf("expect: %v, got: %v", p1, packets[0])
 	}
 
-	p2 := &Packet{Data: data, Length: len(data)}
-	pp2, err := Encode(data)
+	p2 := &packet.Packet{Data: data, Length: len(data)}
+	pp2, err := e.Encode(p2)
 	if err != nil {
 		t.Error(err.Error())
 	}
 
-	d2 := NewDecoder()
+	d2 := plain.NewDecoder()
 	upp2, err := d2.Decode(pp2)
 	if err != nil {
 		t.Fatal(err.Error())
@@ -45,44 +47,35 @@ func TestPack(t *testing.T) {
 		t.Fatalf("expect: %v, got: %v", p2, upp2[0])
 	}
 
-	_ = &Packet{Data: data, Length: len(data)}
-	if _, err := Encode(data); err != nil {
-		t.Error("cannot be err")
-	}
-
-	_ = &Packet{Data: data, Length: len(data)}
-	if _, err = Encode(data); err != nil {
-		t.Error("cannot be err")
-	}
-
-	p5 := &Packet{Data: data, Length: len(data)}
-	pp5, err := Encode(data)
+	p3 := &packet.Packet{Length: len(data), Data: data}
+	pp3, err := e.Encode(p3)
 	if err != nil {
 		t.Fatal(err.Error())
 	}
-	d3 := NewDecoder()
-	upp5, err := d3.Decode(append(pp5, []byte{0x00, 0x00, 0x00, 0x00}...))
+	d3 := plain.NewDecoder()
+	upp3, err := d3.Decode(append(pp3, []byte{0x00, 0x00, 0x00, 0x00}...))
 	if err != nil {
 		t.Fatal(err.Error())
 	}
-	if len(upp5) < 1 {
+	if len(upp3) < 1 {
 		t.Fatal("packets should not empty")
 	}
 
-	if !reflect.DeepEqual(p5, upp5[0]) {
-		t.Fatalf("expect: %v, got: %v", p2, upp5[0])
+	if !reflect.DeepEqual(p3, upp3[0]) {
+		t.Fatalf("expect: %v, got: %v", p2, upp3[0])
 	}
 }
 
 func BenchmarkDecoder_Decode(b *testing.B) {
+	var e = plain.NewEncoder()
 	data := []byte("hello world")
-	pp1, err := Encode(data)
+	pp1, err := e.Encode(&packet.Packet{Length: len(data), Data: data})
 	if err != nil {
 		b.Error(err.Error())
 	}
 
 	b.ReportAllocs()
-	d1 := NewDecoder()
+	d1 := plain.NewDecoder()
 	for i := 0; i < b.N; i++ {
 		packets, err := d1.Decode(pp1)
 		if err != nil {

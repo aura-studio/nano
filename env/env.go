@@ -25,6 +25,7 @@ package env
 import (
 	"time"
 
+	"github.com/aura-studio/nano/codec"
 	"github.com/aura-studio/nano/serialize"
 	"github.com/aura-studio/nano/serialize/protobuf"
 	"google.golang.org/grpc"
@@ -49,6 +50,9 @@ var (
 	// GlobalTicker represents global ticker that all cron job will be executed
 	// in globalTicker.
 	GlobalTicker *time.Ticker
+
+	// Codec encodes & decodes packets from binary buffer
+	Codec codec.Codec
 
 	// Serializer is message serializer, json or protobuf
 	Serializer serialize.Serializer

@@ -30,6 +30,7 @@ import (
 	"time"
 
 	"github.com/aura-studio/nano/cluster"
+	"github.com/aura-studio/nano/codec/plain"
 	"github.com/aura-studio/nano/component"
 	"github.com/aura-studio/nano/env"
 	"github.com/aura-studio/nano/log"
@@ -98,6 +99,11 @@ func Listen(addr string, opts ...Option) {
 	// Set the retry interval to 3 secondes if doesn't set by user
 	if opt.RetryInterval == 0 {
 		opt.RetryInterval = time.Second * 3
+	}
+
+	// Set default codec
+	if opt.Codec == nil {
+		opt.Codec = plain.NewCodec()
 	}
 
 	node := &cluster.Node{

@@ -8,6 +8,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/aura-studio/nano/codec/plain"
 	"github.com/aura-studio/nano/env"
 	"github.com/aura-studio/nano/log"
 	"github.com/aura-studio/nano/serialize/protobuf"
@@ -27,14 +28,15 @@ type (
 	Connector struct {
 		Options
 
-		conn           net.Conn       // low-level connection
-		codec          *codec.Decoder // decoder
-		die            chan struct{}  // connector close channel
-		chSend         chan []byte    // send queue
-		mid            uint64         // message id
-		connected      int32          // connected state 1: disconnected : 0
-		connectedEvent Callback       // connected callback
-		chReady        chan struct{}  // connector ready channel
+		conn           net.Conn      // low-level connection
+		encoder        codec.Encoder // encoder
+		decoder        codec.Decoder // decoder
+		die            chan struct{} // connector close channel
+		chSend         chan []byte   // send queue
+		mid            uint64        // message id
+		connected      int32         // connected state 1: disconnected : 0
+		connectedEvent Callback      // connected callback
+		chReady        chan struct{} // connector ready channel
 
 		// events handler
 		muEvents        sync.RWMutex
@@ -58,7 +60,6 @@ func NewConnector(opts ...Option) *Connector {
 			serializer: protobuf.NewSerializer(),
 		},
 		die:             make(chan struct{}),
-		codec:           codec.NewDecoder(),
 		chSend:          make(chan []byte, 256),
 		mid:             1,
 		connected:       0,
@@ -77,8 +78,15 @@ func NewConnector(opts ...Option) *Connector {
 	}
 
 	if c.Options.logger != nil {
-		log.SetLogger(c.Options.logger)
+		log.SetLogger(c.logger)
 	}
+
+	if c.Options.codec == nil {
+		c.codec = plain.NewCodec()
+	}
+
+	c.encoder = c.codec.Encoder()
+	c.decoder = c.codec.Decoder()
 
 	c.routes, c.codes = message.ParseDictionary(c.dictionary)
 	return c
@@ -293,7 +301,7 @@ func (c *Connector) sendMessage(msg *message.Message) error {
 		return err
 	}
 
-	payload, err := codec.Encode(data)
+	payload, err := c.encoder.Encode(&packet.Packet{Length: len(data), Data: data})
 	if err != nil {
 		return err
 	}
@@ -339,7 +347,7 @@ func (c *Connector) read() {
 			return
 		}
 
-		packets, err := c.codec.Decode(buf[:n])
+		packets, err := c.decoder.Decode(buf[:n])
 		if err != nil {
 			log.Errorln(err)
 			c.Close()

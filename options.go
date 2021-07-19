@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/aura-studio/nano/cluster"
+	"github.com/aura-studio/nano/codec"
 	"github.com/aura-studio/nano/component"
 	"github.com/aura-studio/nano/env"
 	"github.com/aura-studio/nano/log"
@@ -163,5 +164,12 @@ func WithTSLConfig(certificate, key string) Option {
 func WithLogger(l log.Logger) Option {
 	return func(opt *cluster.Options) {
 		opt.Logger = l
+	}
+}
+
+
+func WithCodec(c codec.Codec) Option {
+	return func(opt *cluster.Options) {
+		opt.Codec = c
 	}
 }
