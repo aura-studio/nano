@@ -62,18 +62,13 @@ type (
 		chDie    chan struct{}       // wait for close
 		chSend   chan pendingMessage // push message queue
 		lastAt   int64               // last heartbeat unix time stamp
-		encoder  codec.Encoder       // encoder
-		decoder  codec.Decoder       // decoder
 		pipeline pipeline.Pipeline
 
 		rpcHandler  rpcHandler
 		srv         reflect.Value                   // cached session reflect.Value
-		routes      map[string]uint16               // copy system routes for agent
-		codes       map[uint16]string               // copy system codes for agent
 		serializers map[string]serialize.Serializer // copy system serializers for agent
-		compressed  bool                            // whether to use compressed msg to client
-		recvPckCnt  int64                           // agent receive packet count
-		sendPckCnt  int64                           // agent send packet count
+
+		codecEntity codec.CodecEntity
 	}
 
 	pendingMessage struct {
@@ -86,7 +81,6 @@ type (
 
 // Create new agent instance
 func newAgent(conn net.Conn, pipeline pipeline.Pipeline, rpcHandler rpcHandler, codec codec.Codec) *agent {
-	routes, codes := message.ReadDictionary()
 	serializers := message.ReadSerializers()
 	a := &agent{
 		conn:        conn,
@@ -94,13 +88,10 @@ func newAgent(conn net.Conn, pipeline pipeline.Pipeline, rpcHandler rpcHandler, 
 		chDie:       make(chan struct{}),
 		lastAt:      time.Now().Unix(),
 		chSend:      make(chan pendingMessage, agentWriteBacklog),
-		encoder:     codec.Encoder(),
-		decoder:     codec.Decoder(),
 		pipeline:    pipeline,
 		rpcHandler:  rpcHandler,
-		routes:      routes,
-		codes:       codes,
 		serializers: serializers,
+		codecEntity: codec.Entity(),
 	}
 
 	// binding session
@@ -301,9 +292,9 @@ func (a *agent) write() {
 			m := &message.Message{
 				Type:     data.typ,
 				ShortVer: a.session.ShortVer(),
-				Data:     payload,
-				Route:    data.route,
 				ID:       data.mid,
+				Route:    data.route,
+				Data:     payload,
 			}
 			if pipe := a.pipeline; pipe != nil {
 				err := pipe.Outbound().Process(a.session, m)
@@ -313,24 +304,20 @@ func (a *agent) write() {
 				}
 			}
 
-			var routes map[string]uint16
-			if a.compressed {
-				routes = a.routes
-			}
-			em, err := message.Encode(m, routes)
+			em, err := a.codecEntity.EncodeMessage(m)
 			if err != nil {
 				log.Errorln(err.Error())
 				break
 			}
 
 			// packet encode
-			p, err := a.encoder.Encode(&packet.Packet{Length: len(em), Data: em})
+			packets := []*packet.Packet{{Length: len(em), Data: em}}
+			p, err := a.codecEntity.EncodePacket(packets)
 			if err != nil {
 				log.Errorln(err)
 				break
 			}
 
-			a.sendPckCnt++
 			chWrite <- p
 
 		case <-a.chDie: // agent closed signal

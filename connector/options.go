@@ -10,7 +10,6 @@ type (
 	// Options contains some configurations for connector
 	Options struct {
 		name       string               // component name
-		dictionary map[string]uint16    // Dictionary info
 		serializer serialize.Serializer // serializer for connector
 		wsPath     string               //websocket path
 		logger     log.Logger           // logger
@@ -25,13 +24,6 @@ type (
 func WithName(name string) Option {
 	return func(opt *Options) {
 		opt.name = name
-	}
-}
-
-// WithDictionary is used to set compressed flag
-func WithDictionary(dictionary map[string]uint16) Option {
-	return func(opt *Options) {
-		opt.dictionary = dictionary
 	}
 }
 

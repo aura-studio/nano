@@ -8,12 +8,12 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/aura-studio/nano/codec/plain"
+	"github.com/aura-studio/nano/codec"
+	"github.com/aura-studio/nano/codec/plaincodec"
 	"github.com/aura-studio/nano/env"
 	"github.com/aura-studio/nano/log"
 	"github.com/aura-studio/nano/serialize/protobuf"
 
-	"github.com/aura-studio/nano/codec"
 	"github.com/aura-studio/nano/message"
 	"github.com/aura-studio/nano/packet"
 )
@@ -29,8 +29,6 @@ type (
 		Options
 
 		conn           net.Conn      // low-level connection
-		encoder        codec.Encoder // encoder
-		decoder        codec.Decoder // decoder
 		die            chan struct{} // connector close channel
 		chSend         chan []byte   // send queue
 		mid            uint64        // message id
@@ -47,8 +45,7 @@ type (
 		muResponses sync.RWMutex
 		responses   map[uint64]Callback
 
-		routes map[string]uint16 // copy system routes for agent
-		codes  map[uint16]string // copy system codes for agent
+		codecEntity codec.CodecEntity
 	}
 )
 
@@ -56,7 +53,6 @@ type (
 func NewConnector(opts ...Option) *Connector {
 	c := &Connector{
 		Options: Options{
-			dictionary: make(map[string]uint16),
 			serializer: protobuf.NewSerializer(),
 		},
 		die:             make(chan struct{}),
@@ -68,8 +64,6 @@ func NewConnector(opts ...Option) *Connector {
 		events:          map[string]Callback{},
 		unexpectedEvent: func(data interface{}) {},
 		responses:       map[uint64]Callback{},
-		routes:          make(map[string]uint16),
-		codes:           make(map[uint16]string),
 	}
 
 	for i := range opts {
@@ -82,13 +76,10 @@ func NewConnector(opts ...Option) *Connector {
 	}
 
 	if c.Options.codec == nil {
-		c.codec = plain.NewCodec()
+		c.codec = plaincodec.NewCodec()
 	}
+	c.codecEntity = c.codec.Entity()
 
-	c.encoder = c.codec.Encoder()
-	c.decoder = c.codec.Decoder()
-
-	c.routes, c.codes = message.ParseDictionary(c.dictionary)
 	return c
 }
 
@@ -296,12 +287,13 @@ func (c *Connector) setResponseHandler(mid uint64, cb Callback) {
 }
 
 func (c *Connector) sendMessage(msg *message.Message) error {
-	data, err := message.Encode(msg, c.routes)
+	data, err := c.codecEntity.EncodeMessage(msg)
 	if err != nil {
 		return err
 	}
 
-	payload, err := c.encoder.Encode(&packet.Packet{Length: len(data), Data: data})
+	packets := []*packet.Packet{{Length: len(data), Data: data}}
+	payload, err := c.codecEntity.EncodePacket(packets)
 	if err != nil {
 		return err
 	}
@@ -347,7 +339,7 @@ func (c *Connector) read() {
 			return
 		}
 
-		packets, err := c.decoder.Decode(buf[:n])
+		packets, err := c.codecEntity.DecodePacket(buf[:n])
 		if err != nil {
 			log.Errorln(err)
 			c.Close()
@@ -362,7 +354,7 @@ func (c *Connector) read() {
 }
 
 func (c *Connector) processPacket(p *packet.Packet) {
-	msg, _, err := message.Decode(p.Data, c.codes)
+	msg, err := c.codecEntity.DecodeMessage(p.Data)
 	if err != nil {
 		log.Errorln(err)
 		return

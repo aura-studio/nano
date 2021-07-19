@@ -10,10 +10,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/aura-studio/nano/codec/plaincodec"
 	"github.com/aura-studio/nano/log"
 
 	"github.com/aura-studio/nano/codec"
-	"github.com/aura-studio/nano/codec/plain"
 	"github.com/aura-studio/nano/env"
 	"github.com/aura-studio/nano/message"
 	"github.com/aura-studio/nano/packet"
@@ -22,28 +22,26 @@ import (
 // Conn is an adapter to t.Conn, which implements all t.Conn
 // interface base on *websocket.Conn
 type Conn struct {
-	w       http.ResponseWriter
-	r       *http.Request
-	conn    net.Conn
-	brw     *bufio.ReadWriter
-	params  map[string]string
-	encoder codec.Encoder
-	decoder codec.Decoder
-	readBuf io.Reader
-	readEOF bool
+	w           http.ResponseWriter
+	r           *http.Request
+	conn        net.Conn
+	brw         *bufio.ReadWriter
+	params      map[string]string
+	codecEntity codec.CodecEntity
+	readBuf     io.Reader
+	readEOF     bool
 }
 
 // NewConn return an initialized *WSConn
 func NewConn(w http.ResponseWriter, r *http.Request, conn net.Conn, brw *bufio.ReadWriter, params map[string]string) *Conn {
 	return &Conn{
-		w:       w,
-		r:       r,
-		conn:    conn,
-		brw:     brw,
-		params:  params,
-		encoder: plain.NewCodec().Encoder(),
-		decoder: plain.NewCodec().Decoder(),
-		readBuf: nil,
+		w:           w,
+		r:           r,
+		conn:        conn,
+		brw:         brw,
+		params:      params,
+		codecEntity: plaincodec.NewCodec().Entity(),
+		readBuf:     nil,
 	}
 }
 
@@ -84,12 +82,12 @@ func (c *Conn) Read(b []byte) (int, error) {
 			ID:    1,
 			Data:  data,
 		}
-		data, err := message.Encode(msg, nil)
+		data, err := c.codecEntity.EncodeMessage(msg)
 		if err != nil {
 			return 0, err
 		}
-		p := &packet.Packet{Length: len(data), Data: data}
-		b, err := c.encoder.Encode(p)
+		packets := []*packet.Packet{{Length: len(data), Data: data}}
+		b, err := c.codecEntity.EncodePacket(packets)
 		if err != nil {
 			return 0, err
 		}
@@ -114,14 +112,14 @@ func (c *Conn) Read(b []byte) (int, error) {
 // Write can be made to time out and return an Error with Timeout() == true
 // after a fixed time limit; see SetDeadline and SetWriteDeadline.
 func (c *Conn) Write(b []byte) (int, error) {
-	packets, err := c.decoder.Decode(b)
+	packets, err := c.codecEntity.DecodePacket(b)
 	if err != nil {
 		return 0, err
 	}
 	if len(packets) != 1 {
 		return 0, fmt.Errorf("http: Error number of packets to write")
 	}
-	m, _, err := message.Decode(packets[0].Data, nil)
+	m, err := c.codecEntity.DecodeMessage(packets[0].Data)
 	if err != nil {
 		return 0, err
 	}

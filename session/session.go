@@ -49,6 +49,7 @@ type EventCallback func(*Session, ...interface{})
 type Session struct {
 	sync.RWMutex                                 // protect data
 	id           int64                           // session global unique id
+	VersionBound bool                            // session version bound
 	shortVer     uint32                          // session short version
 	version      string                          // session version
 	uid          int64                           // binding user id

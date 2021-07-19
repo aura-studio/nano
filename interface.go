@@ -30,7 +30,7 @@ import (
 	"time"
 
 	"github.com/aura-studio/nano/cluster"
-	"github.com/aura-studio/nano/codec/plain"
+	"github.com/aura-studio/nano/codec/plaincodec"
 	"github.com/aura-studio/nano/component"
 	"github.com/aura-studio/nano/env"
 	"github.com/aura-studio/nano/log"
@@ -103,7 +103,7 @@ func Listen(addr string, opts ...Option) {
 
 	// Set default codec
 	if opt.Codec == nil {
-		opt.Codec = plain.NewCodec()
+		opt.Codec = plaincodec.NewCodec()
 	}
 
 	node := &cluster.Node{

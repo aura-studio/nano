@@ -321,7 +321,7 @@ func (h *LocalHandler) handle(conn net.Conn) {
 			return
 		}
 
-		packets, err := agent.decoder.Decode(buf[:n])
+		packets, err := agent.codecEntity.DecodePacket(buf[:n])
 		if err != nil {
 			log.Errorln(err.Error())
 			return
@@ -342,30 +342,18 @@ func (h *LocalHandler) handle(conn net.Conn) {
 }
 
 func (h *LocalHandler) processPacket(agent *agent, p *packet.Packet) error {
-	agent.recvPckCnt++
-
-	msg, compressed, err := message.Decode(p.Data, agent.codes)
+	msg, err := agent.codecEntity.DecodeMessage(p.Data)
 	if err != nil {
 		return err
 	}
 
-	if agent.recvPckCnt == 1 {
+	if !agent.session.VersionBound {
 		h.mu.RLock()
 		version := h.versionDict[msg.ShortVer]
 		h.mu.RUnlock()
 		agent.session.BindShortVer(msg.ShortVer)
 		agent.session.BindVersion(version)
-
-		agent.compressed = compressed
-		if env.Debug {
-			if compressed {
-				log.Printf("Use compressed router mode for agent, SessionID=%d, Version=%s",
-					agent.session.ID(), agent.session.Version())
-			} else {
-				log.Printf("Use uncompressed router mode for agent, SessionID=%d, Version=%s",
-					agent.session.ID(), agent.session.Version())
-			}
-		}
+		agent.session.VersionBound = true
 	}
 
 	h.processMessage(agent.session, msg, false)

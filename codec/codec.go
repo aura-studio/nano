@@ -21,20 +21,19 @@
 package codec
 
 import (
+	"github.com/aura-studio/nano/message"
 	"github.com/aura-studio/nano/packet"
 )
 
 type (
-	Encoder interface {
-		Encode(...*packet.Packet) ([]byte, error)
-	}
-
-	Decoder interface {
-		Decode(data []byte) ([]*packet.Packet, error)
+	CodecEntity interface {
+		EncodePacket([]*packet.Packet) ([]byte, error)
+		DecodePacket(data []byte) ([]*packet.Packet, error)
+		EncodeMessage(*message.Message) ([]byte, error)
+		DecodeMessage([]byte) (*message.Message, error)
 	}
 
 	Codec interface {
-		Encoder() Encoder
-		Decoder() Decoder
+		Entity() CodecEntity
 	}
 )

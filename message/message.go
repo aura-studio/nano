@@ -21,8 +21,6 @@
 package message
 
 import (
-	"encoding/binary"
-	"errors"
 	"fmt"
 	"sync"
 )
@@ -38,12 +36,6 @@ const (
 	Push
 )
 
-const (
-	msgRouteNotCompressMask = 0x08
-	msgTypeMask             = 0x07
-	msgHeadLength           = 0x02
-)
-
 var types = map[Type]string{
 	Request:  "Request",
 	Notify:   "Notify",
@@ -57,22 +49,13 @@ func (t Type) String() string {
 	return types[t]
 }
 
-// Errors that could be occurred in message codec
-var (
-	ErrWrongMessageType   = errors.New("wrong message type")
-	ErrInvalidMessage     = errors.New("invalid message")
-	ErrRouteInfoNotFound  = errors.New("route info not found in dictionary")
-	ErrInvalidRouteLength = errors.New("invalid route length")
-)
-
 // Message represents a unmarshaled message or a message which to be marshaled
 type Message struct {
-	Type       Type   // message type
-	ShortVer   uint32 // message short version
-	ID         uint64 // unique id, zero while notify mode
-	Route      string // route for locating service
-	Data       []byte // payload
-	Compressed bool   // is message compressed
+	Type     Type   // message type
+	ShortVer uint32 // message short version
+	ID       uint64 // unique id, zero while notify mode
+	Route    string // route for locating service
+	Data     []byte // payload
 }
 
 // New returns a new message instance
@@ -85,107 +68,6 @@ func (m *Message) String() string {
 	return fmt.Sprintf("%s %s (%dbytes)", types[m.Type], m.Route, len(m.Data))
 }
 
-func invalidType(t Type) bool {
-	return t < Request || t > Push
-}
-
-// Encode marshals message to binary format. Different message types is corresponding to
-// different message header, message types is identified by 2-4 bit of flag field. The
-// relationship between message types and message header is presented as follows:
-// The figure above indicates that the bit does not affect the type of message.
-// See ref: https://github.com/lonnng/nano/blob/master/docs/communication_protocol.md
-func Encode(m *Message, routes map[string]uint16) ([]byte, error) {
-	if invalidType(m.Type) {
-		return nil, ErrWrongMessageType
-	}
-	var offset uint64 = 0
-	buf := make([]byte, 15)
-
-	// encode flag
-	flag := byte(m.Type)
-	code, compressed := routes[m.Route]
-	if !compressed {
-		flag |= msgRouteNotCompressMask
-	}
-	buf[offset] = byte(flag)
-	offset++
-
-	// encode version ID
-	binary.BigEndian.PutUint32(buf[offset:], m.ShortVer)
-	offset += 4
-
-	// encode msg ID
-	binary.BigEndian.PutUint64(buf[offset:], m.ID)
-	offset += 8
-
-	// encode route
-	if compressed {
-		// encode compressed route ID
-		binary.BigEndian.PutUint16(buf[offset:], code)
-	} else {
-		rl := uint16(len(m.Route))
-
-		// encode route string length
-		binary.BigEndian.PutUint16(buf[offset:], rl)
-
-		// encode route string
-		buf = append(buf, []byte(m.Route)...)
-	}
-
-	buf = append(buf, m.Data...)
-	return buf, nil
-}
-
-// Decode unmarshal the bytes slice to a message
-func Decode(data []byte, codes map[uint16]string) (*Message, bool, error) {
-	if len(data) < msgHeadLength {
-		return nil, false, ErrInvalidMessage
-	}
-	var offset uint64 = 0
-
-	// decode flag
-	m := New()
-	flag := data[offset]
-	offset++
-	m.Type = Type(flag & msgTypeMask)
-	m.Compressed = flag&msgRouteNotCompressMask == 0
-	if invalidType(m.Type) {
-		return nil, false, ErrWrongMessageType
-	}
-
-	// decode version ID
-	m.ShortVer = binary.BigEndian.Uint32(data[offset:])
-	offset += 4
-
-	// decode msg ID
-	m.ID = binary.BigEndian.Uint64(data[offset:])
-	offset += 8
-
-	// decode route
-	if m.Compressed {
-		// decode compressed route ID
-		code := binary.BigEndian.Uint16(data[offset:])
-		route, ok := codes[code]
-		if !ok {
-			return nil, false, ErrRouteInfoNotFound
-		}
-		m.Route = route
-		offset += 2
-	} else {
-		// decode route string length
-		rl := binary.BigEndian.Uint16(data[offset:])
-		offset += 2
-
-		if offset+uint64(rl) > uint64(len(data)) {
-			return nil, false, ErrInvalidRouteLength
-		}
-
-		// decode route string
-		m.Route = string(data[offset:(offset + uint64(rl))])
-		offset += uint64(rl)
-	}
-
-	// decode data
-	m.Data = data[offset:]
-	return m, m.Compressed, nil
+func (m *Message) TypeValid() bool {
+	return m.Type >= Request && m.Type <= Push
 }

@@ -1,0 +1,232 @@
+package plaincodec
+
+import (
+	"bytes"
+	"encoding/binary"
+	"errors"
+
+	"github.com/aura-studio/nano/codec"
+	"github.com/aura-studio/nano/env"
+	"github.com/aura-studio/nano/message"
+	"github.com/aura-studio/nano/packet"
+)
+
+const (
+	HeadLength    = 4
+	MaxPacketSize = 64 * 1024
+)
+
+const (
+	msgRouteNotCompressMask = 0x08
+	msgTypeMask             = 0x07
+	msgHeadLength           = 0x02
+)
+
+var (
+	ErrPacketSizeExcced = errors.New("codec: packet size exceed")
+)
+
+var (
+	ErrWrongMessageType   = errors.New("wrong message type")
+	ErrInvalidMessage     = errors.New("invalid message")
+	ErrRouteInfoNotFound  = errors.New("route info not found in dictionary")
+	ErrInvalidRouteLength = errors.New("invalid route length")
+)
+
+type CodecEntity struct {
+	writeBuf   *bytes.Buffer
+	readBuf    *bytes.Buffer
+	size       int // last packet length
+	routes     map[string]uint16
+	codes      map[uint16]string
+	compressed bool  // whether to use compressed msg to client
+	recvCnt    int64 // agent receive packet count
+}
+
+func NewCodecEntity() *CodecEntity {
+	routes, codes := message.ReadDictionary()
+	return &CodecEntity{
+		writeBuf: bytes.NewBuffer(nil),
+		readBuf:  bytes.NewBuffer(nil),
+		size:     -1,
+		routes:   routes,
+		codes:    codes,
+	}
+}
+
+func (c *CodecEntity) EncodePacket(packets []*packet.Packet) ([]byte, error) {
+	defer c.writeBuf.Reset()
+	for _, p := range packets {
+		err := binary.Write(c.writeBuf, binary.BigEndian, uint32(p.Length))
+		if err != nil {
+			return nil, err
+		}
+		c.writeBuf.Write(p.Data)
+	}
+	data := c.writeBuf.Next(c.writeBuf.Len())
+	return data, nil
+}
+
+func (c *CodecEntity) DecodePacket(data []byte) ([]*packet.Packet, error) {
+	forward := func() error {
+		header := c.readBuf.Next(HeadLength)
+		c.size = int(binary.BigEndian.Uint32(header[:]))
+
+		// packet length limitation
+		if env.Safe && c.size > MaxPacketSize {
+			return ErrPacketSizeExcced
+		}
+
+		return nil
+	}
+
+	c.readBuf.Write(data)
+
+	var (
+		packets []*packet.Packet
+		err     error
+	)
+
+	// check length
+	if c.readBuf.Len() < HeadLength {
+		return nil, err
+	}
+
+	// first time
+	if c.size < 0 {
+		if err = forward(); err != nil {
+			return nil, err
+		}
+	}
+
+	for c.size <= c.readBuf.Len() {
+		p := &packet.Packet{Length: c.size, Data: c.readBuf.Next(c.size)}
+		packets = append(packets, p)
+
+		// more packet
+		if c.readBuf.Len() < HeadLength {
+			c.size = -1
+			break
+		}
+
+		if err = forward(); err != nil {
+			return nil, err
+		}
+
+	}
+
+	return packets, nil
+}
+
+func (c *CodecEntity) EncodeMessage(m *message.Message) ([]byte, error) {
+	if !m.TypeValid() {
+		return nil, ErrWrongMessageType
+	}
+	var offset uint64 = 0
+	buf := make([]byte, 15)
+
+	// encode flag
+	flag := byte(m.Type)
+	code, found := c.routes[m.Route]
+	compressed := c.compressed && found
+	if !compressed {
+		flag |= msgRouteNotCompressMask
+	}
+	buf[offset] = byte(flag)
+	offset++
+
+	// encode version ID
+	binary.BigEndian.PutUint32(buf[offset:], m.ShortVer)
+	offset += 4
+
+	// encode msg ID
+	binary.BigEndian.PutUint64(buf[offset:], m.ID)
+	offset += 8
+
+	// encode route
+	if compressed {
+		// encode compressed route ID
+		binary.BigEndian.PutUint16(buf[offset:], code)
+	} else {
+		rl := uint16(len(m.Route))
+
+		// encode route string length
+		binary.BigEndian.PutUint16(buf[offset:], rl)
+
+		// encode route string
+		buf = append(buf, []byte(m.Route)...)
+	}
+
+	buf = append(buf, m.Data...)
+
+	c.recvCnt++
+	if c.recvCnt == 1 {
+		c.compressed = compressed
+	}
+
+	return buf, nil
+}
+
+func (c *CodecEntity) DecodeMessage(data []byte) (*message.Message, error) {
+	if len(data) < msgHeadLength {
+		return nil, ErrInvalidMessage
+	}
+	var offset uint64 = 0
+
+	// decode flag
+	m := message.New()
+	flag := data[offset]
+	offset++
+	m.Type = message.Type(flag & msgTypeMask)
+	c.compressed = flag&msgRouteNotCompressMask == 0
+	if !m.TypeValid() {
+		return nil, ErrWrongMessageType
+	}
+
+	// decode version ID
+	m.ShortVer = binary.BigEndian.Uint32(data[offset:])
+	offset += 4
+
+	// decode msg ID
+	m.ID = binary.BigEndian.Uint64(data[offset:])
+	offset += 8
+
+	// decode route
+	if c.compressed {
+		// decode compressed route ID
+		code := binary.BigEndian.Uint16(data[offset:])
+		route, ok := c.codes[code]
+		if !ok {
+			return nil, ErrRouteInfoNotFound
+		}
+		m.Route = route
+		offset += 2
+	} else {
+		// decode route string length
+		rl := binary.BigEndian.Uint16(data[offset:])
+		offset += 2
+
+		if offset+uint64(rl) > uint64(len(data)) {
+			return nil, ErrInvalidRouteLength
+		}
+
+		// decode route string
+		m.Route = string(data[offset:(offset + uint64(rl))])
+		offset += uint64(rl)
+	}
+
+	// decode data
+	m.Data = data[offset:]
+	return m, nil
+}
+
+type Codec struct {
+}
+
+func NewCodec() *Codec {
+	return &Codec{}
+}
+
+func (c *Codec) Entity() codec.CodecEntity {
+	return NewCodecEntity()
+}

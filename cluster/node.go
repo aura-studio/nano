@@ -352,6 +352,7 @@ func (n *Node) findOrCreateSession(sid int64, gateAddr string, uid int64, shortV
 		n.handler.mu.RUnlock()
 		s.BindShortVer(shortVer)
 		s.BindVersion(version)
+		s.VersionBound = true
 
 		s.BindUID(uid)
 		ac.session = s
