@@ -21,7 +21,7 @@ const (
 )
 
 const (
-	route = "Legacy.TransferBytes"
+	route = "Proxy.TransferBytes"
 )
 
 var (
