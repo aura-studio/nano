@@ -1,0 +1,77 @@
+{
+	"[proto3]": {
+		"editor.defaultFormatter": "xaver.clang-format",
+	},
+	"[json]": {
+		"editor.defaultFormatter": "vscode.json-language-features"
+	},
+	"editor.defaultFormatter": null,
+	"extensions.ignoreRecommendations": false,
+	"git.autofetchPeriod": 60,
+	"git.autofetch": true,
+	"git.fetchOnPull": true,
+	"git.autorefresh": true,
+	"files.eol": "\n",
+	"files.encoding": "utf8",
+	"files.autoSave": "afterDelay",
+	"files.autoSaveDelay": 500,
+	"editor.tabSize": 4,
+	"editor.formatOnType": true,
+	"editor.formatOnSaveMode": "file",
+	"editor.formatOnPaste": true,
+	"editor.formatOnSave": true,
+	"editor.parameterHints.enabled": true,
+	"editor.tabCompletion": "on",
+	"editor.insertSpaces": false,
+	"go.testTimeout": "3600s",
+	"go.docsTool": "gogetdoc",
+	"go.formatTool": "gofumpt",
+	"go.formatFlags": [],
+	"go.lintTool": "golangci-lint",
+	"go.lintOnSave": "package",
+	"go.lintFlags": [
+		"--fast",
+		"--fix"
+	],
+	"go.vetOnSave": "package",
+	"go.vetFlags": [
+		"-all"
+	],
+	"go.enableCodeLens": {
+		"references": false,
+		"runtest": true
+	},
+	"go.buildOnSave": "package",
+	"go.gotoSymbol.ignoreFolders": [],
+	"go.inferGopath": false,
+	"go.gotoSymbol.includeGoroot": true,
+	"go.gotoSymbol.includeImports": true,
+	"go.installDependenciesWhenBuilding": true,
+	"go.useLanguageServer": true,
+	"go.languageServerFlags": [
+		"-rpc.trace",
+		"serve",
+		"--debug=localhost:6060",
+	],
+	"go.languageServerExperimentalFeatures": {
+		"diagnostics": true,
+	},
+	"go.autocompleteUnimportedPackages": true,
+	"go.coverOnTestPackage": true,
+	"go.liveErrors": {
+		"enabled": false,
+		"delay": 500
+	},
+	"go.useCodeSnippetsOnFunctionSuggest": true,
+	"go.useCodeSnippetsOnFunctionSuggestWithoutType": true,
+	"go.toolsManagement.checkForUpdates": "proxy",
+	"clang-format.style": "google",
+	"clang-format.executable": "${workspaceRoot}\\misc\\clang-format.exe",
+	"clang-format.language.proto.enable": true,
+	"clang-format.language.proto.style": "",
+	"clang-format.language.proto.fallbackStyle": "",
+	"search.exclude": {},
+	"files.exclude": {
+		"**/.git": true,
+	},
+}
