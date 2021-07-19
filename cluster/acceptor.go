@@ -33,11 +33,11 @@ func (a *acceptor) Push(route string, v interface{}) error {
 	if env.Debug {
 		switch d := v.(type) {
 		case []byte:
-			log.Infof("Type=Push, Route=%s, ID=%d, Version=%s, UID=%d, MID=%d, Data=%dbytes",
-				route, a.session.ID(), a.session.Version(), a.session.UID(), 0, len(d))
+			log.Infof("Type=Push, Route=%s, SSID=%d, SID=%d, Version=%s, UID=%d, MID=%d, Data=%dbytes",
+				route, a.session.SSID(), a.session.SID(), a.session.Version(), a.session.UID(), 0, len(d))
 		default:
-			log.Infof("Type=Push, Route=%s, ID=%d, Version=%s, UID=%d, Mid=%d, Data=%+v",
-				route, a.session.ID(), a.session.Version(), a.session.UID(), 0, v)
+			log.Infof("Type=Push, Route=%s, SSID=%d, SID=%d, Version=%s, UID=%d, MID=%d, Data=%+v",
+				route, a.session.SSID(), a.session.SID(), a.session.Version(), a.session.UID(), 0, v)
 		}
 	}
 
@@ -61,11 +61,11 @@ func (a *acceptor) RPC(route string, v interface{}) error {
 	if env.Debug {
 		switch d := v.(type) {
 		case []byte:
-			log.Infof("Type=Notify, Route=%s, ID=%d, Version=%s, UID=%d,  MID=%d, Data=%dbytes",
-				route, a.session.ID(), a.session.Version(), a.session.UID(), a.lastMid, len(d))
+			log.Infof("Type=Notify, Route=%s, SSID=%d, SID=%d, Version=%s, UID=%d,  MID=%d, Data=%dbytes",
+				route, a.session.SSID(), a.session.SID(), a.session.Version(), a.session.UID(), a.lastMid, len(d))
 		default:
-			log.Infof("Type=Notify, Route=%s, ID=%d, Version=%s, UID=%d,  Mid=%d, Data=%+v",
-				route, a.session.ID(), a.session.Version(), a.session.UID(), a.lastMid, v)
+			log.Infof("Type=Notify, Route=%s, SSID=%d, SID=%d, Version=%s, UID=%d,  MID=%d, Data=%+v",
+				route, a.session.SSID(), a.session.SID(), a.session.Version(), a.session.UID(), a.lastMid, v)
 		}
 	}
 
@@ -101,11 +101,11 @@ func (a *acceptor) ResponseMid(mid uint64, route string, v interface{}) error {
 	if env.Debug {
 		switch d := v.(type) {
 		case []byte:
-			log.Infof("Type=Response, Route=%s, ID=%d, Version=%s, UID=%d,  MID=%d, Data=%dbytes",
-				route, a.session.ID(), a.session.Version(), a.session.UID(), mid, len(d))
+			log.Infof("Type=Response, Route=%s, SSID=%d, SID=%d, Version=%s, UID=%d,  MID=%d, Data=%dbytes",
+				route, a.session.SSID(), a.session.SID(), a.session.Version(), a.session.UID(), mid, len(d))
 		default:
-			log.Infof("Type=Response, Route=%s, ID=%d, Version=%s, UID=%d,  Mid=%d, Data=%+v",
-				route, a.session.ID(), a.session.Version(), a.session.UID(), mid, v)
+			log.Infof("Type=Response, Route=%s, SSID=%d, SID=%d, Version=%s, UID=%d,  MID=%d, Data=%+v",
+				route, a.session.SSID(), a.session.SID(), a.session.Version(), a.session.UID(), mid, v)
 		}
 	}
 

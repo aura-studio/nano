@@ -130,8 +130,8 @@ func (c *Group) Broadcast(route string, v interface{}) error {
 
 	for _, s := range c.sessions {
 		if err = s.Push(route, data); err != nil {
-			log.Errorf("Session push message error, ID=%d, UID=%d, Error=%s",
-				s.ID(), s.UID(), err.Error())
+			log.Errorf("Session push message error, SSID=%d, SID=%d, UID=%d, Error=%s",
+				s.SSID(), s.SID(), s.UID(), err.Error())
 		}
 	}
 
@@ -151,8 +151,8 @@ func (c *Group) Add(session *session.Session) error {
 	}
 
 	if env.Debug {
-		log.Infof("Add session to group %s, ID=%d, UID=%d", c.name,
-			session.ID(), session.UID())
+		log.Infof("Add session to group %s, SSID=%d, SID=%d, UID=%d", c.name,
+			session.SSID(), session.SID(), session.UID())
 	}
 
 	c.mu.Lock()

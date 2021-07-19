@@ -107,6 +107,14 @@ func (s *Session) ID() int64 {
 	return s.id
 }
 
+func (s *Session) SID() int64 {
+	return s.id >> 16
+}
+
+func (s *Session) SSID() int64 {
+	return s.id % 65536
+}
+
 // UID returns uid that bind to current session
 func (s *Session) UID() int64 {
 	return atomic.LoadInt64(&s.uid)

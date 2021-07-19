@@ -132,11 +132,11 @@ func (a *agent) Push(route string, v interface{}) error {
 	if env.Debug {
 		switch d := v.(type) {
 		case []byte:
-			log.Infof("Type=Push, Route=%s, ID=%d, Version=%s, UID=%d,  MID=%d, Data=%dbytes",
-				route, a.session.ID(), a.session.Version(), a.session.UID(), 0, len(d))
+			log.Infof("Type=Push, Route=%s, SSID=%d, SID=%d, Version=%s, UID=%d,  MID=%d, Data=%dbytes",
+				route, a.session.SSID(), a.session.SID(), a.session.Version(), a.session.UID(), 0, len(d))
 		default:
-			log.Infof("Type=Push, Route=%s, ID=%d, Version=%s, UID=%d, MID=%d, Data=%+v",
-				route, a.session.ID(), a.session.Version(), a.session.UID(), 0, v)
+			log.Infof("Type=Push, Route=%s, SSID=%d, SID=%d, Version=%s, UID=%d, MID=%d, Data=%+v",
+				route, a.session.SSID(), a.session.SID(), a.session.Version(), a.session.UID(), 0, v)
 		}
 	}
 
@@ -157,11 +157,11 @@ func (a *agent) RPC(route string, v interface{}) error {
 	if env.Debug {
 		switch d := v.(type) {
 		case []byte:
-			log.Infof("Type=Notify, Route=%s, ID=%d, Version=%s, UID=%d, MID=%d, Data=%dbytes",
-				route, a.session.ID(), a.session.Version(), a.session.UID(), a.lastMid, len(d))
+			log.Infof("Type=Notify, Route=%s, SSID=%d, SID=%d, Version=%s, UID=%d, MID=%d, Data=%dbytes",
+				route, a.session.SSID(), a.session.SID(), a.session.Version(), a.session.UID(), a.lastMid, len(d))
 		default:
-			log.Infof("Type=Notify, Route=%s, ID=%d, Version=%s, UID=%d, MID=%d, Data=%+v",
-				route, a.session.ID(), a.session.Version(), a.session.UID(), a.lastMid, v)
+			log.Infof("Type=Notify, Route=%s, SSID=%d, SID=%d, Version=%s, UID=%d, MID=%d, Data=%+v",
+				route, a.session.SSID(), a.session.SID(), a.session.Version(), a.session.UID(), a.lastMid, v)
 		}
 	}
 
@@ -196,11 +196,11 @@ func (a *agent) ResponseMid(mid uint64, route string, v interface{}) error {
 	if env.Debug {
 		switch d := v.(type) {
 		case []byte:
-			log.Infof("Type=Response, Route=%s, ID=%d, Version=%s, UID=%d, MID=%d, Data=%dbytes",
-				route, a.session.ID(), a.session.Version(), a.session.UID(), mid, len(d))
+			log.Infof("Type=Response, Route=%s, SSID=%d, SID=%d, Version=%s, UID=%d, MID=%d, Data=%dbytes",
+				route, a.session.SSID(), a.session.SID(), a.session.Version(), a.session.UID(), mid, len(d))
 		default:
-			log.Infof("Type=Response, Route=%s, ID=%d, Version=%s, UID=%d, MID=%d, Data=%+v",
-				route, a.session.ID(), a.session.Version(), a.session.UID(), mid, v)
+			log.Infof("Type=Response, Route=%s, SSID=%d, SID=%d, Version=%s, UID=%d, MID=%d, Data=%+v",
+				route, a.session.SSID(), a.session.SID(), a.session.Version(), a.session.UID(), mid, v)
 		}
 	}
 
@@ -217,8 +217,8 @@ func (a *agent) Close() error {
 	a.setStatus(statusClosed)
 
 	if env.Debug {
-		log.Infof("Session closed, ID=%d, UID=%d, IP=%s",
-			a.session.ID(), a.session.UID(), a.conn.RemoteAddr())
+		log.Infof("Session closed, SSID=%d, SID=%d, UID=%d, IP=%s",
+			a.session.SSID(), a.session.SID(), a.session.UID(), a.conn.RemoteAddr())
 	}
 
 	// prevent closing closed channel
@@ -261,8 +261,8 @@ func (a *agent) write() {
 		close(chWrite)
 		a.Close()
 		if env.Debug {
-			log.Infof("Session write goroutine exit, SessionID=%d, UID=%d",
-				a.session.ID(), a.session.UID())
+			log.Infof("Session write goroutine exit, SSID=%d, SID=%d, UID=%d",
+				a.session.SSID(), a.session.SID(), a.session.UID())
 		}
 	}()
 
