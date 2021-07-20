@@ -108,11 +108,11 @@ func (s *Session) ID() int64 {
 }
 
 func (s *Session) SID() int64 {
-	return s.id >> 16
+	return s.id >> 32
 }
 
 func (s *Session) SSID() int64 {
-	return s.id % 65536
+	return s.id % (1 << 32)
 }
 
 // UID returns uid that bind to current session
