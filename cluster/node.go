@@ -37,7 +37,7 @@ import (
 	"github.com/aura-studio/nano/env"
 	"github.com/aura-studio/nano/log"
 	"github.com/aura-studio/nano/message"
-	"github.com/aura-studio/nano/persistence"
+	"github.com/aura-studio/nano/persist"
 	"github.com/aura-studio/nano/pipeline"
 	"github.com/aura-studio/nano/session"
 	"github.com/aura-studio/nano/upgrader"
@@ -49,7 +49,7 @@ import (
 type Options struct {
 	Pipeline       pipeline.Pipeline
 	Convention     Convention
-	MasterPersist  persistence.Persistence
+	MasterPersist  persist.Persist
 	IsMaster       bool
 	AdvertiseAddr  string
 	RetryInterval  time.Duration

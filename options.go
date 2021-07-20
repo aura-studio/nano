@@ -9,7 +9,7 @@ import (
 	"github.com/aura-studio/nano/env"
 	"github.com/aura-studio/nano/log"
 	"github.com/aura-studio/nano/message"
-	"github.com/aura-studio/nano/persistence"
+	"github.com/aura-studio/nano/persist"
 	"github.com/aura-studio/nano/pipeline"
 	"github.com/aura-studio/nano/serialize"
 	"github.com/aura-studio/nano/upgrader"
@@ -145,10 +145,10 @@ func WithHttpAddr(httpAddr string) Option {
 	}
 }
 
-// WithMasterPersist sets the persistence of cluster
-func WithMasterPersist(persistence persistence.Persistence) Option {
+// WithMasterPersist sets the persist of cluster
+func WithMasterPersist(persist persist.Persist) Option {
 	return func(opt *cluster.Options) {
-		opt.MasterPersist = persistence
+		opt.MasterPersist = persist
 	}
 }
 
@@ -166,7 +166,6 @@ func WithLogger(l log.Logger) Option {
 		opt.Logger = l
 	}
 }
-
 
 func WithCodec(c codec.Codec) Option {
 	return func(opt *cluster.Options) {

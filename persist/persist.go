@@ -1,4 +1,4 @@
-package persistence
+package persist
 
 type (
 
@@ -12,8 +12,8 @@ type (
 		Get(interface{}) error
 	}
 
-	// Persistence is the interface that groups the basic Marshal and Unmarshal methods.
-	Persistence interface {
+	// Persist is the interface that groups the basic Marshal and Unmarshal methods.
+	Persist interface {
 		Setter
 		Getter
 	}
