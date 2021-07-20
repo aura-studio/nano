@@ -71,7 +71,7 @@ type Options struct {
 type Node struct {
 	Options            // current node options
 	ServiceAddr string // current server service address (RPC)
-	ServerID    uint16 // current server service ID
+	ServerID    uint32 // current server service ID
 
 	cluster      *cluster
 	handler      *LocalHandler
@@ -88,11 +88,8 @@ func (n *Node) Startup() error {
 	if n.ServiceAddr == "" {
 		return errors.New("service address cannot be empty in master node")
 	}
-	serverID, err := strconv.ParseUint(strings.Split(n.ServiceAddr, ":")[1], 10, 16)
-	if err != nil {
-		return err
-	}
-	n.ServerID = uint16(serverID)
+	n.ServerID = n.getServerID()
+
 	n.sessions = map[int64]*session.Session{}
 	n.cluster = newCluster(n)
 	n.handler = newHandler(n)
@@ -133,6 +130,21 @@ func (n *Node) Startup() error {
 	}
 
 	return nil
+}
+
+func (n *Node) getServerID() uint32 {
+	parts := strings.Split(n.ServiceAddr, ":")
+	bits := strings.Split(parts[0], ".")
+	b2, _ := strconv.Atoi(bits[2])
+	b3, _ := strconv.Atoi(bits[3])
+	port, _ := strconv.Atoi(parts[1])
+
+	var serverID uint32
+	serverID += uint32(b2) << 24
+	serverID += uint32(b3) << 16
+	serverID += uint32(port)
+
+	return serverID
 }
 
 // Handler returns localhandler for this node.
