@@ -26,8 +26,6 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -133,18 +131,19 @@ func (n *Node) Startup() error {
 }
 
 func (n *Node) getServerID() uint32 {
-	parts := strings.Split(n.ServiceAddr, ":")
-	bits := strings.Split(parts[0], ".")
-	b2, _ := strconv.Atoi(bits[2])
-	b3, _ := strconv.Atoi(bits[3])
-	port, _ := strconv.Atoi(parts[1])
+	// parts := strings.Split(n.ServiceAddr, ":")
+	// bits := strings.Split(parts[0], ".")
+	// b2, _ := strconv.Atoi(bits[2])
+	// b3, _ := strconv.Atoi(bits[3])
+	// port, _ := strconv.Atoi(parts[1])
 
-	var serverID uint32
-	serverID += uint32(b2) << 24
-	serverID += uint32(b3) << 16
-	serverID += uint32(port)
+	// var serverID uint32
+	// serverID += uint32(b2) << 24
+	// serverID += uint32(b3) << 16
+	// serverID += uint32(port)
 
-	return serverID
+	// return serverID
+	return 100
 }
 
 // Handler returns localhandler for this node.
