@@ -122,7 +122,7 @@ func (c *CodecEntity) DecodeMessage(data []byte) (*message.Message, error) {
 	if len(data) < msgHeadLength {
 		return nil, ErrInvalidMessage
 	}
-	var offset uint64 = 2
+	var offset uint64 = 0
 	m := message.New()
 	offset += 2
 	m.Type = message.Request
