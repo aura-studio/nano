@@ -299,7 +299,7 @@ func (h *LocalHandler) handle(conn net.Conn) {
 				continue
 			}
 			if env.Debug {
-				log.Infoln("Session Closed notify remote server success", remote)
+				log.Infoln("Session closed notify remote server success", remote)
 			}
 		}
 
