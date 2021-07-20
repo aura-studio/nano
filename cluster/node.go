@@ -26,6 +26,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -158,7 +159,7 @@ func (n *Node) initNode() error {
 		return nil
 	}
 
-	listener, err := net.Listen("tcp", n.ServiceAddr)
+	listener, err := net.Listen("tcp", n.ServiceAddr[strings.Index(n.ServiceAddr, ":"):])
 	if err != nil {
 		return err
 	}
