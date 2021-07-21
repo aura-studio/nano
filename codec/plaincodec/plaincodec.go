@@ -26,28 +26,24 @@ var (
 	ErrPacketSizeExcced   = errors.New("codec: packet size exceed")
 	ErrWrongMessageType   = errors.New("codec: wrong message type")
 	ErrInvalidMessage     = errors.New("codec: invalid message")
-	ErrRouteInfoNotFound  = errors.New("codec: route info not found in dictionary")
 	ErrInvalidRouteLength = errors.New("codec: invalid route length")
 )
 
 type CodecEntity struct {
+	dictionary message.Dictionary
 	writeBuf   *bytes.Buffer
 	readBuf    *bytes.Buffer
-	size       int // last packet length
-	routes     map[string]uint16
-	codes      map[uint16]string
+	size       int   // last packet length
 	compressed bool  // whether to use compressed msg to client
 	recvCnt    int64 // agent receive packet count
 }
 
-func NewCodecEntity() *CodecEntity {
-	routes, codes := message.ReadDictionary()
+func NewCodecEntity(dictionary message.Dictionary) *CodecEntity {
 	return &CodecEntity{
-		writeBuf: bytes.NewBuffer(nil),
-		readBuf:  bytes.NewBuffer(nil),
-		size:     -1,
-		routes:   routes,
-		codes:    codes,
+		writeBuf:   bytes.NewBuffer(nil),
+		readBuf:    bytes.NewBuffer(nil),
+		size:       -1,
+		dictionary: dictionary,
 	}
 }
 
@@ -122,12 +118,12 @@ func (c *CodecEntity) EncodeMessage(m *message.Message) ([]byte, error) {
 
 	// encode flag
 	flag := byte(m.Type)
-	code, found := c.routes[m.Route]
-	compressed := c.compressed && found
+	code, err := c.dictionary.IndexRoute(m.Route)
+	compressed := c.compressed && err == nil
 	if !compressed {
 		flag |= msgRouteNotCompressMask
 	}
-	buf[offset] = byte(flag)
+	buf[offset] = flag
 	offset++
 
 	// encode version ID
@@ -141,7 +137,7 @@ func (c *CodecEntity) EncodeMessage(m *message.Message) ([]byte, error) {
 	// encode route
 	if compressed {
 		// encode compressed route ID
-		binary.BigEndian.PutUint16(buf[offset:], code)
+		binary.BigEndian.PutUint16(buf[offset:], uint16(code))
 	} else {
 		rl := uint16(len(m.Route))
 
@@ -190,9 +186,9 @@ func (c *CodecEntity) DecodeMessage(data []byte) (*message.Message, error) {
 	if c.compressed {
 		// decode compressed route ID
 		code := binary.BigEndian.Uint16(data[offset:])
-		route, ok := c.codes[code]
-		if !ok {
-			return nil, ErrRouteInfoNotFound
+		route, err := c.dictionary.IndexCode(uint32(code))
+		if err != nil {
+			return nil, err
 		}
 		m.Route = route
 		offset += 2
@@ -222,6 +218,6 @@ func NewCodec() *Codec {
 	return &Codec{}
 }
 
-func (c *Codec) Entity() codec.CodecEntity {
-	return NewCodecEntity()
+func (c *Codec) Entity(dictionary message.Dictionary) codec.CodecEntity {
+	return NewCodecEntity(dictionary)
 }

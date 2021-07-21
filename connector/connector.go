@@ -78,7 +78,7 @@ func NewConnector(opts ...Option) *Connector {
 	if c.Options.codec == nil {
 		c.codec = plaincodec.NewCodec()
 	}
-	c.codecEntity = c.codec.Entity()
+	c.codecEntity = c.codec.Entity(nil)
 
 	return c
 }

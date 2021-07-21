@@ -92,7 +92,7 @@ func newAgent(conn net.Conn, pipeline pipeline.Pipeline, rpcHandler rpcHandler,
 		pipeline:    pipeline,
 		rpcHandler:  rpcHandler,
 		serializers: serializers,
-		codecEntity: codec.Entity(),
+		codecEntity: codec.Entity(message.DuplicateDictionary()),
 	}
 
 	// binding session

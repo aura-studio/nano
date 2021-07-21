@@ -29,7 +29,7 @@ type (
 		name          string                 // component name
 		renameHandler func(string) string    // rename handler name
 		schedule      scheduler.SchedFunc    // schedule service task
-		dictionary    map[uint16]interface{} // Dictionary info slice
+		dictionary    map[uint32]interface{} // Dictionary info slice
 	}
 
 	// Option used to customize handler
@@ -59,7 +59,7 @@ func WithScheduleFunc(fn scheduler.SchedFunc) Option {
 }
 
 // WithDictionary set dictionary for compressed route
-func WithDictionary(dict map[uint16]interface{}) Option {
+func WithDictionary(dict map[uint32]interface{}) Option {
 	return func(opt *options) {
 		opt.dictionary = dict
 	}

@@ -34,6 +34,6 @@ type (
 	}
 
 	Codec interface {
-		Entity() CodecEntity
+		Entity(message.Dictionary) CodecEntity
 	}
 )

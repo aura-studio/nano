@@ -1,6 +1,7 @@
 package message
 
 import (
+	"github.com/aura-studio/nano/cluster/clusterpb"
 	"github.com/aura-studio/nano/env"
 	"github.com/aura-studio/nano/serialize"
 	"github.com/aura-studio/nano/serialize/json"
@@ -9,7 +10,7 @@ import (
 )
 
 const (
-	Unknown uint16 = iota
+	Unknown uint32 = iota
 	JSON
 	Protobuf
 	RawString
@@ -26,7 +27,7 @@ var (
 	Serializers = make(map[string]serialize.Serializer)
 )
 
-func GetSerializerType(s serialize.Serializer) uint16 {
+func GetSerializerType(s serialize.Serializer) uint32 {
 	switch s.(type) {
 	case *json.Serializer:
 		return JSON
@@ -39,7 +40,7 @@ func GetSerializerType(s serialize.Serializer) uint16 {
 	}
 }
 
-func GetSerializer(typ uint16) serialize.Serializer {
+func GetSerializer(typ uint32) serialize.Serializer {
 	switch typ {
 	case JSON:
 		return jsonSerializer
@@ -61,7 +62,7 @@ func ReadSerializers() map[string]serialize.Serializer {
 }
 
 // WriteSerializerItem is to set serializer item when server registers.
-func WriteSerializerItem(route string, typ uint16) map[string]serialize.Serializer {
+func WriteSerializerItem(route string, typ uint32) map[string]serialize.Serializer {
 	rw.Lock()
 	defer rw.Unlock()
 
@@ -71,12 +72,12 @@ func WriteSerializerItem(route string, typ uint16) map[string]serialize.Serializ
 }
 
 // WriteSerializers is to set serializers when new serializer dictionary is found.
-func WriteSerializers(serializers map[string]uint16) map[string]serialize.Serializer {
+func WriteSerializers(items []*clusterpb.DictionaryItem) map[string]serialize.Serializer {
 	rw.Lock()
 	defer rw.Unlock()
 
-	for route, typ := range serializers {
-		Serializers[route] = GetSerializer(typ)
+	for _, item := range items {
+		Serializers[item.Route] = GetSerializer(item.Serializer)
 	}
 
 	return Serializers

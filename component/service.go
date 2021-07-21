@@ -34,7 +34,7 @@ type (
 		Method   reflect.Method // method stub
 		Type     reflect.Type   // low-level type of method
 		IsRawArg bool           // whether the data need to serialize
-		Code     uint16         // Route compressed code
+		Code     uint32         // Route compressed code
 	}
 
 	// Service implements a specific service, some of it's methods will be
@@ -92,7 +92,7 @@ func (s *Service) suitableHandlerMethods(typ reflect.Type) map[string]*Handler {
 				mn = s.Options.renameHandler(mn)
 			}
 			// find commpressed code
-			var code uint16
+			var code uint32
 			for c, fn := range s.Options.dictionary {
 				if reflect.ValueOf(fn).Pointer() == method.Func.Pointer() {
 					code = c

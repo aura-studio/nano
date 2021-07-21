@@ -40,7 +40,7 @@ func NewConn(w http.ResponseWriter, r *http.Request, conn net.Conn, brw *bufio.R
 		conn:        conn,
 		brw:         brw,
 		params:      params,
-		codecEntity: plaincodec.NewCodec().Entity(),
+		codecEntity: plaincodec.NewCodec().Entity(nil),
 		readBuf:     nil,
 	}
 }

@@ -1,4 +1,4 @@
-package proxycodec
+package legacycodec
 
 import (
 	"bytes"
@@ -17,11 +17,8 @@ const (
 )
 
 const (
-	msgHeadLength = 16
-)
-
-const (
-	route = "Proxy.TransferBytes"
+	msgHeadLength      = 16
+	msgContentTypeMask = 0x1
 )
 
 var (
@@ -31,17 +28,18 @@ var (
 )
 
 type CodecEntity struct {
+	dictionary message.Dictionary
 	writeBuf   *bytes.Buffer
 	readBuf    *bytes.Buffer
 	size       int // last packet length
-	dictionary message.Dictionary
 }
 
-func NewCodecEntity() *CodecEntity {
+func NewCodecEntity(dictionary message.Dictionary) *CodecEntity {
 	return &CodecEntity{
-		writeBuf: bytes.NewBuffer(nil),
-		readBuf:  bytes.NewBuffer(nil),
-		size:     -1,
+		dictionary: dictionary,
+		writeBuf:   bytes.NewBuffer(nil),
+		readBuf:    bytes.NewBuffer(nil),
+		size:       -1,
 	}
 }
 
@@ -49,6 +47,10 @@ func (c *CodecEntity) EncodePacket(packets []*packet.Packet) ([]byte, error) {
 	defer c.writeBuf.Reset()
 
 	for _, p := range packets {
+		err := binary.Write(c.writeBuf, binary.LittleEndian, uint32(p.Length+2))
+		if err != nil {
+			return nil, err
+		}
 		c.writeBuf.Write(p.Data)
 	}
 	data := c.writeBuf.Next(c.writeBuf.Len())
@@ -87,13 +89,7 @@ func (c *CodecEntity) DecodePacket(data []byte) ([]*packet.Packet, error) {
 	}
 
 	for c.size <= c.readBuf.Len() {
-		data := make([]byte, c.size+HeadLength)
-		binary.LittleEndian.PutUint16(data, uint16(c.size)+HeadLength)
-		copy(data[HeadLength:], c.readBuf.Next(c.size))
-		p := &packet.Packet{
-			Length: c.size,
-			Data:   data,
-		}
+		p := &packet.Packet{Length: c.size, Data: c.readBuf.Next(c.size)}
 		packets = append(packets, p)
 
 		// more packet
@@ -111,17 +107,52 @@ func (c *CodecEntity) DecodePacket(data []byte) ([]*packet.Packet, error) {
 }
 
 func (c *CodecEntity) EncodeMessage(m *message.Message) ([]byte, error) {
-	return m.Data, nil
+	if !m.TypeValid() {
+		return nil, ErrWrongMessageType
+	}
+	var offset uint64 = 0
+	buf := make([]byte, 16)
+
+	// encode version ID
+	binary.LittleEndian.PutUint32(buf[offset:], m.ShortVer)
+	offset += 4
+
+	// encode msg ID
+	binary.LittleEndian.PutUint32(buf[offset:], uint32(m.ID))
+	offset += 4
+
+	// encode compressed route ID
+	code, err := c.dictionary.IndexRoute(m.Route)
+	if err != nil {
+		return nil, err
+	}
+	binary.LittleEndian.PutUint32(buf[offset:], code)
+	offset += 4
+
+	// encode data length
+	length := uint16(len(m.Data))
+	binary.LittleEndian.PutUint16(buf[offset:], length)
+	offset += 2
+
+	// encode flag
+	flag := uint16(0)
+	flag |= msgContentTypeMask
+	binary.LittleEndian.PutUint16(buf[offset:], flag)
+
+	// encode data
+	buf = append(buf, m.Data...)
+
+	return buf, nil
 }
 
 func (c *CodecEntity) DecodeMessage(data []byte) (*message.Message, error) {
+	var err error
 	if len(data) < msgHeadLength {
 		return nil, ErrInvalidMessage
 	}
 	var offset uint64 = 0
 	m := message.New()
-	offset += 2
-	m.Type = message.Request
+	m.Type = message.Response
 
 	// decode version ID
 	m.ShortVer = binary.LittleEndian.Uint32(data[offset:])
@@ -129,21 +160,28 @@ func (c *CodecEntity) DecodeMessage(data []byte) (*message.Message, error) {
 
 	// decode msg ID
 	m.ID = uint64(binary.LittleEndian.Uint32(data[offset:]))
+	offset += 4
 
-	m.Route = route
+	// decode compressed route ID
+	code := binary.LittleEndian.Uint32(data[offset:])
+	m.Route, err = c.dictionary.IndexCode(code)
+	if err != nil {
+		return nil, err
+	}
 
-	m.Data = data
+	m.Data = data[msgHeadLength:]
 
 	return m, nil
 }
 
 type Codec struct {
+	message.Dictionary
 }
 
 func NewCodec() *Codec {
 	return &Codec{}
 }
 
-func (c *Codec) Entity(message.Dictionary) codec.CodecEntity {
-	return NewCodecEntity()
+func (c *Codec) Entity(dictionary message.Dictionary) codec.CodecEntity {
+	return NewCodecEntity(dictionary)
 }
