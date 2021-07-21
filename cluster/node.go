@@ -26,6 +26,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -87,7 +88,7 @@ func (n *Node) Startup() error {
 	if n.ServiceAddr == "" {
 		return errors.New("service address cannot be empty in master node")
 	}
-	n.ServerID = n.getServerID()
+	n.setServerID()
 
 	n.sessions = map[int64]*session.Session{}
 	n.cluster = newCluster(n)
@@ -131,20 +132,28 @@ func (n *Node) Startup() error {
 	return nil
 }
 
-func (n *Node) getServerID() uint32 {
-	// parts := strings.Split(n.ServiceAddr, ":")
-	// bits := strings.Split(parts[0], ".")
-	// b2, _ := strconv.Atoi(bits[2])
-	// b3, _ := strconv.Atoi(bits[3])
-	// port, _ := strconv.Atoi(parts[1])
+func (n *Node) setServerID() {
+	parts := strings.Split(n.ServiceAddr, ":")
+	port, _ := strconv.Atoi(parts[1])
+	addrs, _ := net.LookupHost(parts[0])
+	var serverID = uint32(0)
+	for _, addr := range addrs {
+		bits := strings.Split(addr, ".")
+		b2, _ := strconv.Atoi(bits[2])
+		b3, _ := strconv.Atoi(bits[3])
+		var sum uint32
+		sum += uint32(b2) << 24
+		sum += uint32(b3) << 16
+		sum += uint32(port)
+		if sum > serverID {
+			serverID = sum
+		}
+	}
+	n.ServerID = serverID
+}
 
-	// var serverID uint32
-	// serverID += uint32(b2) << 24
-	// serverID += uint32(b3) << 16
-	// serverID += uint32(port)
-
-	// return serverID
-	return 100
+func (n *Node) WholeInterface(addr string) string {
+	return addr[strings.Index(addr, ":"):]
 }
 
 // Handler returns localhandler for this node.
@@ -159,7 +168,7 @@ func (n *Node) initNode() error {
 		return nil
 	}
 
-	listener, err := net.Listen("tcp", n.ServiceAddr[strings.Index(n.ServiceAddr, ":"):])
+	listener, err := net.Listen("tcp", n.WholeInterface(n.ServiceAddr))
 	if err != nil {
 		return err
 	}
@@ -271,7 +280,7 @@ EXIT:
 
 // Enable current server accept connection
 func (n *Node) listenAndServe() {
-	listener, err := net.Listen("tcp", n.ClientAddr)
+	listener, err := net.Listen("tcp", n.WholeInterface(n.ClientAddr))
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -303,9 +312,9 @@ func (n *Node) listenAndServeHttp() {
 
 	var addr string
 	if n.HttpAddr != "" {
-		addr = n.HttpAddr
+		addr = n.WholeInterface(n.HttpAddr)
 	} else {
-		addr = n.ClientAddr
+		addr = n.WholeInterface(n.ClientAddr)
 	}
 
 	if len(n.TSLCertificate) != 0 {
@@ -320,7 +329,7 @@ func (n *Node) listenAndServeHttp() {
 }
 
 func (n *Node) ListenAndServeDebug() {
-	if err := http.ListenAndServe(n.DebugAddr, nil); err != nil {
+	if err := http.ListenAndServe(n.WholeInterface(n.DebugAddr), nil); err != nil {
 		log.Fatal(err.Error())
 	}
 }
