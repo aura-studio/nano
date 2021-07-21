@@ -183,5 +183,8 @@ func NewCodec() *Codec {
 }
 
 func (c *Codec) Entity(dictionary message.Dictionary) codec.CodecEntity {
+	if dictionary == nil {
+		dictionary = message.EmptyDictionary
+	}
 	return NewCodecEntity(dictionary)
 }

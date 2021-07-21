@@ -365,13 +365,12 @@ func (n *Node) findOrCreateSession(sid int64, gateAddr string, uid int64, shortV
 		if err != nil {
 			return nil, err
 		}
-		serializers := message.ReadSerializers()
 		ac := &acceptor{
 			sid:         sid,
 			gateClient:  clusterpb.NewMemberClient(conns.Get()),
 			rpcHandler:  n.handler.processMessage,
 			gateAddr:    gateAddr,
-			serializers: serializers,
+			serializers: message.DuplicateSerializers(),
 			remoteAddr:  remoteAddr,
 		}
 		s = session.New(ac, sid)

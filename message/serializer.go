@@ -1,6 +1,8 @@
 package message
 
 import (
+	"sync"
+
 	"github.com/aura-studio/nano/cluster/clusterpb"
 	"github.com/aura-studio/nano/env"
 	"github.com/aura-studio/nano/serialize"
@@ -25,6 +27,8 @@ var (
 var (
 	// Serializers is a map from route to serializer
 	Serializers = make(map[string]serialize.Serializer)
+
+	rw sync.RWMutex
 )
 
 func GetSerializerType(s serialize.Serializer) uint32 {
@@ -53,8 +57,8 @@ func GetSerializer(typ uint32) serialize.Serializer {
 	}
 }
 
-// ReadSerializers returns serializers for compressed route.
-func ReadSerializers() map[string]serialize.Serializer {
+// DuplicateSerializers returns serializers for compressed route.
+func DuplicateSerializers() map[string]serialize.Serializer {
 	rw.RLock()
 	defer rw.RUnlock()
 
