@@ -2,10 +2,8 @@ package message
 
 import (
 	"errors"
-	"sync"
 
 	"github.com/aura-studio/nano/cluster/clusterpb"
-	"github.com/mohae/deepcopy"
 )
 
 type Dictionary interface {
@@ -18,22 +16,22 @@ type MemberDictionary struct {
 	routes map[string]uint32
 	// Codes is a map from code to route
 	codes map[uint32]string
-	// RW lock
-	rw sync.RWMutex
+}
+
+func NewMemberDictionary() *MemberDictionary {
+	return &MemberDictionary{
+		routes: make(map[string]uint32),
+		codes:  make(map[uint32]string),
+	}
 }
 
 var ErrIndexRouteNotFound = errors.New("dictionary: index route not found")
 var ErrIndexCodeNotFound = errors.New("dictionary: index code not found")
 
-var memberDictionary = &MemberDictionary{
-	routes: make(map[string]uint32),
-	codes:  make(map[uint32]string),
-}
-
-var EmptyDictionary = &MemberDictionary{
-	routes: make(map[string]uint32),
-	codes:  make(map[uint32]string),
-}
+var (
+	memberDictionary = NewMemberDictionary()
+	EmptyDictionary  = NewMemberDictionary()
+)
 
 func (d *MemberDictionary) IndexRoute(route string) (uint32, error) {
 	if d == nil {
@@ -58,15 +56,25 @@ func (d *MemberDictionary) IndexCode(code uint32) (string, error) {
 }
 
 func (d *MemberDictionary) duplicate() *MemberDictionary {
-	d.rw.RLock()
-	defer d.rw.RUnlock()
+	rw.RLock()
+	defer rw.RUnlock()
 
-	return deepcopy.Copy(d).(*MemberDictionary)
+	memberDictionary := NewMemberDictionary()
+
+	for route, code := range d.routes {
+		memberDictionary.routes[route] = code
+	}
+
+	for code, route := range d.codes {
+		memberDictionary.codes[code] = route
+	}
+
+	return memberDictionary
 }
 
 func (d *MemberDictionary) write(route string, code uint32) {
-	d.rw.Lock()
-	defer d.rw.Unlock()
+	rw.Lock()
+	defer rw.Unlock()
 
 	if code > 0 {
 		d.routes[route] = code
@@ -75,8 +83,8 @@ func (d *MemberDictionary) write(route string, code uint32) {
 }
 
 func (d *MemberDictionary) writeClusterItems(items []*clusterpb.DictionaryItem) {
-	d.rw.Lock()
-	defer d.rw.Unlock()
+	rw.Lock()
+	defer rw.Unlock()
 
 	for _, item := range items {
 		if item.Code > 0 {
