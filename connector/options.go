@@ -3,6 +3,7 @@ package connector
 import (
 	"github.com/aura-studio/nano/codec"
 	"github.com/aura-studio/nano/log"
+	"github.com/aura-studio/nano/message"
 	"github.com/aura-studio/nano/serialize"
 )
 
@@ -14,6 +15,7 @@ type (
 		wsPath     string               //websocket path
 		logger     log.Logger           // logger
 		codec      codec.Codec          // codec
+		dictionary message.Dictionary   // dictionary
 	}
 
 	// Option used to customize handler
@@ -53,5 +55,11 @@ func WithLogger(l log.Logger) Option {
 func WithCodec(codec codec.Codec) Option {
 	return func(opt *Options) {
 		opt.codec = codec
+	}
+}
+
+func WithDictionary(dictionary message.Dictionary) Option {
+	return func(opt *Options) {
+		opt.dictionary = dictionary
 	}
 }
