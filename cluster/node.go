@@ -139,6 +139,9 @@ func (n *Node) setServerID() {
 	var serverID = uint32(0)
 	for _, addr := range addrs {
 		bits := strings.Split(addr, ".")
+		if len(bits) != 4 {
+			continue
+		}
 		b2, _ := strconv.Atoi(bits[2])
 		b3, _ := strconv.Atoi(bits[3])
 		var sum uint32
