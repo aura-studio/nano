@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
-	"fmt"
 
 	"github.com/aura-studio/nano/codec"
 	"github.com/aura-studio/nano/env"
@@ -131,7 +130,6 @@ func (c *CodecEntity) EncodeMessage(m *message.Message) ([]byte, error) {
 	offset += 2
 	binary.LittleEndian.PutUint16(buf[offset:], uint16(code%65536))
 	offset += 2
-	fmt.Println(buf[offset-4:])
 
 	// encode data length
 	length := uint16(len(m.Data))
