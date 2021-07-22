@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"fmt"
 
 	"github.com/aura-studio/nano/codec"
 	"github.com/aura-studio/nano/env"
@@ -47,7 +48,7 @@ func (c *CodecEntity) EncodePacket(packets []*packet.Packet) ([]byte, error) {
 	defer c.writeBuf.Reset()
 
 	for _, p := range packets {
-		err := binary.Write(c.writeBuf, binary.LittleEndian, uint32(p.Length+2))
+		err := binary.Write(c.writeBuf, binary.LittleEndian, uint16(p.Length+2))
 		if err != nil {
 			return nil, err
 		}
@@ -126,8 +127,11 @@ func (c *CodecEntity) EncodeMessage(m *message.Message) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	binary.LittleEndian.PutUint32(buf[offset:], code)
-	offset += 4
+	binary.LittleEndian.PutUint16(buf[offset:], uint16(code/65536))
+	offset += 2
+	binary.LittleEndian.PutUint16(buf[offset:], uint16(code%65536))
+	offset += 2
+	fmt.Println(buf[offset-4:])
 
 	// encode data length
 	length := uint16(len(m.Data))
@@ -163,7 +167,8 @@ func (c *CodecEntity) DecodeMessage(data []byte) (*message.Message, error) {
 	offset += 4
 
 	// decode compressed route ID
-	code := binary.LittleEndian.Uint32(data[offset:])
+	code := uint32(binary.LittleEndian.Uint16(data[offset:]))*65536 +
+		uint32(binary.LittleEndian.Uint16(data[offset+2:]))
 	m.Route, err = c.dictionary.IndexCode(code)
 	if err != nil {
 		return nil, err
