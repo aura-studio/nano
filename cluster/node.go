@@ -150,7 +150,6 @@ func (n *Node) setServerID() {
 		}
 		b2, _ := strconv.Atoi(bits[2])
 		b3, _ := strconv.Atoi(bits[3])
-		fmt.Println(b2, b3)
 		var sum uint32
 		sum += uint32(b2) << 24
 		sum += uint32(b3) << 16
