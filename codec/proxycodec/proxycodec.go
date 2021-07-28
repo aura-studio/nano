@@ -51,7 +51,7 @@ func (c *CodecEntity) EncodePacket(packets []*packet.Packet) ([]byte, error) {
 		c.writeBuf.Write(p.Data)
 		length += len(p.Data)
 	}
-	data := c.writeBuf.Next(c.writeBuf.Len())
+	data := c.writeBuf.Next(length)
 
 	return data, nil
 }
