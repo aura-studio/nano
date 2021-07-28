@@ -137,6 +137,8 @@ func (n *Node) setServerID() {
 	var host string
 	if parts[0] == "" {
 		host = "0.0.0.0"
+	} else {
+		host = parts[0]
 	}
 	port, _ := strconv.Atoi(parts[1])
 	addrs, _ := net.LookupHost(host)
