@@ -61,10 +61,10 @@ func (a *acceptor) RPC(route string, v interface{}) error {
 	if env.Debug {
 		switch d := v.(type) {
 		case []byte:
-			log.Infof("Type=Notify, Route=%s, SSID=%d, SID=%d, Version=%s, UID=%d,  MID=%d, Data=%dbytes",
+			log.Infof("Type=Notify, Route=%s, SSID=%d, SID=%d, Version=%s, UID=%d, MID=%d, Data=%dbytes",
 				route, a.session.SSID(), a.session.SID(), a.session.Version(), a.session.UID(), a.lastMid, len(d))
 		default:
-			log.Infof("Type=Notify, Route=%s, SSID=%d, SID=%d, Version=%s, UID=%d,  MID=%d, Data=%+v",
+			log.Infof("Type=Notify, Route=%s, SSID=%d, SID=%d, Version=%s, UID=%d, MID=%d, Data=%+v",
 				route, a.session.SSID(), a.session.SID(), a.session.Version(), a.session.UID(), a.lastMid, v)
 		}
 	}
@@ -101,10 +101,10 @@ func (a *acceptor) ResponseMid(mid uint64, route string, v interface{}) error {
 	if env.Debug {
 		switch d := v.(type) {
 		case []byte:
-			log.Infof("Type=Response, Route=%s, SSID=%d, SID=%d, Version=%s, UID=%d,  MID=%d, Data=%dbytes",
+			log.Infof("Type=Response, Route=%s, SSID=%d, SID=%d, Version=%s, UID=%d, MID=%d, Data=%dbytes",
 				route, a.session.SSID(), a.session.SID(), a.session.Version(), a.session.UID(), mid, len(d))
 		default:
-			log.Infof("Type=Response, Route=%s, SSID=%d, SID=%d, Version=%s, UID=%d,  MID=%d, Data=%+v",
+			log.Infof("Type=Response, Route=%s, SSID=%d, SID=%d, Version=%s, UID=%d, MID=%d, Data=%+v",
 				route, a.session.SSID(), a.session.SID(), a.session.Version(), a.session.UID(), mid, v)
 		}
 	}

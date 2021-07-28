@@ -131,7 +131,7 @@ func (a *agent) Push(route string, v interface{}) error {
 	if env.Debug {
 		switch d := v.(type) {
 		case []byte:
-			log.Infof("Type=Push, Route=%s, SSID=%d, SID=%d, Version=%s, UID=%d,  MID=%d, Data=%dbytes",
+			log.Infof("Type=Push, Route=%s, SSID=%d, SID=%d, Version=%s, UID=%d, MID=%d, Data=%dbytes",
 				route, a.session.SSID(), a.session.SID(), a.session.Version(), a.session.UID(), 0, len(d))
 		default:
 			log.Infof("Type=Push, Route=%s, SSID=%d, SID=%d, Version=%s, UID=%d, MID=%d, Data=%+v",
