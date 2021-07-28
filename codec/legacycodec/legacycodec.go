@@ -44,16 +44,18 @@ func NewCodecEntity(dictionary message.Dictionary) *CodecEntity {
 }
 
 func (c *CodecEntity) EncodePacket(packets []*packet.Packet) ([]byte, error) {
-	defer c.writeBuf.Reset()
-
+	var length int
 	for _, p := range packets {
 		err := binary.Write(c.writeBuf, binary.LittleEndian, uint16(p.Length+2))
 		if err != nil {
 			return nil, err
 		}
+		length += 2
 		c.writeBuf.Write(p.Data)
+		length += len(p.Data)
 	}
-	data := c.writeBuf.Next(c.writeBuf.Len())
+	data := c.writeBuf.Next(length)
+
 	return data, nil
 }
 
