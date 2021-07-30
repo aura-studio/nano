@@ -343,6 +343,13 @@ func (n *Node) ListenAndServeDebug() {
 	}
 }
 
+func (n *Node) CountSessions() int {
+	n.mu.Lock()
+	c := len(n.sessions)
+	n.mu.Unlock()
+	return c
+}
+
 func (n *Node) storeSession(s *session.Session) {
 	n.mu.Lock()
 	n.sessions[s.ID()] = s
