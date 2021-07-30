@@ -11,7 +11,7 @@ type (
 	// Transmitter unicasts & multicasts msg to
 	Transmitter interface {
 		Node() *Node
-		Unicast(label string, sig int64, msg []byte) ([]byte, error)
+		Unicast(label string, sig int64, msg []byte) ([][]byte, error)
 		Multicast(sig int64, msg []byte) ([]string, [][]byte, error)
 	}
 
@@ -58,28 +58,26 @@ func (t *transmitter) Node() *Node {
 }
 
 // Unicast implements Transmitter.Unicast
-func (t *transmitter) Unicast(label string, sig int64, msg []byte) ([]byte, error) {
+func (t *transmitter) Unicast(label string, sig int64, msg []byte) ([][]byte, error) {
 	request := &clusterpb.PerformConventionRequest{Sig: sig, Data: msg}
-
-	var addr string
+	var data [][]byte
 	for _, member := range t.node.cluster.members {
 		if member.memberInfo.Label == label {
-			addr = member.memberInfo.ServiceAddr
-			break
+			addr := member.memberInfo.ServiceAddr
+			pool, err := t.node.rpcClient.getConnPool(addr)
+			if err != nil {
+				return nil, fmt.Errorf("cannot retrieve connection pool for address %s %v", addr, err)
+			}
+			client := clusterpb.NewMemberClient(pool.Get())
+			resp, err := client.PerformConvention(context.Background(), request)
+			if err != nil {
+				return nil, fmt.Errorf("cannot perform convention in remote address %s %v", addr, err)
+			}
+			data = append(data, resp.Data)
 		}
 	}
 
-	pool, err := t.node.rpcClient.getConnPool(addr)
-	if err != nil {
-		return nil, fmt.Errorf("cannot retrieve connection pool for address %s %v", addr, err)
-	}
-	client := clusterpb.NewMemberClient(pool.Get())
-	response, err := client.PerformConvention(context.Background(), request)
-	if err != nil {
-		return nil, fmt.Errorf("cannot perform convention in remote address %s %v", addr, err)
-	}
-
-	return response.Data, nil
+	return data, nil
 }
 
 // Unicast implements Transmitter.Multicast
