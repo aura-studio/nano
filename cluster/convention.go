@@ -61,19 +61,22 @@ func (t *transmitter) Node() *Node {
 func (t *transmitter) Unicast(label string, sig int64, msg []byte) ([]byte, error) {
 	request := &clusterpb.PerformConventionRequest{Sig: sig, Data: msg}
 
-	members := t.node.cluster.remoteMemebers()
-	remote, ok := members[label]
-	if !ok {
-		return nil, fmt.Errorf("member not found by label %s", label)
+	var addr string
+	for _, member := range t.node.cluster.members {
+		if member.memberInfo.Label == label {
+			addr = member.memberInfo.ServiceAddr
+			break
+		}
 	}
-	pool, err := t.node.rpcClient.getConnPool(remote)
+
+	pool, err := t.node.rpcClient.getConnPool(addr)
 	if err != nil {
-		return nil, fmt.Errorf("cannot retrieve connection pool for address %s %v", remote, err)
+		return nil, fmt.Errorf("cannot retrieve connection pool for address %s %v", addr, err)
 	}
 	client := clusterpb.NewMemberClient(pool.Get())
 	response, err := client.PerformConvention(context.Background(), request)
 	if err != nil {
-		return nil, fmt.Errorf("cannot perform convention in remote address %s %v", remote, err)
+		return nil, fmt.Errorf("cannot perform convention in remote address %s %v", addr, err)
 	}
 
 	return response.Data, nil
@@ -84,16 +87,16 @@ func (t *transmitter) Multicast(sig int64, msg []byte) ([]string, [][]byte, erro
 	var labels []string
 	var data [][]byte
 	request := &clusterpb.PerformConventionRequest{Sig: sig, Data: msg}
-	members := t.node.cluster.remoteMemebers()
-	for _, remote := range members {
-		pool, err := t.node.rpcClient.getConnPool(remote)
+	for _, member := range t.node.cluster.members {
+		addr := member.memberInfo.ServiceAddr
+		pool, err := t.node.rpcClient.getConnPool(addr)
 		if err != nil {
-			return nil, nil, fmt.Errorf("cannot retrieve connection pool for address %s %v", remote, err)
+			return nil, nil, fmt.Errorf("cannot retrieve connection pool for address %s %v", addr, err)
 		}
 		client := clusterpb.NewMemberClient(pool.Get())
 		resp, err := client.PerformConvention(context.Background(), request)
 		if err != nil {
-			return nil, nil, fmt.Errorf("cannot perform convention in remote address %s %v", remote, err)
+			return nil, nil, fmt.Errorf("cannot perform convention in remote address %s %v", addr, err)
 		}
 		labels = append(labels, resp.Label)
 		data = append(data, resp.Data)

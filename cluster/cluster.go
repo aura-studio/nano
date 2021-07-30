@@ -38,7 +38,7 @@ type cluster struct {
 	rpcClient   *rpcClient
 
 	mu      sync.RWMutex
-	members []*Member
+	members []*Member // current node doesn't exsits in members
 }
 
 func newCluster(currentNode *Node) *cluster {
@@ -211,16 +211,6 @@ func (c *cluster) remoteAddrs() []string {
 	}
 	c.mu.RUnlock()
 	return addrs
-}
-
-func (c *cluster) remoteMemebers() map[string]string {
-	var members = make(map[string]string)
-	c.mu.RLock()
-	for _, m := range c.members {
-		members[m.memberInfo.Label] = m.memberInfo.ServiceAddr
-	}
-	c.mu.RUnlock()
-	return members
 }
 
 func (c *cluster) initMembers(members []*clusterpb.MemberInfo) {
