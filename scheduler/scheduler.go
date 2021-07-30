@@ -73,7 +73,7 @@ func Digest() {
 	for {
 		select {
 		case <-ticker.C:
-			cron()
+			timerManager.Cron()
 
 		case f := <-chTasks:
 			try(f)

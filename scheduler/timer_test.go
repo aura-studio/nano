@@ -40,14 +40,14 @@ func TestNewTimer(t *testing.T) {
 	const tc = 1000
 	var counter int64
 	for i := 0; i < tc; i++ {
-		NewTimer(1*time.Millisecond, func() {
+		timerManager.NewTimer(1*time.Millisecond, func() {
 			atomic.AddInt64(&counter, 1)
 		})
 	}
 
 	<-time.After(5 * time.Millisecond)
-	cron()
-	cron()
+	timerManager.Cron()
+	timerManager.Cron()
 	if counter != tc*2 {
 		t.Fatalf("expect: %d, got: %d", tc*2, counter)
 	}
@@ -79,13 +79,13 @@ func TestNewAfterTimer(t *testing.T) {
 	const tc = 1000
 	var counter int64
 	for i := 0; i < tc; i++ {
-		NewAfterTimer(1*time.Millisecond, func() {
+		timerManager.NewAfterTimer(1*time.Millisecond, func() {
 			atomic.AddInt64(&counter, 1)
 		})
 	}
 
 	<-time.After(5 * time.Millisecond)
-	cron()
+	timerManager.Cron()
 	if counter != tc {
 		t.Fatalf("expect: %d, got: %d", tc, counter)
 	}
