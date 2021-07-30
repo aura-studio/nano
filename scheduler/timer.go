@@ -223,3 +223,37 @@ func (tm *TimerManager) NewCondTimer(condition TimerCondition, fn TimerFunc) *Ti
 func (tm *TimerManager) NewTimer(interval time.Duration, fn TimerFunc) *Timer {
 	return tm.NewCountTimer(interval, infinite, fn)
 }
+
+// NewCountTimer returns a new Timer containing a function that will be called
+// with a period specified by the duration argument. After count times, timer
+// will be stopped automatically, It adjusts the intervals for slow receivers.
+// The duration d must be greater than zero; if not, NewCountTimer will panic.
+// Stop the timer to release associated resources.
+func NewCountTimer(interval time.Duration, count int, fn TimerFunc) *Timer {
+	return timerManager.NewCountTimer(interval, count, fn)
+}
+
+// NewAfterTimer returns a new Timer containing a function that will be called
+// after duration that specified by the duration argument.
+// The duration d must be greater than zero; if not, NewAfterTimer will panic.
+// Stop the timer to release associated resources.
+func NewAfterTimer(duration time.Duration, fn TimerFunc) *Timer {
+	return timerManager.NewAfterTimer(duration, fn)
+}
+
+// NewCondTimer returns a new Timer containing a function that will be called
+// when condition satisfied that specified by the condition argument.
+// The duration d must be greater than zero; if not, NewCondTimer will panic.
+// Stop the timer to release associated resources.
+func NewCondTimer(condition TimerCondition, fn TimerFunc) *Timer {
+	return timerManager.NewCondTimer(condition, fn)
+}
+
+// NewTimer returns a new Timer containing a function that will be called
+// with a period specified by the duration argument. It adjusts the intervals
+// for slow receivers.
+// The duration d must be greater than zero; if not, NewTimer will panic.
+// Stop the timer to release associated resources.
+func NewTimer(interval time.Duration, fn TimerFunc) *Timer {
+	return timerManager.NewTimer(interval, fn)
+}
