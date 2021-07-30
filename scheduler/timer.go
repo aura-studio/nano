@@ -34,19 +34,6 @@ const (
 	infinite = -1
 )
 
-var (
-	// timerManager manager for all timers
-	timerManager = &struct {
-		incrementID int64            // auto increment id
-		timers      map[int64]*Timer // all timers
-
-		muClosingTimer sync.RWMutex
-		closingTimer   []int64
-		muCreatedTimer sync.RWMutex
-		createdTimer   []*Timer
-	}{}
-)
-
 type (
 	// TimerFunc represents a function which will be called periodically in main
 	// logic gorontine.
@@ -69,10 +56,31 @@ type (
 		closed    int32          // is timer closed
 		counter   int            // counter
 	}
+
+	TimerManager struct {
+		incrementID int64            // auto increment id
+		timers      map[int64]*Timer // all timers
+
+		muClosingTimer sync.RWMutex
+		closingTimer   []int64
+		muCreatedTimer sync.RWMutex
+		createdTimer   []*Timer
+	}
+)
+
+func NewTimerManager() *TimerManager {
+	return &TimerManager{
+		timers: make(map[int64]*Timer),
+	}
+}
+
+var (
+	// timerManager manager for all timers
+	timerManager *TimerManager
 )
 
 func init() {
-	timerManager.timers = map[int64]*Timer{}
+	timerManager = NewTimerManager()
 }
 
 // ID returns id of current timer
