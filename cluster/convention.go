@@ -59,45 +59,61 @@ func (t *transmitter) Node() *Node {
 
 // Unicast implements Transmitter.Unicast
 func (t *transmitter) Unicast(label string, sig int64, msg []byte) ([][]byte, error) {
-	request := &clusterpb.PerformConventionRequest{Sig: sig, Data: msg}
-	var data [][]byte
-	for _, member := range t.node.cluster.members {
-		if member.memberInfo.Label == label {
-			addr := member.memberInfo.ServiceAddr
-			pool, err := t.node.rpcClient.getConnPool(addr)
-			if err != nil {
-				return nil, fmt.Errorf("cannot retrieve connection pool for address %s %v", addr, err)
-			}
-			client := clusterpb.NewMemberClient(pool.Get())
-			resp, err := client.PerformConvention(context.Background(), request)
-			if err != nil {
-				return nil, fmt.Errorf("cannot perform convention in remote address %s %v", addr, err)
-			}
-			data = append(data, resp.Data)
+	var labels []string
+	var dataList [][]byte
+
+	for _, addr := range t.addrs(label) {
+		label, data, err := t.invoke(addr, sig, msg)
+		if err != nil {
+			return nil, err
 		}
+		labels = append(labels, label)
+		dataList = append(dataList, data)
 	}
 
-	return data, nil
+	return dataList, nil
 }
 
 // Unicast implements Transmitter.Multicast
 func (t *transmitter) Multicast(sig int64, msg []byte) ([]string, [][]byte, error) {
 	var labels []string
-	var data [][]byte
-	request := &clusterpb.PerformConventionRequest{Sig: sig, Data: msg}
-	for _, member := range t.node.cluster.members {
-		addr := member.memberInfo.ServiceAddr
-		pool, err := t.node.rpcClient.getConnPool(addr)
+	var dataList [][]byte
+
+	for _, addr := range t.addrs("") {
+		label, data, err := t.invoke(addr, sig, msg)
 		if err != nil {
-			return nil, nil, fmt.Errorf("cannot retrieve connection pool for address %s %v", addr, err)
+			return nil, nil, err
 		}
-		client := clusterpb.NewMemberClient(pool.Get())
-		resp, err := client.PerformConvention(context.Background(), request)
-		if err != nil {
-			return nil, nil, fmt.Errorf("cannot perform convention in remote address %s %v", addr, err)
-		}
-		labels = append(labels, resp.Label)
-		data = append(data, resp.Data)
+		labels = append(labels, label)
+		dataList = append(dataList, data)
 	}
-	return labels, data, nil
+
+	return labels, dataList, nil
+}
+
+func (t *transmitter) addrs(label string) []string {
+	var addrs []string
+	if label == "" || label == t.node.Label {
+		addrs = append(addrs, t.node.ServiceAddr)
+	}
+	for _, member := range t.node.cluster.members {
+		if label == "" || member.memberInfo.Label == label {
+			addrs = append(addrs, member.memberInfo.ServiceAddr)
+		}
+	}
+	return addrs
+}
+
+func (t *transmitter) invoke(addr string, sig int64, data []byte) (string, []byte, error) {
+	request := &clusterpb.PerformConventionRequest{Sig: sig, Data: data}
+	pool, err := t.node.rpcClient.getConnPool(addr)
+	if err != nil {
+		return "", nil, fmt.Errorf("cannot retrieve connection pool for address %s %v", addr, err)
+	}
+	client := clusterpb.NewMemberClient(pool.Get())
+	response, err := client.PerformConvention(context.Background(), request)
+	if err != nil {
+		return "", nil, fmt.Errorf("cannot perform convention in remote address %s %v", addr, err)
+	}
+	return response.Label, request.Data, nil
 }
