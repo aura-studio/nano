@@ -11,8 +11,9 @@ type (
 	// Transmitter unicasts & multicasts msg to
 	Transmitter interface {
 		Node() *Node
-		Unicast(label string, sig int64, msg []byte) ([][]byte, error)
-		Multicast(sig int64, msg []byte) ([]string, [][]byte, error)
+		Unicast(addr string, sig int64, msg []byte) ([]byte, error)
+		Multicast(label string, sig int64, msg []byte) ([][]byte, error)
+		Broadcast(sig int64, msg []byte) ([]string, [][]byte, error)
 	}
 
 	// Acceptor
@@ -25,31 +26,20 @@ type (
 		Establish(Transmitter) Acceptor
 	}
 
-	// transmitter is to implement Transmitter
 	transmitter struct {
+		Acceptor
 		node *Node
-	}
-
-	// conventioner contains a transmitter & a acceptor
-	conventioner struct {
-		transmitter Transmitter
-		acceptor    Acceptor
 	}
 )
 
-// newConventioner creates a new conventioner
-func newConventioner(node *Node) *conventioner {
-	transmitter := &transmitter{
-		node: node,
+// newTransmitter creates a new conventioner
+func newTransmitter(node *Node) *transmitter {
+	c := &transmitter{nil, node}
+	if node.Convention == nil {
+		return c
 	}
-	var acceptor Acceptor
-	if node.Convention != nil {
-		acceptor = node.Convention.Establish(transmitter)
-	}
-	return &conventioner{
-		transmitter: transmitter,
-		acceptor:    acceptor,
-	}
+	c.Acceptor = node.Convention.Establish(c)
+	return c
 }
 
 // Node returns current node
@@ -57,10 +47,27 @@ func (t *transmitter) Node() *Node {
 	return t.node
 }
 
-// Unicast implements Transmitter.Unicast
-func (t *transmitter) Unicast(label string, sig int64, msg []byte) ([][]byte, error) {
+// Unicast implements func Transmitter.Unicast
+func (t *transmitter) Unicast(addr string, sig int64, msg []byte) ([]byte, error) {
+	if addr == t.node.ServiceAddr {
+		return t.React(sig, msg)
+	}
+	_, data, err := t.invoke(addr, sig, msg)
+	return data, err
+}
+
+// Multicast implements func Transmitter.Multicast
+func (t *transmitter) Multicast(label string, sig int64, msg []byte) ([][]byte, error) {
 	var labels []string
 	var dataList [][]byte
+
+	if label == t.node.Label {
+		data, err := t.React(sig, msg)
+		if err != nil {
+			return nil, err
+		}
+		dataList = append(dataList, data)
+	}
 
 	for _, addr := range t.addrs(label) {
 		label, data, err := t.invoke(addr, sig, msg)
@@ -74,10 +81,16 @@ func (t *transmitter) Unicast(label string, sig int64, msg []byte) ([][]byte, er
 	return dataList, nil
 }
 
-// Unicast implements Transmitter.Multicast
-func (t *transmitter) Multicast(sig int64, msg []byte) ([]string, [][]byte, error) {
+// Broadcast implements func Transmitter.Broadcast
+func (t *transmitter) Broadcast(sig int64, msg []byte) ([]string, [][]byte, error) {
 	var labels []string
 	var dataList [][]byte
+
+	data, err := t.React(sig, msg)
+	if err != nil {
+		return nil, nil, err
+	}
+	dataList = append(dataList, data)
 
 	for _, addr := range t.addrs("") {
 		label, data, err := t.invoke(addr, sig, msg)
@@ -93,9 +106,6 @@ func (t *transmitter) Multicast(sig int64, msg []byte) ([]string, [][]byte, erro
 
 func (t *transmitter) addrs(label string) []string {
 	var addrs []string
-	if label == "" || label == t.node.Label {
-		addrs = append(addrs, t.node.ServiceAddr)
-	}
 	for _, member := range t.node.cluster.members {
 		if label == "" || member.memberInfo.Label == label {
 			addrs = append(addrs, member.memberInfo.ServiceAddr)

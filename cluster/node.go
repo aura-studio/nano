@@ -73,11 +73,11 @@ type Node struct {
 	ServiceAddr string // current server service address (RPC)
 	ServerID    uint32 // current server service ID
 
-	cluster      *cluster
-	handler      *LocalHandler
-	server       *grpc.Server
-	rpcClient    *rpcClient
-	conventioner *conventioner
+	cluster     *cluster
+	handler     *LocalHandler
+	server      *grpc.Server
+	rpcClient   *rpcClient
+	transmitter *transmitter
 
 	mu       sync.RWMutex
 	sessions map[int64]*session.Session
@@ -93,7 +93,7 @@ func (n *Node) Startup() error {
 	n.sessions = map[int64]*session.Session{}
 	n.cluster = newCluster(n)
 	n.handler = newHandler(n)
-	n.conventioner = newConventioner(n)
+	n.transmitter = newTransmitter(n)
 	components := n.Components.List()
 	for _, c := range components {
 		err := n.handler.Register(c.Comp, c.Opts)
@@ -511,12 +511,12 @@ func (n *Node) CloseSession(_ context.Context, req *clusterpb.CloseSessionReques
 
 // PerformConvention implements the MemberServer interface
 func (n *Node) PerformConvention(_ context.Context, req *clusterpb.PerformConventionRequest) (*clusterpb.PerformConventionResponse, error) {
-	if n.conventioner.acceptor != nil {
-		data, err := n.conventioner.acceptor.React(req.Sig, req.Data)
-		if err != nil {
-			return &clusterpb.PerformConventionResponse{}, fmt.Errorf("member %s react error %s", n.Label, err.Error())
-		}
-		return &clusterpb.PerformConventionResponse{Label: n.Label, Data: data}, nil
+	if n.transmitter == nil {
+		return &clusterpb.PerformConventionResponse{}, nil
 	}
-	return &clusterpb.PerformConventionResponse{}, nil
+	data, err := n.transmitter.React(req.Sig, req.Data)
+	if err != nil {
+		return &clusterpb.PerformConventionResponse{}, fmt.Errorf("member %s react error %s", n.Label, err.Error())
+	}
+	return &clusterpb.PerformConventionResponse{Label: n.Label, Data: data}, nil
 }
