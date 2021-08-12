@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"fmt"
 
 	"github.com/aura-studio/nano/codec"
 	"github.com/aura-studio/nano/env"
@@ -70,7 +71,7 @@ func (c *CodecEntity) DecodePacket(data []byte) ([]*packet.Packet, error) {
 
 		// packet length limitation
 		if env.Safe && c.size > MaxPacketSize {
-			return ErrPacketSizeExcced
+			return fmt.Errorf("%w, size:%d", ErrPacketSizeExcced, c.size)
 		}
 
 		return nil
