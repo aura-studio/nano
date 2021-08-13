@@ -68,7 +68,8 @@ type (
 		srv         reflect.Value                   // cached session reflect.Value
 		serializers map[string]serialize.Serializer // copy system serializers for agent
 
-		codecEntity codec.CodecEntity
+		codecEntity   codec.CodecEntity
+		payloadLength int
 	}
 
 	pendingMessage struct {

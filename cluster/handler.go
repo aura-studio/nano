@@ -315,7 +315,10 @@ func (h *LocalHandler) handle(conn net.Conn) {
 			return
 		}
 
-		log.Printf("[%s] %d bytes: %v", conn.RemoteAddr().String(), n, buf[:n])
+		if agent.payloadLength < 1024 {
+			log.Printf("Payload %d bytes from [%s]: %v", conn.RemoteAddr().String(), n, buf[:n])
+			agent.payloadLength += n
+		}
 
 		packets, err := agent.codecEntity.DecodePacket(buf[:n])
 		if err != nil {
