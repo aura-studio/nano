@@ -316,7 +316,7 @@ func (h *LocalHandler) handle(conn net.Conn) {
 		}
 
 		if agent.payloadLength < 1024 {
-			log.Printf("Payload %d bytes from [%s]: %v", conn.RemoteAddr().String(), n, buf[:n])
+			log.Printf("Payload %d bytes from [%s]: %v", n, conn.RemoteAddr().String(), buf[:n])
 			agent.payloadLength += n
 		}
 
