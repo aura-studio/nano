@@ -315,6 +315,8 @@ func (h *LocalHandler) handle(conn net.Conn) {
 			return
 		}
 
+		log.Println("[%s] %d bytes: %v", conn.RemoteAddr().String(), n, buf)
+
 		packets, err := agent.codecEntity.DecodePacket(buf[:n])
 		if err != nil {
 			log.Errorln(err.Error())
