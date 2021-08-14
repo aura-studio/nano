@@ -259,6 +259,10 @@ func (c *Connector) Deserialize(data []byte, v interface{}) error {
 	return nil
 }
 
+func (c *Connector) Send(data []byte) {
+	c.send(data)
+}
+
 func (c *Connector) eventHandler(event string) (Callback, bool) {
 	c.muEvents.RLock()
 	defer c.muEvents.RUnlock()
