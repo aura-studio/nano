@@ -72,9 +72,7 @@ func (c *Conn) Read(b []byte) (int, error) {
 			route = c.r.URL.Query().Get("route")
 		}
 
-		if env.Debug {
-			log.Infof("http: Type=Request, Route=%s, Len=%d, Data=%+v", route, len(data), string(data))
-		}
+		log.Infof("http: Type=Request, Route=%s, Len=%d, Data=%+v", route, len(data), string(data))
 
 		msg := &message.Message{
 			Type:  message.Request,
