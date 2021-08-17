@@ -3,6 +3,7 @@ package httpupgrader
 import (
 	"bufio"
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net"
@@ -54,25 +55,48 @@ func (c *Conn) Read(b []byte) (int, error) {
 	}
 
 	if c.readBuf == nil {
-		var data []byte
-		if c.r.ContentLength > 0 {
-			data = make([]byte, int(c.r.ContentLength))
-			_, err := io.ReadFull(c.brw, data)
-			if err != nil {
-				return 0, err
+		var (
+			err   error
+			data  []byte
+			route string
+		)
+
+		data = []byte(c.r.URL.Query().Get("data"))
+		if len(data) == 0 {
+			if c.r.ContentLength > 0 {
+				data = make([]byte, int(c.r.ContentLength))
+				_, err := io.ReadFull(c.brw, data)
+				if err != nil {
+					return 0, err
+				}
+			} else if c.brw.Reader.Buffered() > 0 {
+				dataBuf := new(bytes.Buffer)
+				for {
+					buf := make([]byte, 2048)
+					n, err := c.brw.Read(buf)
+					if err != nil && err != io.EOF {
+						return 0, err
+					}
+					if err == io.EOF {
+						break
+					}
+					dataBuf.Write(buf[:n])
+					if json.Valid(dataBuf.Bytes()) {
+						break
+					}
+				}
+				data = dataBuf.Bytes()
 			}
-		} else {
-			data = []byte(c.r.URL.Query().Get("data"))
 		}
 
-		var route string
-		if c.params["route"] != "" {
+		route = c.r.URL.Query().Get("route")
+		if len(route) == 0 {
 			route = c.params["route"]
-		} else {
-			route = c.r.URL.Query().Get("route")
 		}
 
-		log.Infof("http: Type=Request, Route=%s, Len=%d, Data=%+v", route, len(data), string(data))
+		if env.Debug {
+			log.Infof("http: Type=Request, Route=%s, Len=%d, Data=%+v", route, len(data), string(data))
+		}
 
 		msg := &message.Message{
 			Type:  message.Request,
@@ -80,17 +104,18 @@ func (c *Conn) Read(b []byte) (int, error) {
 			ID:    1,
 			Data:  data,
 		}
-		data, err := c.codecEntity.EncodeMessage(msg)
+		m, err := c.codecEntity.EncodeMessage(msg)
 		if err != nil {
 			return 0, err
 		}
-		packets := []*packet.Packet{{Length: len(data), Data: data}}
-		b, err := c.codecEntity.EncodePacket(packets)
+		packets := []*packet.Packet{{Length: len(m), Data: m}}
+		p, err := c.codecEntity.EncodePacket(packets)
 		if err != nil {
 			return 0, err
 		}
+
 		buf := new(bytes.Buffer)
-		_, err = buf.Write(b)
+		_, err = buf.Write(p)
 		if err != nil {
 			return 0, err
 		}
