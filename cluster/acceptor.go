@@ -16,7 +16,6 @@ type acceptor struct {
 	sid         int64
 	gateClient  clusterpb.MemberClient
 	session     *session.Session
-	lastMid     uint64
 	rpcHandler  rpcHandler
 	gateAddr    string
 	serializers map[string]serialize.Serializer // copy system serializers for agent
@@ -52,12 +51,7 @@ func (a *acceptor) Push(route string, v interface{}) error {
 }
 
 // RPC implements the session.NetworkEntity interface
-func (a *acceptor) RPC(route string, v interface{}) error {
-	return a.RPCMid(a.lastMid, route, v)
-}
-
-// RPC implements the session.NetworkEntity interface
-func (a *acceptor) RPCMid(mid uint64, route string, v interface{}) error {
+func (a *acceptor) RPC(mid uint64, route string, v interface{}) error {
 	data, err := message.RouteSerialize(a.serializers, route, v)
 	if err != nil {
 		return err
@@ -87,12 +81,7 @@ func (a *acceptor) RPCMid(mid uint64, route string, v interface{}) error {
 }
 
 // Response implements the session.NetworkEntity interface
-func (a *acceptor) Response(route string, v interface{}) error {
-	return a.ResponseMid(a.lastMid, route, v)
-}
-
-// ResponseMid implements the session.NetworkEntity interface
-func (a *acceptor) ResponseMid(mid uint64, route string, v interface{}) error {
+func (a *acceptor) Response(mid uint64, route string, v interface{}) error {
 	data, err := message.Serialize(v)
 	if err != nil {
 		return err

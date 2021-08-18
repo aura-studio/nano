@@ -17,11 +17,11 @@ func (s *Session) LastMid() uint64 {
 }
 
 func (s *Session) RPC(route string, v interface{}) error {
-	return s.KernalSession.entity.RPCMid(s.lastMid, route, v)
+	return s.KernalSession.entity.RPC(s.lastMid, route, v)
 }
 
 func (s *Session) Response(route string, v interface{}) error {
-	return s.KernalSession.entity.ResponseMid(s.lastMid, route, v)
+	return s.KernalSession.entity.Response(s.lastMid, route, v)
 }
 
 // New returns a new session instance

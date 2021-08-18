@@ -28,10 +28,8 @@ import (
 // NetworkEntity represent low-level network instance
 type NetworkEntity interface {
 	Push(route string, v interface{}) error
-	RPC(route string, v interface{}) error
-	RPCMid(mid uint64, route string, v interface{}) error
-	Response(route string, v interface{}) error
-	ResponseMid(mid uint64, route string, v interface{}) error
+	RPC(mid uint64, route string, v interface{}) error
+	Response(mid uint64, route string, v interface{}) error
 	Close() error
 	RemoteAddr() net.Addr
 }
@@ -79,13 +77,8 @@ func (s *KernalSession) Router() *Router {
 }
 
 // RPC sends message to remote server
-func (s *KernalSession) RPC(route string, v interface{}) error {
-	return s.entity.RPC(route, v)
-}
-
-// RPC sends message to remote server
-func (s *KernalSession) RPCMid(mid uint64, route string, v interface{}) error {
-	return s.entity.RPCMid(mid, route, v)
+func (s *KernalSession) RPC(mid uint64, route string, v interface{}) error {
+	return s.entity.RPC(mid, route, v)
 }
 
 // Push message to client
@@ -94,12 +87,6 @@ func (s *KernalSession) Push(route string, v interface{}) error {
 }
 
 // Response message to client
-func (s *KernalSession) Response(route string, v interface{}) error {
-	return s.entity.Response(route, v)
-}
-
-// ResponseMid responses message to client, mid is
-// request message ID
-func (s *KernalSession) ResponseMid(mid uint64, route string, v interface{}) error {
-	return s.entity.ResponseMid(mid, route, v)
+func (s *KernalSession) Response(mid uint64, route string, v interface{}) error {
+	return s.entity.Response(mid, route, v)
 }

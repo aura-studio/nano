@@ -21,7 +21,6 @@
 package mock
 
 import (
-	"fmt"
 	"net"
 )
 
@@ -73,16 +72,6 @@ func (n *NetworkEntity) Response(route string, v interface{}) error {
 	return nil
 }
 
-// ResponseMid implements the session.NetworkEntity interface
-func (n *NetworkEntity) ResponseMid(mid uint64, route string, v interface{}) error {
-	_, found := n.msgmap[mid]
-	if found {
-		return fmt.Errorf("duplicated message id: %v", mid)
-	}
-	n.msgmap[mid] = v
-	return nil
-}
-
 // Close implements the session.NetworkEntity interface
 func (n *NetworkEntity) Close() error {
 	return nil
@@ -91,14 +80,6 @@ func (n *NetworkEntity) Close() error {
 // RemoteAddr implements the session.NetworkEntity interface
 func (n *NetworkEntity) RemoteAddr() net.Addr {
 	return NetAddr{}
-}
-
-// LastResponse returns the last respond message
-func (n *NetworkEntity) LastResponse() interface{} {
-	if len(n.responses) < 1 {
-		return nil
-	}
-	return n.responses[len(n.responses)-1]
 }
 
 // FindResponseByMID returns the response respective the message id

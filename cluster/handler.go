@@ -516,15 +516,6 @@ func (h *LocalHandler) localProcess(handler *component.Handler, lastMid uint64, 
 	args := []reflect.Value{handler.Receiver, reflect.ValueOf(session.NewContextSession(s, lastMid)), reflect.ValueOf(data)}
 
 	task := func() {
-		if lastMid > 0 {
-			switch v := s.NetworkEntity().(type) {
-			case *agent:
-				v.lastMid = lastMid
-			case *acceptor:
-				v.lastMid = lastMid
-			}
-		}
-
 		result := handler.Method.Func.Call(args)
 		if len(result) > 0 {
 			if err := result[0].Interface(); err != nil {
