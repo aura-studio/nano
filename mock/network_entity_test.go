@@ -39,7 +39,6 @@ func (s *networkEntitySuite) TestNetworkEntity(c *C) {
 	entity := mock.NewNetworkEntity()
 
 	c.Assert(entity.LastResponse(), IsNil)
-	c.Assert(entity.LastMid(), Equals, uint64(1))
 	c.Assert(entity.Response("onResponse", "hello"), IsNil)
 	c.Assert(entity.LastResponse().(string), Equals, "hello")
 

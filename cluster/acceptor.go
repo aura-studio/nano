@@ -53,6 +53,11 @@ func (a *acceptor) Push(route string, v interface{}) error {
 
 // RPC implements the session.NetworkEntity interface
 func (a *acceptor) RPC(route string, v interface{}) error {
+	return a.RPCMid(a.lastMid, route, v)
+}
+
+// RPC implements the session.NetworkEntity interface
+func (a *acceptor) RPCMid(mid uint64, route string, v interface{}) error {
 	data, err := message.RouteSerialize(a.serializers, route, v)
 	if err != nil {
 		return err
@@ -62,28 +67,23 @@ func (a *acceptor) RPC(route string, v interface{}) error {
 		switch d := v.(type) {
 		case []byte:
 			log.Infof("Type=Notify, Route=%s, SSID=%d, SID=%d, Version=%s, UID=%d, MID=%d, Data=%dbytes",
-				route, a.session.SSID(), a.session.SID(), a.session.Version(), a.session.UID(), a.lastMid, len(d))
+				route, a.session.SSID(), a.session.SID(), a.session.Version(), a.session.UID(), mid, len(d))
 		default:
 			log.Infof("Type=Notify, Route=%s, SSID=%d, SID=%d, Version=%s, UID=%d, MID=%d, Data=%+v",
-				route, a.session.SSID(), a.session.SID(), a.session.Version(), a.session.UID(), a.lastMid, v)
+				route, a.session.SSID(), a.session.SID(), a.session.Version(), a.session.UID(), mid, v)
 		}
 	}
 
 	msg := &message.Message{
 		Type:     message.Notify,
 		ShortVer: a.session.ShortVer(),
-		ID:       a.lastMid,
+		ID:       mid,
 		Route:    route,
 		Data:     data,
 	}
 
 	a.rpcHandler(a.session, msg, true)
 	return nil
-}
-
-// LastMid implements the session.NetworkEntity interface
-func (a *acceptor) LastMid() uint64 {
-	return a.lastMid
 }
 
 // Response implements the session.NetworkEntity interface

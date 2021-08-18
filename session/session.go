@@ -1,105 +1,42 @@
-// Copyright (c) nano Authors. All Rights Reserved.
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE.
-
 package session
 
 import (
 	"net"
-	"sync"
 	"sync/atomic"
 
 	"github.com/mohae/deepcopy"
 )
 
-// NetworkEntity represent low-level network instance
-type NetworkEntity interface {
-	Push(route string, v interface{}) error
-	RPC(route string, v interface{}) error
-	LastMid() uint64
-	Response(route string, v interface{}) error
-	ResponseMid(mid uint64, route string, v interface{}) error
-	Close() error
-	RemoteAddr() net.Addr
+type Session struct {
+	*KernalSession
+	lastMid uint64
 }
 
-// EventCallback is the func called after event trigged
-type EventCallback func(*Session, ...interface{})
+func (s *Session) LastMid() uint64 {
+	return s.lastMid
+}
 
-// Session represents a client session which could storage temp data during low-level
-// keep connected, all data will be released when the low-level connection was broken.
-// Session instance related to the client will be passed to Handler method as the first
-// parameter.
-type Session struct {
-	sync.RWMutex                                 // protect data
-	id           int64                           // session global unique id
-	VersionBound bool                            // session version bound
-	shortVer     uint32                          // session short version
-	version      string                          // session version
-	uid          int64                           // binding user id
-	entity       NetworkEntity                   // low-level network entity
-	data         map[string]interface{}          // session data store
-	router       *Router                         // store remote addr
-	onEvents     map[interface{}][]EventCallback // call EventCallback after event trigged
+func (s *Session) RPC(route string, v interface{}) error {
+	return s.KernalSession.entity.RPCMid(s.lastMid, route, v)
+}
+
+func (s *Session) Response(route string, v interface{}) error {
+	return s.KernalSession.entity.ResponseMid(s.lastMid, route, v)
 }
 
 // New returns a new session instance
 // a NetworkEntity is a low-level network instance
 func New(entity NetworkEntity, id int64) *Session {
 	return &Session{
-		id:       id,
-		entity:   entity,
-		data:     make(map[string]interface{}),
-		router:   newRouter(),
-		onEvents: make(map[interface{}][]EventCallback),
+		KernalSession: NewKernalSession(entity, id),
 	}
 }
 
-// NetworkEntity returns the low-level network agent object
-func (s *Session) NetworkEntity() NetworkEntity {
-	return s.entity
-}
-
-// Router returns the service router
-func (s *Session) Router() *Router {
-	return s.router
-}
-
-// RPC sends message to remote server
-func (s *Session) RPC(route string, v interface{}) error {
-	return s.entity.RPC(route, v)
-}
-
-// Push message to client
-func (s *Session) Push(route string, v interface{}) error {
-	return s.entity.Push(route, v)
-}
-
-// Response message to client
-func (s *Session) Response(route string, v interface{}) error {
-	return s.entity.Response(route, v)
-}
-
-// ResponseMid responses message to client, mid is
-// request message ID
-func (s *Session) ResponseMid(mid uint64, route string, v interface{}) error {
-	return s.entity.ResponseMid(mid, route, v)
+func NewContextSession(s *Session, lastMid uint64) *Session {
+	return &Session{
+		KernalSession: s.KernalSession,
+		lastMid:       lastMid,
+	}
 }
 
 // ID returns the session id
@@ -134,11 +71,6 @@ func (s *Session) ShortVer() uint32 {
 
 func (s *Session) BindShortVer(shortVer uint32) {
 	s.shortVer = shortVer
-}
-
-// LastMid returns the last message id
-func (s *Session) LastMid() uint64 {
-	return s.entity.LastMid()
 }
 
 // Bind bind UID to current session

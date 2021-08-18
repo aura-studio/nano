@@ -67,11 +67,6 @@ func (n *NetworkEntity) Push(route string, v interface{}) error {
 	return nil
 }
 
-// LastMid implements the session.NetworkEntity interface
-func (n *NetworkEntity) LastMid() uint64 {
-	return 1
-}
-
 // Response implements the session.NetworkEntity interface
 func (n *NetworkEntity) Response(route string, v interface{}) error {
 	n.responses = append(n.responses, v)
