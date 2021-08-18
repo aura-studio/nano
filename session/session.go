@@ -32,7 +32,7 @@ func New(entity NetworkEntity, id int64) *Session {
 	}
 }
 
-func NewContextSession(s *Session, lastMid uint64) *Session {
+func Context(s *Session, lastMid uint64) *Session {
 	return &Session{
 		KernalSession: s.KernalSession,
 		lastMid:       lastMid,

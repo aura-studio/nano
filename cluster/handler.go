@@ -513,7 +513,7 @@ func (h *LocalHandler) localProcess(handler *component.Handler, lastMid uint64, 
 		}
 	}
 
-	args := []reflect.Value{handler.Receiver, reflect.ValueOf(session.NewContextSession(s, lastMid)), reflect.ValueOf(data)}
+	args := []reflect.Value{handler.Receiver, reflect.ValueOf(session.Context(s, lastMid)), reflect.ValueOf(data)}
 
 	task := func() {
 		result := handler.Method.Func.Call(args)
