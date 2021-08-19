@@ -8,7 +8,7 @@ import (
 )
 
 type Session struct {
-	*KernalSession
+	*KernelSession
 	lastMid uint64
 }
 

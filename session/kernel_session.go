@@ -41,7 +41,7 @@ type EventCallback func(*Session, ...interface{})
 // keep connected, all data will be released when the low-level connection was broken.
 // Session instance related to the client will be passed to Handler method as the first
 // parameter.
-type KernalSession struct {
+type KernelSession struct {
 	sync.RWMutex                                 // protect data
 	id           int64                           // session global unique id
 	VersionBound bool                            // session version bound
@@ -56,8 +56,8 @@ type KernalSession struct {
 
 // New returns a new session instance
 // a NetworkEntity is a low-level network instance
-func NewKernalSession(entity NetworkEntity, id int64) *KernalSession {
-	return &KernalSession{
+func NewKernalSession(entity NetworkEntity, id int64) *KernelSession {
+	return &KernelSession{
 		id:       id,
 		entity:   entity,
 		data:     make(map[string]interface{}),
@@ -67,26 +67,26 @@ func NewKernalSession(entity NetworkEntity, id int64) *KernalSession {
 }
 
 // NetworkEntity returns the low-level network agent object
-func (s *KernalSession) NetworkEntity() NetworkEntity {
+func (s *KernelSession) NetworkEntity() NetworkEntity {
 	return s.entity
 }
 
 // Router returns the service router
-func (s *KernalSession) Router() *Router {
+func (s *KernelSession) Router() *Router {
 	return s.router
 }
 
 // RPC sends message to remote server
-func (s *KernalSession) RPC(mid uint64, route string, v interface{}) error {
+func (s *KernelSession) RPC(mid uint64, route string, v interface{}) error {
 	return s.entity.RPC(mid, route, v)
 }
 
 // Push message to client
-func (s *KernalSession) Push(route string, v interface{}) error {
+func (s *KernelSession) Push(route string, v interface{}) error {
 	return s.entity.Push(route, v)
 }
 
 // Response message to client
-func (s *KernalSession) Response(mid uint64, route string, v interface{}) error {
+func (s *KernelSession) Response(mid uint64, route string, v interface{}) error {
 	return s.entity.Response(mid, route, v)
 }
