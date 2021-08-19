@@ -56,7 +56,7 @@ type KernelSession struct {
 
 // New returns a new session instance
 // a NetworkEntity is a low-level network instance
-func NewKernalSession(entity NetworkEntity, id int64) *KernelSession {
+func NewKernelSession(entity NetworkEntity, id int64) *KernelSession {
 	return &KernelSession{
 		id:       id,
 		entity:   entity,

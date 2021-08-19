@@ -17,24 +17,24 @@ func (s *Session) LastMid() uint64 {
 }
 
 func (s *Session) RPC(route string, v interface{}) error {
-	return s.KernalSession.entity.RPC(s.lastMid, route, v)
+	return s.KernelSession.entity.RPC(s.lastMid, route, v)
 }
 
 func (s *Session) Response(route string, v interface{}) error {
-	return s.KernalSession.entity.Response(s.lastMid, route, v)
+	return s.KernelSession.entity.Response(s.lastMid, route, v)
 }
 
 // New returns a new session instance
 // a NetworkEntity is a low-level network instance
 func New(entity NetworkEntity, id int64) *Session {
 	return &Session{
-		KernalSession: NewKernalSession(entity, id),
+		KernelSession: NewKernelSession(entity, id),
 	}
 }
 
 func Context(s *Session, lastMid uint64) *Session {
 	return &Session{
-		KernalSession: s.KernalSession,
+		KernelSession: s.KernelSession,
 		lastMid:       lastMid,
 	}
 }
