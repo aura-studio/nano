@@ -125,5 +125,5 @@ func (t *transmitter) invoke(addr string, sig int64, data []byte) (string, []byt
 	if err != nil {
 		return "", nil, fmt.Errorf("cannot perform convention in remote address %s %v", addr, err)
 	}
-	return response.Label, request.Data, nil
+	return response.Label, response.Data, nil
 }
