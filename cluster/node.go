@@ -126,6 +126,11 @@ func (n *Node) Startup() error {
 }
 
 func (n *Node) setServerID() {
+	if n.MemberAddr == "" {
+		n.ServerID = 0
+		return
+	}
+
 	parts := strings.Split(n.MemberAddr, ":")
 	var host string
 	if parts[0] == "" {
