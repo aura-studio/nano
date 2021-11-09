@@ -312,8 +312,7 @@ func (n *Node) listenAndServeHttp() {
 			err  error
 		)
 		params := mux.Vars(r)
-		route := r.URL.Query().Get("route")
-		if route == "websocket" {
+		if route, ok := params["route"]; ok && route == "websocket" {
 			conn, err = wsupgrader.Default().Upgrade(w, r, params)
 		} else {
 			conn, err = httpupgrader.Default().Upgrade(w, r, params)

@@ -1,18 +1,21 @@
 package connector
 
 import (
+	"crypto/tls"
 	"fmt"
 	"io"
 	"net"
+	"net/url"
 	"sync"
 	"sync/atomic"
-	"time"
 
+	"github.com/aura-studio/nano/cluster"
 	"github.com/aura-studio/nano/codec"
 	"github.com/aura-studio/nano/codec/plaincodec"
 	"github.com/aura-studio/nano/env"
 	"github.com/aura-studio/nano/log"
 	"github.com/aura-studio/nano/serialize/protobuf"
+	"github.com/gorilla/websocket"
 
 	"github.com/aura-studio/nano/message"
 	"github.com/aura-studio/nano/packet"
@@ -83,14 +86,16 @@ func NewConnector(opts ...Option) *Connector {
 	return c
 }
 
-// StartWithTimeout connects to server with custom timeout
-func (c *Connector) StartWithTimeout(addr string, timeout time.Duration) error {
-	conn, err := net.DialTimeout("tcp", addr, timeout)
+// Start connects to the server and send/recv between the c/s
+func (c *Connector) Start(addr string) (err error) {
+	if c.isWebSocket {
+		c.conn, err = c.getWebSocketConn(addr)
+	} else {
+		c.conn, err = c.getConn(addr)
+	}
 	if err != nil {
 		return err
 	}
-
-	c.conn = conn
 
 	go c.write()
 
@@ -103,24 +108,26 @@ func (c *Connector) StartWithTimeout(addr string, timeout time.Duration) error {
 	return nil
 }
 
-// Start connects to the server and send/recv between the c/s
-func (c *Connector) Start(addr string) error {
-	conn, err := net.Dial("tcp", addr)
+func (c *Connector) getConn(addr string) (net.Conn, error) {
+	return net.Dial("tcp", addr)
+}
+
+func (c *Connector) getWebSocketConn(addr string) (net.Conn, error) {
+	u := url.URL{Scheme: "ws", Host: addr, Path: c.wsPath}
+	dialer := websocket.DefaultDialer
+	var conn *websocket.Conn
+	var err error
+	conn, _, err = dialer.Dial(u.String(), nil)
 	if err != nil {
-		return err
+		u.Scheme = "wss"
+		dialer.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+		conn, _, err = dialer.Dial(u.String(), nil)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	c.conn = conn
-
-	go c.write()
-
-	go c.read()
-
-	atomic.StoreInt32(&c.connected, 1)
-	go c.connectedEvent(nil)
-	c.chReady <- struct{}{}
-
-	return nil
+	return cluster.NewWSConn(conn)
 }
 
 func (c *Connector) Ready() <-chan struct{} {
