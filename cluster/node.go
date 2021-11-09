@@ -22,7 +22,6 @@ package cluster
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -85,9 +84,6 @@ type Node struct {
 
 // Startup bootstraps a start up.
 func (n *Node) Startup() error {
-	if n.MemberAddr == "" {
-		return errors.New("service address cannot be empty in master node")
-	}
 	n.setServerID()
 
 	n.sessions = map[int64]*session.Session{}

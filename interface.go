@@ -120,9 +120,8 @@ func Serve(opts ...Option) {
 	}
 
 	log.Infof("Startup %v as %v server in %v mode", app.name, app.typ, app.mode)
-
-	if node.DebugAddr != "" {
-		log.Infof("Debug address: %s", node.DebugAddr)
+	if node.MemberAddr != "" {
+		log.Infof("Member address: %s", node.MemberAddr)
 	}
 	if node.TCPAddr != "" {
 		log.Infof("TCP address: %s", node.TCPAddr)
@@ -130,8 +129,9 @@ func Serve(opts ...Option) {
 	if node.HttpAddr != "" {
 		log.Infof("HTTP address: %s", node.TCPAddr)
 	}
-	if app.mode == Cluster {
-		log.Infof("Service address: %s", node.MemberAddr)
+
+	if node.DebugAddr != "" {
+		log.Infof("Debug address: %s", node.DebugAddr)
 	}
 
 	log.Infof("Nano server is serving...")
