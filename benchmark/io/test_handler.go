@@ -27,7 +27,7 @@ func (h *TestHandler) AfterInit() {
 			qps := atomic.LoadInt32(&h.metrics)
 			println("QPS", qps)
 			if qps == 0 {
-				panic(fmt.Errorf("QPS is 0"))
+				log.Println("QPS is 0"))
 			}
 			atomic.StoreInt32(&h.metrics, 0)
 		}

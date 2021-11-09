@@ -47,7 +47,8 @@ func client(t *testing.T) {
 
 func server(t *testing.T) {
 	components.Register(&TestHandler{metrics: 0})
-	nano.Listen(addr,
+	nano.Serve(
+		nano.WithMemberAddr(addr),
 		nano.WithComponents(&components),
 		nano.WithSerializer(protobuf.NewSerializer()),
 	)

@@ -413,7 +413,7 @@ func (h *LocalHandler) remoteProcess(s *session.Session, msg *message.Message, n
 	}
 
 	// Retrieve gate address and session ID
-	gateAddr := h.currentNode.ServiceAddr
+	gateAddr := h.currentNode.MemberAddr
 	sessionID := s.ID()
 	switch v := s.NetworkEntity().(type) {
 	case *acceptor:

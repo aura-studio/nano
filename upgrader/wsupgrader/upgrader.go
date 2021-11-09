@@ -4,6 +4,7 @@ import (
 	"net"
 	"net/http"
 
+	"github.com/aura-studio/nano/upgrader"
 	"github.com/gorilla/websocket"
 )
 
@@ -19,6 +20,12 @@ func NewWSUpgrader() *Upgrader {
 			CheckOrigin:     func(_ *http.Request) bool { return true },
 		},
 	}
+}
+
+var defaultUpgrader = NewWSUpgrader()
+
+func Default() upgrader.Upgrader {
+	return defaultUpgrader
 }
 
 func (u *Upgrader) Upgrade(w http.ResponseWriter, r *http.Request, params map[string]string) (net.Conn, error) {

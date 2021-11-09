@@ -40,7 +40,8 @@ import (
 	"github.com/aura-studio/nano/persist"
 	"github.com/aura-studio/nano/pipeline"
 	"github.com/aura-studio/nano/session"
-	"github.com/aura-studio/nano/upgrader"
+	"github.com/aura-studio/nano/upgrader/httpupgrader"
+	"github.com/aura-studio/nano/upgrader/wsupgrader"
 	"github.com/gorilla/mux"
 	"google.golang.org/grpc"
 )
@@ -53,12 +54,11 @@ type Options struct {
 	IsMaster       bool
 	AdvertiseAddr  string
 	RetryInterval  time.Duration
-	ClientAddr     string
+	TCPAddr        string
 	DebugAddr      string
+	MemberAddr     string
 	Components     *component.Components
 	Label          string
-	HttpUpgrader   upgrader.Upgrader
-	WSUpgrader     upgrader.Upgrader
 	HttpAddr       string
 	TSLCertificate string
 	TSLKey         string
@@ -70,9 +70,8 @@ type Options struct {
 // All services will register to cluster and messages will be forwarded to the node
 // which provides respective service
 type Node struct {
-	Options            // current node options
-	ServiceAddr string // current server service address (RPC)
-	ServerID    uint32 // current server service ID
+	Options         // current node options
+	ServerID uint32 // current server service ID
 
 	cluster     *cluster
 	handler     *LocalHandler
@@ -86,7 +85,7 @@ type Node struct {
 
 // Startup bootstraps a start up.
 func (n *Node) Startup() error {
-	if n.ServiceAddr == "" {
+	if n.MemberAddr == "" {
 		return errors.New("service address cannot be empty in master node")
 	}
 	n.setServerID()
@@ -119,22 +118,19 @@ func (n *Node) Startup() error {
 		go n.ListenAndServeDebug()
 	}
 
-	if n.ClientAddr != "" {
-		if n.HttpUpgrader == nil {
-			go n.listenAndServe()
-		} else if n.HttpAddr == "" {
-			go n.listenAndServeHttp()
-		} else {
-			go n.listenAndServe()
-			go n.listenAndServeHttp()
-		}
+	if n.TCPAddr != "" {
+		go n.listenAndServeTCP()
+	}
+
+	if n.HttpAddr != "" {
+		go n.listenAndServeHttp()
 	}
 
 	return nil
 }
 
 func (n *Node) setServerID() {
-	parts := strings.Split(n.ServiceAddr, ":")
+	parts := strings.Split(n.MemberAddr, ":")
 	var host string
 	if parts[0] == "" {
 		host = "0.0.0.0"
@@ -178,7 +174,7 @@ func (n *Node) initNode() error {
 		return nil
 	}
 
-	listener, err := net.Listen("tcp", n.WholeInterface(n.ServiceAddr))
+	listener, err := net.Listen("tcp", n.WholeInterface(n.MemberAddr))
 	if err != nil {
 		return err
 	}
@@ -202,7 +198,7 @@ func (n *Node) initNode() error {
 			memberInfo: &clusterpb.MemberInfo{
 				Label:       n.Label,
 				Version:     env.Version,
-				ServiceAddr: n.ServiceAddr,
+				ServiceAddr: n.MemberAddr,
 				Services:    n.handler.LocalService(),
 				Dictionary:  n.handler.LocalDictionary(),
 			},
@@ -229,7 +225,7 @@ func (n *Node) initNode() error {
 			MemberInfo: &clusterpb.MemberInfo{
 				Label:       n.Label,
 				Version:     env.Version,
-				ServiceAddr: n.ServiceAddr,
+				ServiceAddr: n.MemberAddr,
 				Services:    n.handler.LocalService(),
 				Dictionary:  n.handler.LocalDictionary(),
 			},
@@ -273,7 +269,7 @@ func (n *Node) Shutdown() {
 		}
 		client := clusterpb.NewMasterClient(pool.Get())
 		request := &clusterpb.UnregisterRequest{
-			ServiceAddr: n.ServiceAddr,
+			ServiceAddr: n.MemberAddr,
 		}
 		_, err = client.Unregister(context.Background(), request)
 		if err != nil {
@@ -289,8 +285,8 @@ EXIT:
 }
 
 // Enable current server accept connection
-func (n *Node) listenAndServe() {
-	listener, err := net.Listen("tcp", n.WholeInterface(n.ClientAddr))
+func (n *Node) listenAndServeTCP() {
+	listener, err := net.Listen("tcp", n.WholeInterface(n.TCPAddr))
 	if err != nil {
 		log.Fatal(err.Error())
 	}
@@ -317,9 +313,9 @@ func (n *Node) listenAndServeHttp() {
 		params := mux.Vars(r)
 		route := r.URL.Query().Get("route")
 		if route == "websocket" {
-			conn, err = n.WSUpgrader.Upgrade(w, r, params)
+			conn, err = wsupgrader.Default().Upgrade(w, r, params)
 		} else {
-			conn, err = n.HttpUpgrader.Upgrade(w, r, params)
+			conn, err = httpupgrader.Default().Upgrade(w, r, params)
 		}
 
 		if err != nil {
@@ -330,12 +326,7 @@ func (n *Node) listenAndServeHttp() {
 	})
 	http.Handle("/", router)
 
-	var addr string
-	if n.HttpAddr != "" {
-		addr = n.WholeInterface(n.HttpAddr)
-	} else {
-		addr = n.WholeInterface(n.ClientAddr)
-	}
+	addr := n.WholeInterface(n.HttpAddr)
 
 	if len(n.TSLCertificate) != 0 {
 		if err := http.ListenAndServeTLS(addr, n.TSLCertificate, n.TSLKey, nil); err != nil {

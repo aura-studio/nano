@@ -57,10 +57,10 @@ var (
 	}{}
 )
 
-// Listen listens on the TCP network address addr
+// Serve listens on the TCP network address addr
 // and then calls Serve with handler to handle requests
 // on incoming connections.
-func Listen(addr string, opts ...Option) {
+func Serve(opts ...Option) {
 	if atomic.AddInt32(&app.running, 1) != 1 {
 		log.Infoln("Nano server is running")
 		return
@@ -85,15 +85,13 @@ func Listen(addr string, opts ...Option) {
 	}
 
 	log.SetLogger(opt.Logger)
-
 	log.Infoln("Nano server is starting...")
 
 	// Use listen address as client address in non-cluster mode
-	if !opt.IsMaster && opt.AdvertiseAddr == "" && opt.ClientAddr == "" {
-		app.mode = Singleton
-		opt.ClientAddr = addr
-	} else {
+	if opt.IsMaster || opt.AdvertiseAddr != "" {
 		app.mode = Cluster
+	} else {
+		app.mode = Singleton
 	}
 
 	// Set the retry interval to 3 secondes if doesn't set by user
@@ -107,8 +105,7 @@ func Listen(addr string, opts ...Option) {
 	}
 
 	node := &cluster.Node{
-		Options:     opt,
-		ServiceAddr: addr,
+		Options: opt,
 	}
 
 	err := node.Startup()
@@ -116,7 +113,7 @@ func Listen(addr string, opts ...Option) {
 		log.Fatalf("Nano server startup failed: %v", err)
 	}
 
-	if node.ClientAddr != "" {
+	if node.TCPAddr != "" {
 		app.typ = Frontend
 	} else {
 		app.typ = Backend
@@ -127,20 +124,14 @@ func Listen(addr string, opts ...Option) {
 	if node.DebugAddr != "" {
 		log.Infof("Debug address: %s", node.DebugAddr)
 	}
-
-	if node.ClientAddr != "" {
-		if node.HttpUpgrader == nil {
-			log.Infof("TCP address: %s", node.ClientAddr)
-		} else if node.HttpAddr == "" {
-			log.Infof("HTTP address: %s", node.ClientAddr)
-		} else {
-			log.Infof("TCP address: %s", node.ClientAddr)
-			log.Infof("HTTP address: %s", node.HttpAddr)
-		}
+	if node.TCPAddr != "" {
+		log.Infof("TCP address: %s", node.TCPAddr)
 	}
-
-	if node.ServiceAddr != node.ClientAddr {
-		log.Infof("Service address: %s", node.ServiceAddr)
+	if node.HttpAddr != "" {
+		log.Infof("HTTP address: %s", node.TCPAddr)
+	}
+	if app.mode == Cluster {
+		log.Infof("Service address: %s", node.MemberAddr)
 	}
 
 	log.Infof("Nano server is serving...")

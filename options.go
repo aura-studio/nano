@@ -12,7 +12,6 @@ import (
 	"github.com/aura-studio/nano/persist"
 	"github.com/aura-studio/nano/pipeline"
 	"github.com/aura-studio/nano/serialize"
-	"github.com/aura-studio/nano/upgrader"
 	"google.golang.org/grpc"
 )
 
@@ -44,12 +43,12 @@ func WithAdvertiseAddr(addr string, retryInterval ...time.Duration) Option {
 	}
 }
 
-// WithClientAddr sets the listen address which is used to establish connection between
+// WithTCPAddr sets the listen address which is used to establish connection between
 // cluster members. Will select an available port automatically if no member address
 // setting and panic if no available port
-func WithClientAddr(addr string) Option {
+func WithTCPAddr(addr string) Option {
 	return func(opt *cluster.Options) {
-		opt.ClientAddr = addr
+		opt.TCPAddr = addr
 	}
 }
 
@@ -57,6 +56,12 @@ func WithClientAddr(addr string) Option {
 func WithDebugAddr(addr string) Option {
 	return func(opt *cluster.Options) {
 		opt.DebugAddr = addr
+	}
+}
+
+func WithMemberAddr(addr string) Option {
+	return func(opt *cluster.Options) {
+		opt.MemberAddr = addr
 	}
 }
 
@@ -128,20 +133,6 @@ func WithVersion(version string) Option {
 	return func(opt *cluster.Options) {
 		env.Version = version
 		env.ShortVersion = message.ShortVersion(version)
-	}
-}
-
-// WithHttpUpgrader sets the http upgrader for socket
-func WithHttpUpgrader(upgrader upgrader.Upgrader) Option {
-	return func(opt *cluster.Options) {
-		opt.HttpUpgrader = upgrader
-	}
-}
-
-// WithHttpUpgrader sets the http upgrader for socket
-func WithWSUpgrader(upgrader upgrader.Upgrader) Option {
-	return func(opt *cluster.Options) {
-		opt.WSUpgrader = upgrader
 	}
 }
 

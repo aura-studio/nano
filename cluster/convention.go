@@ -49,7 +49,7 @@ func (t *transmitter) Node() *Node {
 
 // Unicast implements func Transmitter.Unicast
 func (t *transmitter) Unicast(addr string, sig int64, msg []byte) ([]byte, error) {
-	if addr == t.node.ServiceAddr {
+	if addr == t.node.MemberAddr {
 		return t.React(sig, msg)
 	}
 	_, data, err := t.invoke(addr, sig, msg)

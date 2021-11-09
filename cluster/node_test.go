@@ -61,8 +61,8 @@ func (s *nodeSuite) TestNodeStartup(c *C) {
 		Options: cluster.Options{
 			IsMaster:   true,
 			Components: masterComps,
+			MemberAddr: "127.0.0.1:4450",
 		},
-		ServiceAddr: "127.0.0.1:4450",
 	}
 	err := masterNode.Startup()
 	c.Assert(err, IsNil)
@@ -74,10 +74,10 @@ func (s *nodeSuite) TestNodeStartup(c *C) {
 	memberNode1 := &cluster.Node{
 		Options: cluster.Options{
 			AdvertiseAddr: "127.0.0.1:4450",
-			ClientAddr:    "127.0.0.1:14452",
+			TCPAddr:       "127.0.0.1:14452",
+			MemberAddr:    "127.0.0.1:14451",
 			Components:    member1Comps,
 		},
-		ServiceAddr: "127.0.0.1:14451",
 	}
 	err = memberNode1.Startup()
 	c.Assert(err, IsNil)
@@ -92,9 +92,9 @@ func (s *nodeSuite) TestNodeStartup(c *C) {
 	memberNode2 := &cluster.Node{
 		Options: cluster.Options{
 			AdvertiseAddr: "127.0.0.1:4450",
+			MemberAddr:    "127.0.0.1:24451",
 			Components:    member2Comps,
 		},
-		ServiceAddr: "127.0.0.1:24451",
 	}
 	err = memberNode2.Startup()
 	c.Assert(err, IsNil)
