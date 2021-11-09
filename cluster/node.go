@@ -58,6 +58,7 @@ type Options struct {
 	Components     *component.Components
 	Label          string
 	HttpUpgrader   upgrader.Upgrader
+	WSUpgrader     upgrader.Upgrader
 	HttpAddr       string
 	TSLCertificate string
 	TSLKey         string
@@ -309,8 +310,18 @@ func (n *Node) listenAndServe() {
 func (n *Node) listenAndServeHttp() {
 	router := mux.NewRouter()
 	router.HandleFunc("/{route:[A-Za-z\\.]*}", func(w http.ResponseWriter, r *http.Request) {
+		var (
+			conn net.Conn
+			err  error
+		)
 		params := mux.Vars(r)
-		conn, err := n.HttpUpgrader.Upgrade(w, r, params)
+		route := r.URL.Query().Get("route")
+		if route == "websocket" {
+			conn, err = n.WSUpgrader.Upgrade(w, r, params)
+		} else {
+			conn, err = n.HttpUpgrader.Upgrade(w, r, params)
+		}
+
 		if err != nil {
 			log.Errorf("Upgrade failure, URI=%s, Error=%s", r.RequestURI, err.Error())
 		}

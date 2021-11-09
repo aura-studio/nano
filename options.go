@@ -138,6 +138,13 @@ func WithHttpUpgrader(upgrader upgrader.Upgrader) Option {
 	}
 }
 
+// WithHttpUpgrader sets the http upgrader for socket
+func WithWSUpgrader(upgrader upgrader.Upgrader) Option {
+	return func(opt *cluster.Options) {
+		opt.WSUpgrader = upgrader
+	}
+}
+
 // WithHttpAddr sets the independent http address
 func WithHttpAddr(httpAddr string) Option {
 	return func(opt *cluster.Options) {
