@@ -127,7 +127,7 @@ func Serve(opts ...Option) {
 		log.Infof("TCP address: %s", node.TCPAddr)
 	}
 	if node.HttpAddr != "" {
-		log.Infof("HTTP address: %s", node.TCPAddr)
+		log.Infof("HTTP address: %s", node.HttpAddr)
 	}
 
 	if node.DebugAddr != "" {
