@@ -63,6 +63,15 @@ func (s *State) Dump() []StateMod {
 	return s.mods
 }
 
+func (s *State) Data() map[string]string {
+	data := make(map[string]string)
+	s.data.Range(func(key, value interface{}) bool {
+		data[cast.ToString(key)] = cast.ToString(value)
+		return true
+	})
+	return data
+}
+
 func (s *State) Update(data map[string]string) {
 	for k, v := range data {
 		s.data.Store(k, v)
