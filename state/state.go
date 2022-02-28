@@ -117,3 +117,53 @@ func (s *State) Bool(key string) bool {
 	}
 	return cast.ToBool(v)
 }
+
+type Center struct {
+	data map[string]string
+	mu   sync.Mutex
+}
+
+func NewCenter() *Center {
+	return &Center{
+		data: map[string]string{},
+	}
+}
+
+func (c *Center) Restore(data map[string]string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	c.data = map[string]string{}
+	for k, v := range data {
+		c.data[k] = v
+	}
+}
+
+func (c *Center) Update(mods []StateMod) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	for _, mod := range mods {
+		if mod.Action == Set {
+			c.data[mod.Key] = mod.Value
+		} else if mod.Action == Append {
+			if _, ok := c.data[mod.Key]; !ok {
+				c.data[mod.Key] = "0"
+			}
+			c.data[mod.Key] = cast.ToString(cast.ToFloat64(c.data[mod.Key]) +
+				cast.ToFloat64(mod.Value))
+		}
+	}
+}
+
+func (c *Center) Data() map[string]string {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	data := map[string]string{}
+	for k, v := range c.data {
+		data[k] = v
+	}
+
+	return data
+}
