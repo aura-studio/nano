@@ -27,10 +27,12 @@ type State struct {
 }
 
 func NewState() *State {
-	return &State{
+	state := &State{
 		data: sync.Map{},
 		mods: make([]StateMod, 0),
 	}
+	state.facade = NewFacade(state)
+	return state
 }
 
 func (s *State) Facade() *Facade {
