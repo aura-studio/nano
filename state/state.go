@@ -148,7 +148,7 @@ func (f *Facade) Facade() *Facade {
 }
 
 func (f *Facade) Set(k string, v interface{}) {
-	f.state.Facade()
+	f.state.Set(k, v)
 }
 
 func (f *Facade) set(k string, v interface{}) {
