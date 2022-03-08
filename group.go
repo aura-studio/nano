@@ -123,7 +123,7 @@ func (c *Group) Broadcast(route string, v interface{}) error {
 		return err
 	}
 
-	log.Infof("Broadcast %s, Data=%+v", route, v)
+	// log.Infof("Broadcast %s, Data=%+v", route, v)
 
 	c.mu.RLock()
 	defer c.mu.RUnlock()
