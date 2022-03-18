@@ -18,8 +18,9 @@ const (
 )
 
 const (
-	msgRouteNotCompressMask = 0x08
-	msgTypeMask             = 0x07
+	msgRouteNotCompressMask = 0x08 // 0000 1000
+	msgTypeMask             = 0x07 // 0000 0111
+	msgBranchMask           = 0xF0 // 1111 0000
 	msgHeadLength           = 0x02
 )
 
@@ -127,6 +128,7 @@ func (c *CodecEntity) EncodeMessage(m *message.Message) ([]byte, error) {
 	if !compressed {
 		flag |= msgRouteNotCompressMask
 	}
+	flag |= m.Branch << 4
 	buf[offset] = flag
 	offset++
 
@@ -173,6 +175,7 @@ func (c *CodecEntity) DecodeMessage(data []byte) (*message.Message, error) {
 	flag := data[offset]
 	offset++
 	m.Type = message.Type(flag & msgTypeMask)
+	m.Branch = (flag & msgBranchMask) >> 4
 	c.compressed = flag&msgRouteNotCompressMask == 0
 	if !m.TypeValid() {
 		return nil, ErrWrongMessageType
