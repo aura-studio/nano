@@ -129,7 +129,6 @@ func (c *CodecEntity) EncodeMessage(m *message.Message) ([]byte, error) {
 	if !compressed {
 		flag |= msgRouteNotCompressMask
 	}
-	flag |= m.Branch << 4
 	buf[offset] = flag
 	offset++
 
@@ -171,7 +170,6 @@ func (c *CodecEntity) DecodeMessage(data []byte) (*message.Message, error) {
 	flag := data[offset]
 	offset++
 	m.Type = message.Type(flag & msgTypeMask)
-	m.Branch = (flag & msgBranchMask) >> 4
 	c.compressed.Store(flag&msgRouteNotCompressMask == 0)
 	if !m.TypeValid() {
 		return nil, ErrWrongMessageType
@@ -233,6 +231,9 @@ type (
 	AtomicBool struct {
 		value int32
 	}
+	AtomicInt32 struct {
+		value int32
+	}
 )
 
 // Store atomicly store bool value
@@ -247,4 +248,15 @@ func (ab *AtomicBool) Store(b bool) {
 // Load atomicly load bool value
 func (ab *AtomicBool) Load() bool {
 	return atomic.LoadInt32(&ab.value) > 0
+}
+
+// Store atomicly store bool value
+func (ab *AtomicInt32) Store(b int32) {
+	atomic.StoreInt32(&ab.value, b)
+
+}
+
+// Load atomicly load bool value
+func (ab *AtomicInt32) Load() int32 {
+	return atomic.LoadInt32(&ab.value)
 }
