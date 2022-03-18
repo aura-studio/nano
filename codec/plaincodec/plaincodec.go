@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"sync/atomic"
 
 	"github.com/aura-studio/nano/codec"
 	"github.com/aura-studio/nano/env"
@@ -35,9 +36,8 @@ type CodecEntity struct {
 	dictionary message.Dictionary
 	writeBuf   *bytes.Buffer
 	readBuf    *bytes.Buffer
-	size       int   // last packet length
-	compressed bool  // whether to use compressed msg to client
-	recvCnt    int64 // agent receive packet count
+	size       int         // last packet length
+	compressed *AtomicBool // whether to use compressed msg to client
 }
 
 func NewCodecEntity(dictionary message.Dictionary) *CodecEntity {
@@ -46,6 +46,7 @@ func NewCodecEntity(dictionary message.Dictionary) *CodecEntity {
 		readBuf:    bytes.NewBuffer(nil),
 		size:       -1,
 		dictionary: dictionary,
+		compressed: &AtomicBool{},
 	}
 }
 
@@ -124,7 +125,7 @@ func (c *CodecEntity) EncodeMessage(m *message.Message) ([]byte, error) {
 	// encode flag
 	flag := byte(m.Type)
 	code, err := c.dictionary.IndexRoute(m.Route)
-	compressed := c.compressed && err == nil
+	compressed := c.compressed.Load() && err == nil
 	if !compressed {
 		flag |= msgRouteNotCompressMask
 	}
@@ -156,11 +157,6 @@ func (c *CodecEntity) EncodeMessage(m *message.Message) ([]byte, error) {
 
 	buf = append(buf, m.Data...)
 
-	c.recvCnt++
-	if c.recvCnt == 1 {
-		c.compressed = compressed
-	}
-
 	return buf, nil
 }
 
@@ -176,7 +172,7 @@ func (c *CodecEntity) DecodeMessage(data []byte) (*message.Message, error) {
 	offset++
 	m.Type = message.Type(flag & msgTypeMask)
 	m.Branch = (flag & msgBranchMask) >> 4
-	c.compressed = flag&msgRouteNotCompressMask == 0
+	c.compressed.Store(flag&msgRouteNotCompressMask == 0)
 	if !m.TypeValid() {
 		return nil, ErrWrongMessageType
 	}
@@ -190,7 +186,7 @@ func (c *CodecEntity) DecodeMessage(data []byte) (*message.Message, error) {
 	offset += 8
 
 	// decode route
-	if c.compressed {
+	if c.compressed.Load() {
 		// decode compressed route ID
 		code := binary.BigEndian.Uint16(data[offset:])
 		route, err := c.dictionary.IndexCode(uint32(code))
@@ -230,4 +226,25 @@ func (c *Codec) Entity(dictionary message.Dictionary) codec.CodecEntity {
 		dictionary = message.EmptyDictionary
 	}
 	return NewCodecEntity(dictionary)
+}
+
+type (
+	// AtomicBool is a wrapper for atomic int32
+	AtomicBool struct {
+		value int32
+	}
+)
+
+// Store atomicly store bool value
+func (ab *AtomicBool) Store(b bool) {
+	if b {
+		atomic.StoreInt32(&ab.value, 1)
+	} else {
+		atomic.StoreInt32(&ab.value, 0)
+	}
+}
+
+// Load atomicly load bool value
+func (ab *AtomicBool) Load() bool {
+	return atomic.LoadInt32(&ab.value) > 0
 }
