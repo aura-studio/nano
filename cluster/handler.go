@@ -388,8 +388,8 @@ func (h *LocalHandler) remoteProcess(s *session.Session, msg *message.Message, n
 	}
 
 	if env.Debug {
-		log.Infof("Type=%s, Route=%s, SSID=%d, SID=%d, Version=%s, UID=%d, MID=%d, Data=%dbytes",
-			msg.Type.String(), msg.Route, s.SSID(), s.SID(), s.Version(), s.UID(), msg.ID, len(msg.Data))
+		log.Infof("Type=%s, Route=%s, SSID=%d, SID=%d, Version=%s, Branch=%s, UID=%d, MID=%d, Data=%dbytes",
+			msg.Type.String(), msg.Route, s.SSID(), s.SID(), s.Version(), s.Branch(), s.UID(), msg.ID, len(msg.Data))
 	}
 
 	// Select a remote service address
@@ -506,11 +506,11 @@ func (h *LocalHandler) localProcess(handler *component.Handler, lastMid uint64, 
 	if env.Debug {
 		switch d := data.(type) {
 		case []byte:
-			log.Infof("Type=%s, Route=%s, SSID=%d, SID=%d, Version=%s, UID=%d, MID=%d, Data=%dbytes",
-				msg.Type.String(), msg.Route, s.SSID(), s.SID(), s.Version(), s.UID(), msg.ID, len(d))
+			log.Infof("Type=%s, Route=%s, SSID=%d, SID=%d, Version=%s, Branch=%s, UID=%d, MID=%d, Data=%dbytes",
+				msg.Type.String(), msg.Route, s.SSID(), s.SID(), s.Version(), s.Branch(), s.UID(), msg.ID, len(d))
 		default:
-			log.Infof("Type=%s, Route=%s, SSID=%d, SID=%d, Version=%s, UID=%d, MID=%d, Data=%+v",
-				msg.Type.String(), msg.Route, s.SSID(), s.SID(), s.Version(), s.UID(), msg.ID, data)
+			log.Infof("Type=%s, Route=%s, SSID=%d, SID=%d, Version=%s, Branch=%s, UID=%d, MID=%d, Data=%+v",
+				msg.Type.String(), msg.Route, s.SSID(), s.SID(), s.Version(), s.Branch(), s.UID(), msg.ID, data)
 		}
 	}
 
