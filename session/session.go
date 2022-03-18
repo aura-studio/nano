@@ -78,6 +78,14 @@ func (s *Session) BindUID(uid int64) {
 	atomic.StoreInt64(&s.uid, uid)
 }
 
+func (s *Session) BindBranch(branch uint32) {
+	s.branch = branch
+}
+
+func (s *Session) Branch() uint32 {
+	return s.branch
+}
+
 // Close terminate current session, session related data will not be released,
 // all related data should be Clear explicitly in Session closed callback
 func (s *Session) Close() {

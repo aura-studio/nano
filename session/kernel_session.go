@@ -44,6 +44,7 @@ type EventCallback func(*Session, ...interface{})
 type KernelSession struct {
 	sync.RWMutex                                 // protect data
 	id           int64                           // session global unique id
+	branch       uint32                          // logic branch
 	VersionBound bool                            // session version bound
 	shortVer     uint32                          // session short version
 	version      string                          // session version
@@ -52,6 +53,7 @@ type KernelSession struct {
 	data         map[string]interface{}          // session data store
 	router       *Router                         // store remote addr
 	onEvents     map[interface{}][]EventCallback // call EventCallback after event trigged
+
 }
 
 // New returns a new session instance

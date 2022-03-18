@@ -352,6 +352,7 @@ func (h *LocalHandler) processPacket(agent *agent, p *packet.Packet) error {
 		h.mu.RUnlock()
 		agent.session.BindShortVer(msg.ShortVer)
 		agent.session.BindVersion(version)
+		agent.session.BindBranch(msg.Branch)
 		agent.session.VersionBound = true
 	}
 

@@ -51,6 +51,7 @@ message RequestMessage {
   string route = 6;
   bytes data = 7;
   NetAddr remoteAddr = 8;
+  uint32 branch = 9;
 }
 
 message NotifyMessage {
@@ -62,6 +63,7 @@ message NotifyMessage {
   string route = 6;
   bytes data = 7;
   NetAddr remoteAddr = 8;
+  uint32 branch = 9;
 }
 
 message ResponseMessage {

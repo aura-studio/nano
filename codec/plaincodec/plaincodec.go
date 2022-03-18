@@ -129,7 +129,7 @@ func (c *CodecEntity) EncodeMessage(m *message.Message) ([]byte, error) {
 	if !compressed {
 		flag |= msgRouteNotCompressMask
 	}
-	flag |= m.Branch << 4
+	flag |= byte(m.Branch) << 4
 	buf[offset] = flag
 	offset++
 
@@ -171,7 +171,7 @@ func (c *CodecEntity) DecodeMessage(data []byte) (*message.Message, error) {
 	flag := data[offset]
 	offset++
 	m.Type = message.Type(flag & msgTypeMask)
-	m.Branch = (flag & msgBranchMask) >> 4
+	m.Branch = uint32((flag & msgBranchMask) >> 4)
 	c.compressed.Store(flag&msgRouteNotCompressMask == 0)
 	if !m.TypeValid() {
 		return nil, ErrWrongMessageType
