@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/aura-studio/nano/cluster/clusterpb"
+	"github.com/aura-studio/nano/log"
 )
 
 type (
@@ -72,7 +73,8 @@ func (t *transmitter) Multicast(label string, sig int64, msg []byte) ([][]byte, 
 	for _, addr := range t.addrs(label) {
 		label, data, err := t.invoke(addr, sig, msg)
 		if err != nil {
-			return nil, err
+			log.Errorf("transmitter broadcast %v err: %v", addr, err)
+			continue
 		}
 		labels = append(labels, label)
 		dataList = append(dataList, data)
@@ -95,7 +97,8 @@ func (t *transmitter) Broadcast(sig int64, msg []byte) ([]string, [][]byte, erro
 	for _, addr := range t.addrs("") {
 		label, data, err := t.invoke(addr, sig, msg)
 		if err != nil {
-			return nil, nil, err
+			log.Errorf("transmitter broadcast %v err: %v", addr, err)
+			continue
 		}
 		labels = append(labels, label)
 		dataList = append(dataList, data)
