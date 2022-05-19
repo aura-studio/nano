@@ -268,7 +268,6 @@ func (h *LocalHandler) handle(conn net.Conn) {
 	if env.Debug {
 		log.Infof("New session established: %s", agent.String())
 	}
-	session.Inited(agent.session)
 
 	// guarantee agent related resource be destroyed
 	defer func() {
@@ -354,6 +353,8 @@ func (h *LocalHandler) processPacket(agent *agent, p *packet.Packet) error {
 		agent.session.BindVersion(version)
 		agent.session.BindBranch(msg.Branch)
 		agent.session.VersionBound = true
+
+		session.Inited(agent.session)
 	}
 
 	h.processMessage(agent.session, msg, false)
