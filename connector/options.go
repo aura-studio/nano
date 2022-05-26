@@ -17,6 +17,7 @@ type (
 		logger      log.Logger           // logger
 		codec       codec.Codec          // codec
 		dictionary  message.Dictionary   // dictionary
+		branch      uint32
 	}
 
 	// Option used to customize handler
@@ -68,5 +69,11 @@ func WithCodec(codec codec.Codec) Option {
 func WithDictionary(dictionary message.Dictionary) Option {
 	return func(opt *Options) {
 		opt.dictionary = dictionary
+	}
+}
+
+func WithBranch(branch uint32) Option {
+	return func(opt *Options) {
+		opt.branch = branch
 	}
 }

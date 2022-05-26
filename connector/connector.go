@@ -165,6 +165,7 @@ func (c *Connector) Request(route string, v interface{}, callback Callback) erro
 
 	msg := &message.Message{
 		Type:     message.Request,
+		Branch:   c.branch,
 		ShortVer: env.ShortVersion,
 		Route:    route,
 		ID:       c.mid,
@@ -196,6 +197,7 @@ func (c *Connector) Notify(route string, v interface{}) error {
 
 	msg := &message.Message{
 		Type:     message.Notify,
+		Branch:   c.branch,
 		ShortVer: env.ShortVersion,
 		Route:    route,
 		Data:     data,
