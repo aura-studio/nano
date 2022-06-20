@@ -70,6 +70,7 @@ func (a *acceptor) RPC(mid uint64, route string, v interface{}) error {
 
 	msg := &message.Message{
 		Type:     message.Notify,
+		Branch:   a.session.Branch(),
 		ShortVer: a.session.ShortVer(),
 		ID:       mid,
 		Route:    route,

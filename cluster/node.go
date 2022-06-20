@@ -399,7 +399,7 @@ func (n *Node) findOrCreateSession(sid int64, gateAddr string, uid int64, shortV
 		s.BindShortVer(shortVer)
 		s.BindVersion(version)
 		s.BindBranch(branch)
-		
+
 		s.VersionBound = true
 
 		s.BindUID(uid)
@@ -426,6 +426,7 @@ func (n *Node) HandleRequest(_ context.Context, req *clusterpb.RequestMessage) (
 	}
 	msg := &message.Message{
 		Type:     message.Request,
+		Branch:   s.Branch(),
 		ShortVer: s.ShortVer(),
 		ID:       req.ID,
 		Route:    req.Route,
@@ -448,6 +449,7 @@ func (n *Node) HandleNotify(_ context.Context, req *clusterpb.NotifyMessage) (*c
 	}
 	msg := &message.Message{
 		Type:     message.Notify,
+		Branch:   s.Branch(),
 		ShortVer: s.ShortVer(),
 		ID:       req.ID,
 		Route:    req.Route,
