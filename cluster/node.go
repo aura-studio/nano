@@ -399,6 +399,7 @@ func (n *Node) findOrCreateSession(sid int64, gateAddr string, uid int64, shortV
 		s.BindShortVer(shortVer)
 		s.BindVersion(version)
 		s.BindBranch(branch)
+		
 		s.VersionBound = true
 
 		s.BindUID(uid)

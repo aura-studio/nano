@@ -438,6 +438,7 @@ func (h *LocalHandler) remoteProcess(s *session.Session, msg *message.Message, n
 				Network: s.RemoteAddr().Network(),
 				Addr:    s.RemoteAddr().String(),
 			},
+			Branch: s.Branch(),
 		}
 		_, err = client.HandleRequest(context.Background(), request)
 	case message.Notify:
@@ -453,6 +454,7 @@ func (h *LocalHandler) remoteProcess(s *session.Session, msg *message.Message, n
 				Network: s.RemoteAddr().Network(),
 				Addr:    s.RemoteAddr().String(),
 			},
+			Branch: s.Branch(),
 		}
 		_, err = client.HandleNotify(context.Background(), request)
 	}
