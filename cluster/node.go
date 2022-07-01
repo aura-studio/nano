@@ -28,6 +28,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/aura-studio/nano/cluster/clusterpb"
@@ -80,6 +81,7 @@ type Node struct {
 
 	mu       sync.RWMutex
 	sessions map[int64]*session.Session
+	state    uint32
 }
 
 // Startup bootstraps a start up.
@@ -250,6 +252,17 @@ func (n *Node) initNode() error {
 // Shutdown all components registered by application, that
 // call by reverse order against register
 func (n *Node) Shutdown() {
+	atomic.AddUint32(&n.state, 1)
+
+	for {
+		select {
+		case env.ConnDie <- true:
+		case <-time.After(time.Second):
+			time.After(time.Second)
+			goto CLOSE
+		}
+	}
+CLOSE:
 	// reverse call `BeforeShutdown` hooks
 	components := n.Components.List()
 	length := len(components)
@@ -300,6 +313,10 @@ func (n *Node) listenAndServeTCP() {
 			continue
 		}
 
+		if atomic.LoadUint32(&n.state) != 0 {
+			continue
+		}
+
 		go n.handler.handle(conn)
 	}
 }
@@ -320,6 +337,10 @@ func (n *Node) listenAndServeHttp() {
 
 		if err != nil {
 			log.Errorf("Upgrade failure, URI=%s, Error=%s", r.RequestURI, err.Error())
+		}
+
+		if atomic.LoadUint32(&n.state) != 0 {
+			return
 		}
 
 		go n.handler.handle(conn)

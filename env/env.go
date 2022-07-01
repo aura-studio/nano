@@ -37,6 +37,9 @@ var (
 	// Die waits for end application
 	Die chan bool
 
+	// ConnDie waits for application die
+	ConnDie chan bool
+
 	// Debug enables Debug mode
 	Debug bool
 
@@ -68,6 +71,7 @@ var (
 
 func init() {
 	Die = make(chan bool)
+	ConnDie = make(chan bool)
 	Debug = false
 	Safe = true
 	Serializer = protobuf.NewSerializer()
