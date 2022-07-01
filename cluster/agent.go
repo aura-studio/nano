@@ -312,9 +312,6 @@ func (a *agent) write() {
 
 		case <-a.chDie: // agent closed signal
 			return
-
-		case <-env.Die: // application quit
-			return
 		}
 	}
 }
