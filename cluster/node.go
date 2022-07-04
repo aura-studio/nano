@@ -342,6 +342,7 @@ func (n *Node) listenAndServeHttp() {
 		}
 
 		if atomic.LoadUint32(&n.state) != 0 {
+			conn.Close()
 			return
 		}
 
