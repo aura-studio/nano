@@ -337,6 +337,8 @@ func (n *Node) listenAndServeHttp() {
 
 		if err != nil {
 			log.Errorf("Upgrade failure, URI=%s, Error=%s", r.RequestURI, err.Error())
+			conn.Close()
+			return
 		}
 
 		if atomic.LoadUint32(&n.state) != 0 {
