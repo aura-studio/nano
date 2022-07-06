@@ -337,13 +337,17 @@ func (n *Node) listenAndServeHttp() {
 
 		if err != nil {
 			log.Errorf("Upgrade failure, connection will be dropped. URI=%s, Error=%s", r.RequestURI, err.Error())
-			conn.Close()
+			if conn != nil {
+				conn.Close()
+			}
 			return
 		}
 
 		if atomic.LoadUint32(&n.state) != 0 {
 			log.Errorln("Server is closing, connection will be dropped.")
-			conn.Close()
+			if conn != nil {
+				conn.Close()
+			}
 			return
 		}
 
