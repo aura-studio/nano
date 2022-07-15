@@ -229,3 +229,11 @@ func (f *Facade) Bool(key string) bool {
 	}
 	return cast.ToBool(v)
 }
+
+func (f *Facade) Value(key string) interface{} {
+	v, ok := f.data.Load(key)
+	if !ok {
+		return nil
+	}
+	return v
+}
