@@ -23,7 +23,7 @@ type (
 
 	// Callback represents the callback type which will be called
 	// when the correspond events is occurred.
-	Callback func(data interface{})
+	Callback func(m *message.Message)
 
 	// Connector is a tiny Nano client
 	Connector struct {
@@ -58,10 +58,10 @@ func NewConnector(opts ...Option) *Connector {
 		chSend:          make(chan []byte, 256),
 		mid:             1,
 		connected:       0,
-		connectedEvent:  func(data interface{}) {},
+		connectedEvent:  func(data *message.Message) {},
 		chReady:         make(chan struct{}, 1),
 		events:          map[string]Callback{},
-		unexpectedEvent: func(data interface{}) {},
+		unexpectedEvent: func(data *message.Message) {},
 		responses:       map[uint64]Callback{},
 	}
 

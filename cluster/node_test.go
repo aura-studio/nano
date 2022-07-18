@@ -107,7 +107,7 @@ func (s *nodeSuite) TestNodeStartup(c *C) {
 	connector := connector.NewConnector()
 
 	chWait := make(chan struct{})
-	connector.OnConnected(func(data interface{}) {
+	connector.OnConnected(func(*message.Message) {
 		chWait <- struct{}{}
 	})
 
@@ -117,10 +117,8 @@ func (s *nodeSuite) TestNodeStartup(c *C) {
 	}
 	<-chWait
 	onResult := make(chan string)
-	connector.On("test", func(data interface{}) {
-		//onResult <- string(data.([]byte))
-		msg := data.(*message.Message)
-		onResult <- string(msg.Data)
+	connector.On("test", func(m *message.Message) {
+		onResult <- string(m.Data)
 	})
 	err = connector.Notify("GateComponent.Test", &testdata.Ping{Content: "ping"})
 	c.Assert(err, IsNil)
@@ -130,18 +128,14 @@ func (s *nodeSuite) TestNodeStartup(c *C) {
 	c.Assert(err, IsNil)
 	c.Assert(strings.Contains(<-onResult, "game server pong"), IsTrue)
 
-	err = connector.Request("GateComponent.Test2", &testdata.Ping{Content: "ping"}, func(data interface{}) {
-		//onResult <- string(data.([]byte))
-		msg := data.(*message.Message)
-		onResult <- string(msg.Data)
+	err = connector.Request("GateComponent.Test2", &testdata.Ping{Content: "ping"}, func(m *message.Message) {
+		onResult <- string(m.Data)
 	})
 	c.Assert(err, IsNil)
 	c.Assert(strings.Contains(<-onResult, "gate server pong2"), IsTrue)
 
-	err = connector.Request("GameComponent.Test2", &testdata.Ping{Content: "ping"}, func(data interface{}) {
-		//onResult <- string(data.([]byte))
-		msg := data.(*message.Message)
-		onResult <- string(msg.Data)
+	err = connector.Request("GameComponent.Test2", &testdata.Ping{Content: "ping"}, func(m *message.Message) {
+		onResult <- string(m.Data)
 	})
 	c.Assert(err, IsNil)
 	c.Assert(strings.Contains(<-onResult, "game server pong2"), IsTrue)

@@ -31,7 +31,7 @@ func client(t *testing.T) {
 	if err := c.Start(addr); err != nil {
 		panic(err)
 	}
-	c.On("pong", func(data interface{}) {
+	c.On("pong", func(*message.Message) {
 		// t.Log("pong received")
 	})
 	<-c.Ready()
