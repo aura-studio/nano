@@ -100,9 +100,9 @@ func (h *LocalHandler) Register(comp component.Component, opts []component.Optio
 	for name, handler := range s.Handlers {
 		route := fmt.Sprintf("%s.%s", s.Name, name)
 		h.localHandlers[route] = handler
-		message.WriteDictionaryItem(route, handler.Code)
-		message.WriteSerializerItem(route, env.SerializerType)
 	}
+
+	message.Register(h.LocalMessages())
 
 	return nil
 }
@@ -129,11 +129,10 @@ func (h *LocalHandler) addMember(member *clusterpb.MemberInfo) {
 			h.remoteServices[s] = make(map[string][]*clusterpb.MemberInfo)
 		}
 		h.remoteServices[s][v] = append(h.remoteServices[s][v], member)
-		h.versionDict[message.ShortVersion(v)] = v
+		h.versionDict[message.VersionNum(v)] = v
 	}
 
-	message.WriteDictionary(member.Dictionary)
-	message.WriteSerializers(member.Dictionary)
+	message.Register(member.Messages)
 }
 
 func (h *LocalHandler) delMember(addr string) {
@@ -234,18 +233,19 @@ func (h *LocalHandler) RemoteService() []string {
 	return result
 }
 
-// LocalDictionary transforms local services info from map to slice
-func (h *LocalHandler) LocalDictionary() []*clusterpb.DictionaryItem {
-	var result []*clusterpb.DictionaryItem
+// LocalMessages transforms local services info from map to slice
+func (h *LocalHandler) LocalMessages() []*clusterpb.MessageItem {
+	var messages []*clusterpb.MessageItem
 	for name, handler := range h.localHandlers {
-		result = append(result, &clusterpb.DictionaryItem{
+		messages = append(messages, &clusterpb.MessageItem{
 			Route:      name,
-			Code:       uint32(handler.Code),
+			Code:       handler.Code,
 			Type:       handler.Type.String(),
-			Serializer: uint32(env.SerializerType),
+			Serializer: h.currentNode.Serializer,
+			VersionNum: env.VersionNum,
 		})
 	}
-	return result
+	return messages
 }
 
 // RouteHandler routes handler from localHandlers by route
@@ -346,9 +346,9 @@ func (h *LocalHandler) processPacket(agent *agent, p *packet.Packet) error {
 
 	if !agent.session.VersionBound {
 		h.mu.RLock()
-		version := h.versionDict[msg.ShortVer]
+		version := h.versionDict[msg.VersionNum]
 		h.mu.RUnlock()
-		agent.session.BindShortVer(msg.ShortVer)
+		agent.session.BindShortVer(msg.VersionNum)
 		agent.session.BindVersion(version)
 		agent.session.BindBranch(msg.Branch)
 		agent.session.VersionBound = true
@@ -381,7 +381,7 @@ func (h *LocalHandler) remoteProcess(s *session.Session, msg *message.Message, n
 	}
 
 	service := msg.Route[:index]
-	version, members := h.findMembers(service, msg.ShortVer)
+	version, members := h.findMembers(service, msg.VersionNum)
 	if len(members) == 0 {
 		log.Errorf("nano/handler: %s (version:%s) not found(forgot registered?)", msg.Route, version)
 		return
@@ -426,13 +426,13 @@ func (h *LocalHandler) remoteProcess(s *session.Session, msg *message.Message, n
 	switch msg.Type {
 	case message.Request:
 		request := &clusterpb.RequestMessage{
-			GateAddr:  gateAddr,
-			SessionID: sessionID,
-			ShortVer:  s.ShortVer(),
-			ID:        msg.ID,
-			UID:       s.UID(),
-			Route:     msg.Route,
-			Data:      data,
+			GateAddr:   gateAddr,
+			SessionID:  sessionID,
+			VersionNum: s.VersionNum(),
+			ID:         msg.ID,
+			UID:        s.UID(),
+			Route:      msg.Route,
+			Data:       data,
 			RemoteAddr: &clusterpb.NetAddr{
 				Network: s.RemoteAddr().Network(),
 				Addr:    s.RemoteAddr().String(),
@@ -442,13 +442,13 @@ func (h *LocalHandler) remoteProcess(s *session.Session, msg *message.Message, n
 		_, err = client.HandleRequest(context.Background(), request)
 	case message.Notify:
 		request := &clusterpb.NotifyMessage{
-			GateAddr:  gateAddr,
-			SessionID: sessionID,
-			ShortVer:  s.ShortVer(),
-			ID:        msg.ID,
-			UID:       s.UID(),
-			Route:     msg.Route,
-			Data:      data,
+			GateAddr:   gateAddr,
+			SessionID:  sessionID,
+			VersionNum: s.VersionNum(),
+			ID:         msg.ID,
+			UID:        s.UID(),
+			Route:      msg.Route,
+			Data:       data,
 			RemoteAddr: &clusterpb.NetAddr{
 				Network: s.RemoteAddr().Network(),
 				Addr:    s.RemoteAddr().String(),
@@ -498,7 +498,7 @@ func (h *LocalHandler) localProcess(handler *component.Handler, lastMid uint64, 
 		data = payload
 	} else {
 		data = reflect.New(handler.Type.Elem()).Interface()
-		err := env.Serializer.Unmarshal(payload, data)
+		err := message.Deserialize(msg.Route, payload, data)
 		if err != nil {
 			log.Errorf("Deserialize to %T failed: %+v (%v)", data, err, payload)
 			return

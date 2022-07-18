@@ -65,12 +65,12 @@ func (s *Session) BindVersion(version string) {
 	s.version = version
 }
 
-func (s *Session) ShortVer() uint32 {
-	return s.shortVer
+func (s *Session) VersionNum() uint32 {
+	return s.versionNum
 }
 
-func (s *Session) BindShortVer(shortVer uint32) {
-	s.shortVer = shortVer
+func (s *Session) BindShortVer(versionNum uint32) {
+	s.versionNum = versionNum
 }
 
 // Bind bind UID to current session

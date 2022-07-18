@@ -1,6 +1,7 @@
 package message
 
 import (
+	"errors"
 	"sync"
 
 	"github.com/aura-studio/nano/cluster/clusterpb"
@@ -11,6 +12,10 @@ import (
 	"github.com/aura-studio/nano/serialize/rawstring"
 )
 
+var (
+	ErrSerializerRouteNotFound = errors.New("serializer: route not found")
+)
+
 const (
 	Unknown uint32 = iota
 	JSON
@@ -18,97 +23,80 @@ const (
 	RawString
 )
 
-var (
-	jsonSerializer      = json.NewSerializer()
-	protobufSerializer  = protobuf.NewSerializer()
-	rawStringSerializer = rawstring.NewSerializer()
-)
+type serializer struct {
+	serializerMap map[uint32]map[string]uint32
+	rw            sync.RWMutex
+}
 
-var (
-	// Serializers is a map from route to serializer
-	Serializers = make(map[string]serialize.Serializer)
-
-	rw sync.RWMutex
-)
-
-func GetSerializerType(s serialize.Serializer) uint32 {
-	switch s.(type) {
-	case *json.Serializer:
-		return JSON
-	case *protobuf.Serializer:
-		return Protobuf
-	case *rawstring.Serializer:
-		return RawString
-	default:
-		return Unknown
+func newSerializer() *serializer {
+	return &serializer{
+		serializerMap: make(map[uint32]map[string]uint32),
 	}
 }
 
-func GetSerializer(typ uint32) serialize.Serializer {
-	switch typ {
-	case JSON:
-		return jsonSerializer
-	case Protobuf:
-		return protobufSerializer
-	case RawString:
-		return rawStringSerializer
-	default:
-		return env.Serializer
+var Serializer = newSerializer()
+
+func (s *serializer) Deserialize(route string, payload []byte, v interface{}) error {
+	serializer, err := s.Route(route)
+	if err != nil {
+		return err
 	}
+	return serializer.Unmarshal(payload, v)
 }
 
-// DuplicateSerializers returns serializers for compressed route.
-func DuplicateSerializers() map[string]serialize.Serializer {
-	rw.RLock()
-	defer rw.RUnlock()
-
-	return Serializers
-}
-
-// WriteSerializerItem is to set serializer item when server registers.
-func WriteSerializerItem(route string, typ uint32) map[string]serialize.Serializer {
-	rw.Lock()
-	defer rw.Unlock()
-
-	Serializers[route] = GetSerializer(typ)
-
-	return Serializers
-}
-
-// WriteSerializers is to set serializers when new serializer dictionary is found.
-func WriteSerializers(items []*clusterpb.DictionaryItem) map[string]serialize.Serializer {
-	rw.Lock()
-	defer rw.Unlock()
-
-	for _, item := range items {
-		Serializers[item.Route] = GetSerializer(item.Serializer)
-	}
-
-	return Serializers
-}
-
-func Serialize(v interface{}) ([]byte, error) {
+func (s *serializer) Serialize(route string, v interface{}) ([]byte, error) {
 	if data, ok := v.([]byte); ok {
 		return data, nil
 	}
-	data, err := env.Serializer.Marshal(v)
+	serializer, err := s.Route(route)
 	if err != nil {
 		return nil, err
-	}
-	return data, nil
-}
-
-func RouteSerialize(serializers map[string]serialize.Serializer, route string, v interface{}) ([]byte, error) {
-	if data, ok := v.([]byte); ok {
-		return data, nil
-	}
-	serializer, ok := serializers[route]
-	if !ok {
-		serializer = env.Serializer
 	}
 	data, err := serializer.Marshal(v)
 	if err != nil {
 		return nil, err
 	}
 	return data, nil
+}
+
+func (s *serializer) Register(items []*clusterpb.MessageItem) {
+	s.rw.Lock()
+	defer s.rw.Unlock()
+
+	for _, item := range items {
+		if _, ok := s.serializerMap[item.VersionNum]; !ok {
+			s.serializerMap[item.VersionNum] = make(map[string]uint32)
+		}
+		s.serializerMap[item.VersionNum][item.Route] = item.Serializer
+	}
+}
+
+func (s *serializer) Route(route string) (serialize.Serializer, error) {
+	s.rw.RLock()
+	defer s.rw.RUnlock()
+
+	if _, ok := s.serializerMap[env.VersionNum]; ok {
+		if serializer, ok := s.serializerMap[env.VersionNum][route]; ok {
+			return s.Instance(serializer), nil
+		}
+	}
+	if _, ok := s.serializerMap[0]; ok {
+		if serializer, ok := s.serializerMap[0][route]; ok {
+			return s.Instance(serializer), nil
+		}
+	}
+	return nil, ErrDictionaryRouteNotFound
+}
+
+func (s *serializer) Instance(serializer uint32) serialize.Serializer {
+	switch serializer {
+	case JSON:
+		return json.NewSerializer()
+	case Protobuf:
+		return protobuf.NewSerializer()
+	case RawString:
+		return rawstring.NewSerializer()
+	default:
+		return rawstring.NewSerializer()
+	}
 }

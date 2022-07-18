@@ -6,8 +6,6 @@ import (
 
 	"github.com/aura-studio/nano/message"
 
-	"github.com/aura-studio/nano/serialize/protobuf"
-
 	"github.com/aura-studio/nano/benchmark/testdata"
 	"github.com/aura-studio/nano/cluster"
 	"github.com/aura-studio/nano/component"
@@ -106,9 +104,7 @@ func (s *nodeSuite) TestNodeStartup(c *C) {
 	c.Assert(member2Handler.LocalService(), DeepEquals, []string{"GameComponent"})
 	c.Assert(member2Handler.RemoteService(), DeepEquals, []string{"GateComponent", "MasterComponent"})
 
-	connector := connector.NewConnector(
-		connector.WithSerializer(protobuf.NewSerializer()),
-	)
+	connector := connector.NewConnector()
 
 	chWait := make(chan struct{})
 	connector.OnConnected(func(data interface{}) {

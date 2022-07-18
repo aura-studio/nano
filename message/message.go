@@ -22,6 +22,8 @@ package message
 
 import (
 	"fmt"
+
+	"github.com/aura-studio/nano/cluster/clusterpb"
 )
 
 // Type represents the type of message, which could be Request/Notify/Response/Push
@@ -48,12 +50,12 @@ func (t Type) String() string {
 
 // Message represents a unmarshaled message or a message which to be marshaled
 type Message struct {
-	Type     Type   // message type
-	Branch   uint32 // client branch
-	ShortVer uint32 // message short version
-	ID       uint64 // unique id, zero while notify mode
-	Route    string // route for locating service
-	Data     []byte // payload
+	Type       Type   // message type
+	Branch     uint32 // client branch
+	VersionNum uint32 // message short version
+	ID         uint64 // unique id, zero while notify mode
+	Route      string // route for locating service
+	Data       []byte // payload
 }
 
 // New returns a new message instance
@@ -68,4 +70,25 @@ func (m *Message) String() string {
 
 func (m *Message) TypeValid() bool {
 	return m.Type >= Request && m.Type <= Push
+}
+
+func Register(items []*clusterpb.MessageItem) {
+	Dictionary.Register(items)
+	Serializer.Register(items)
+}
+
+func Serialize(route string, v interface{}) ([]byte, error) {
+	return Serializer.Serialize(route, v)
+}
+
+func Deserialize(route string, payload []byte, v interface{}) error {
+	return Serializer.Deserialize(route, payload, v)
+}
+
+func Route(version uint32, route string) (uint32, error) {
+	return Dictionary.Route(version, route)
+}
+
+func Code(version uint32, code uint32) (string, error) {
+	return Dictionary.Code(version, code)
 }

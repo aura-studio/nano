@@ -64,6 +64,7 @@ type Options struct {
 	TSLKey         string
 	Logger         log.Logger
 	Codec          codec.Codec
+	Serializer     uint32
 }
 
 // Node represents a node in nano cluster, which will contains a group of services.
@@ -203,7 +204,7 @@ func (n *Node) initNode() error {
 				Version:     env.Version,
 				ServiceAddr: n.MemberAddr,
 				Services:    n.handler.LocalService(),
-				Dictionary:  n.handler.LocalDictionary(),
+				Messages:    n.handler.LocalMessages(),
 			},
 		}
 		n.cluster.members = append(n.cluster.members, member)
@@ -230,7 +231,7 @@ func (n *Node) initNode() error {
 				Version:     env.Version,
 				ServiceAddr: n.MemberAddr,
 				Services:    n.handler.LocalService(),
-				Dictionary:  n.handler.LocalDictionary(),
+				Messages:    n.handler.LocalMessages(),
 			},
 		}
 		for {
@@ -413,12 +414,11 @@ func (n *Node) findOrCreateSession(sid int64, gateAddr string, uid int64, shortV
 			return nil, err
 		}
 		ac := &acceptor{
-			sid:         sid,
-			gateClient:  clusterpb.NewMemberClient(conns.Get()),
-			rpcHandler:  n.handler.processMessage,
-			gateAddr:    gateAddr,
-			serializers: message.DuplicateSerializers(),
-			remoteAddr:  remoteAddr,
+			sid:        sid,
+			gateClient: clusterpb.NewMemberClient(conns.Get()),
+			rpcHandler: n.handler.processMessage,
+			gateAddr:   gateAddr,
+			remoteAddr: remoteAddr,
 		}
 		s = session.New(ac, sid)
 
@@ -449,17 +449,17 @@ func (n *Node) HandleRequest(_ context.Context, req *clusterpb.RequestMessage) (
 		return nil, fmt.Errorf("service not found in current node: %v", req.Route)
 	}
 	remoteAddr := &NetAddr{network: req.RemoteAddr.Network, addr: req.RemoteAddr.Addr}
-	s, err := n.findOrCreateSession(req.SessionID, req.GateAddr, req.UID, req.ShortVer, remoteAddr, req.Branch)
+	s, err := n.findOrCreateSession(req.SessionID, req.GateAddr, req.UID, req.VersionNum, remoteAddr, req.Branch)
 	if err != nil {
 		return nil, err
 	}
 	msg := &message.Message{
-		Type:     message.Request,
-		Branch:   s.Branch(),
-		ShortVer: s.ShortVer(),
-		ID:       req.ID,
-		Route:    req.Route,
-		Data:     req.Data,
+		Type:       message.Request,
+		Branch:     s.Branch(),
+		VersionNum: s.VersionNum(),
+		ID:         req.ID,
+		Route:      req.Route,
+		Data:       req.Data,
 	}
 	n.handler.localProcess(handler, req.ID, s, msg)
 	return &clusterpb.MemberHandleResponse{}, nil
@@ -472,17 +472,17 @@ func (n *Node) HandleNotify(_ context.Context, req *clusterpb.NotifyMessage) (*c
 		return nil, fmt.Errorf("service not found in current node: %v", req.Route)
 	}
 	remoteAddr := &NetAddr{network: req.RemoteAddr.Network, addr: req.RemoteAddr.Addr}
-	s, err := n.findOrCreateSession(req.SessionID, req.GateAddr, req.UID, req.ShortVer, remoteAddr, req.Branch)
+	s, err := n.findOrCreateSession(req.SessionID, req.GateAddr, req.UID, req.VersionNum, remoteAddr, req.Branch)
 	if err != nil {
 		return nil, err
 	}
 	msg := &message.Message{
-		Type:     message.Notify,
-		Branch:   s.Branch(),
-		ShortVer: s.ShortVer(),
-		ID:       req.ID,
-		Route:    req.Route,
-		Data:     req.Data,
+		Type:       message.Notify,
+		Branch:     s.Branch(),
+		VersionNum: s.VersionNum(),
+		ID:         req.ID,
+		Route:      req.Route,
+		Data:       req.Data,
 	}
 	n.handler.localProcess(handler, req.ID, s, msg)
 	return &clusterpb.MemberHandleResponse{}, nil

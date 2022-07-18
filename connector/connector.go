@@ -2,7 +2,6 @@ package connector
 
 import (
 	"crypto/tls"
-	"fmt"
 	"io"
 	"net"
 	"net/url"
@@ -14,7 +13,6 @@ import (
 	"github.com/aura-studio/nano/codec/plaincodec"
 	"github.com/aura-studio/nano/env"
 	"github.com/aura-studio/nano/log"
-	"github.com/aura-studio/nano/serialize/protobuf"
 	"github.com/gorilla/websocket"
 
 	"github.com/aura-studio/nano/message"
@@ -55,9 +53,7 @@ type (
 // NewConnector create a new Connector
 func NewConnector(opts ...Option) *Connector {
 	c := &Connector{
-		Options: Options{
-			serializer: protobuf.NewSerializer(),
-		},
+		Options:         Options{},
 		die:             make(chan struct{}),
 		chSend:          make(chan []byte, 256),
 		mid:             1,
@@ -81,7 +77,7 @@ func NewConnector(opts ...Option) *Connector {
 	if c.Options.codec == nil {
 		c.codec = plaincodec.NewCodec()
 	}
-	c.codecEntity = c.codec.Entity(c.Options.dictionary)
+	c.codecEntity = c.codec.Entity()
 
 	return c
 }
@@ -157,19 +153,19 @@ func (c *Connector) Request(route string, v interface{}, callback Callback) erro
 		data = v
 	default:
 		var err error
-		data, err = c.Serialize(v)
+		data, err = message.Serialize(route, v)
 		if err != nil {
 			return err
 		}
 	}
 
 	msg := &message.Message{
-		Type:     message.Request,
-		Branch:   c.branch,
-		ShortVer: env.ShortVersion,
-		Route:    route,
-		ID:       c.mid,
-		Data:     data,
+		Type:       message.Request,
+		Branch:     c.branch,
+		VersionNum: env.VersionNum,
+		Route:      route,
+		ID:         c.mid,
+		Data:       data,
 	}
 
 	c.setResponseHandler(c.mid, callback)
@@ -189,18 +185,18 @@ func (c *Connector) Notify(route string, v interface{}) error {
 		data = v
 	default:
 		var err error
-		data, err = c.Serialize(v)
+		data, err = message.Serialize(route, v)
 		if err != nil {
 			return err
 		}
 	}
 
 	msg := &message.Message{
-		Type:     message.Notify,
-		Branch:   c.branch,
-		ShortVer: env.ShortVersion,
-		Route:    route,
-		Data:     data,
+		Type:       message.Notify,
+		Branch:     c.branch,
+		VersionNum: env.VersionNum,
+		Route:      route,
+		Data:       data,
 	}
 	return c.sendMessage(msg)
 }
@@ -230,42 +226,6 @@ func (c *Connector) Close() {
 // Connected returns the status whether connector is conncected
 func (c *Connector) Connected() bool {
 	return atomic.LoadInt32(&c.connected) == 1
-}
-
-// Serialize marshals customized data into byte slice
-func (c *Connector) Serialize(v interface{}) ([]byte, error) {
-	if data, ok := v.([]byte); ok {
-		return data, nil
-	}
-
-	if c.serializer == nil {
-		return nil, fmt.Errorf("Serializer is not set")
-	}
-
-	data, err := c.serializer.Marshal(v)
-	if err != nil {
-		return nil, err
-	}
-
-	return data, nil
-}
-
-// Deserialize Unmarshals byte slice into customized data
-func (c *Connector) Deserialize(data []byte, v interface{}) error {
-	var err error
-	if c.serializer == nil {
-		v = data
-	}
-
-	if c.serializer == nil {
-		return fmt.Errorf("Serializer is not set")
-	}
-
-	if err = c.serializer.Unmarshal(data, v); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func (c *Connector) Send(data []byte) {

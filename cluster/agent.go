@@ -34,7 +34,6 @@ import (
 	"github.com/aura-studio/nano/message"
 	"github.com/aura-studio/nano/packet"
 	"github.com/aura-studio/nano/pipeline"
-	"github.com/aura-studio/nano/serialize"
 	"github.com/aura-studio/nano/service"
 	"github.com/aura-studio/nano/session"
 )
@@ -63,9 +62,8 @@ type (
 		lastAt   int64               // last heartbeat unix time stamp
 		pipeline pipeline.Pipeline
 
-		rpcHandler  rpcHandler
-		srv         reflect.Value                   // cached session reflect.Value
-		serializers map[string]serialize.Serializer // copy system serializers for agent
+		rpcHandler rpcHandler
+		srv        reflect.Value // cached session reflect.Value
 
 		codecEntity   codec.CodecEntity
 		payloadLength int
@@ -90,8 +88,7 @@ func newAgent(conn net.Conn, pipeline pipeline.Pipeline, rpcHandler rpcHandler,
 		chSend:      make(chan pendingMessage, agentWriteBacklog),
 		pipeline:    pipeline,
 		rpcHandler:  rpcHandler,
-		serializers: message.DuplicateSerializers(),
-		codecEntity: codec.Entity(message.DuplicateDictionary()),
+		codecEntity: codec.Entity(),
 	}
 
 	// binding session
@@ -142,7 +139,7 @@ func (a *agent) RPC(mid uint64, route string, v interface{}) error {
 		return ErrBrokenPipe
 	}
 
-	data, err := message.RouteSerialize(a.serializers, route, v)
+	data, err := message.Serialize(route, v)
 	if err != nil {
 		return err
 	}
@@ -159,12 +156,12 @@ func (a *agent) RPC(mid uint64, route string, v interface{}) error {
 	}
 
 	msg := &message.Message{
-		Type:     message.Notify,
-		Branch:   a.session.Branch(),
-		ShortVer: a.session.ShortVer(),
-		ID:       mid,
-		Route:    route,
-		Data:     data,
+		Type:       message.Notify,
+		Branch:     a.session.Branch(),
+		VersionNum: a.session.VersionNum(),
+		ID:         mid,
+		Route:      route,
+		Data:       data,
 	}
 	a.rpcHandler(a.session, msg, true)
 	return nil
@@ -264,7 +261,7 @@ func (a *agent) write() {
 			}
 
 		case data := <-a.chSend:
-			payload, err := message.Serialize(data.payload)
+			payload, err := message.Serialize(data.route, data.payload)
 			if err != nil {
 				switch data.typ {
 				case message.Push:
@@ -279,12 +276,12 @@ func (a *agent) write() {
 
 			// construct message and encode
 			m := &message.Message{
-				Type:     data.typ,
-				Branch:   a.session.Branch(),
-				ShortVer: a.session.ShortVer(),
-				ID:       data.mid,
-				Route:    data.route,
-				Data:     payload,
+				Type:       data.typ,
+				Branch:     a.session.Branch(),
+				VersionNum: a.session.VersionNum(),
+				ID:         data.mid,
+				Route:      data.route,
+				Data:       payload,
 			}
 			if pipe := a.pipeline; pipe != nil {
 				err := pipe.Outbound().Process(a.session, m)

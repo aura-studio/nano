@@ -28,18 +28,16 @@ var (
 )
 
 type CodecEntity struct {
-	dictionary message.Dictionary
-	writeBuf   *bytes.Buffer
-	readBuf    *bytes.Buffer
-	size       int // last packet length
+	writeBuf *bytes.Buffer
+	readBuf  *bytes.Buffer
+	size     int // last packet length
 }
 
-func NewCodecEntity(dictionary message.Dictionary) *CodecEntity {
+func NewCodecEntity() *CodecEntity {
 	return &CodecEntity{
-		dictionary: dictionary,
-		writeBuf:   bytes.NewBuffer(nil),
-		readBuf:    bytes.NewBuffer(nil),
-		size:       -1,
+		writeBuf: bytes.NewBuffer(nil),
+		readBuf:  bytes.NewBuffer(nil),
+		size:     -1,
 	}
 }
 
@@ -116,7 +114,7 @@ func (c *CodecEntity) EncodeMessage(m *message.Message) ([]byte, error) {
 	buf := make([]byte, 16)
 
 	// encode version ID
-	binary.LittleEndian.PutUint32(buf[offset:], m.ShortVer)
+	binary.LittleEndian.PutUint32(buf[offset:], m.VersionNum)
 	offset += 4
 
 	// encode msg ID
@@ -124,7 +122,7 @@ func (c *CodecEntity) EncodeMessage(m *message.Message) ([]byte, error) {
 	offset += 4
 
 	// encode compressed route ID
-	code, err := c.dictionary.IndexRoute(m.Route)
+	code, err := message.Route(env.VersionNum, m.Route)
 	if err != nil {
 		return nil, err
 	}
@@ -159,7 +157,7 @@ func (c *CodecEntity) DecodeMessage(data []byte) (*message.Message, error) {
 	m.Type = message.Response
 
 	// decode version ID
-	m.ShortVer = binary.LittleEndian.Uint32(data[offset:])
+	m.VersionNum = binary.LittleEndian.Uint32(data[offset:])
 	offset += 4
 
 	// decode msg ID
@@ -169,7 +167,7 @@ func (c *CodecEntity) DecodeMessage(data []byte) (*message.Message, error) {
 	// decode compressed route ID
 	code := uint32(binary.LittleEndian.Uint16(data[offset:]))*65536 +
 		uint32(binary.LittleEndian.Uint16(data[offset+2:]))
-	m.Route, err = c.dictionary.IndexCode(code)
+	m.Route, err = message.Code(m.VersionNum, code)
 	if err != nil {
 		return nil, err
 	}
@@ -180,16 +178,12 @@ func (c *CodecEntity) DecodeMessage(data []byte) (*message.Message, error) {
 }
 
 type Codec struct {
-	message.Dictionary
 }
 
 func NewCodec() *Codec {
 	return &Codec{}
 }
 
-func (c *Codec) Entity(dictionary message.Dictionary) codec.CodecEntity {
-	if dictionary == nil {
-		dictionary = message.EmptyDictionary
-	}
-	return NewCodecEntity(dictionary)
+func (c *Codec) Entity() codec.CodecEntity {
+	return NewCodecEntity()
 }

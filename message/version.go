@@ -25,7 +25,7 @@ import (
 	"strings"
 )
 
-func ShortVersion(version string) uint32 {
+func VersionNum(version string) uint32 {
 	if lastIndex := strings.LastIndex(version, "-"); lastIndex < 0 {
 		return 0
 	} else {

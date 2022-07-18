@@ -46,7 +46,7 @@ type KernelSession struct {
 	id           int64                           // session global unique id
 	branch       uint32                          // logic branch
 	VersionBound bool                            // session version bound
-	shortVer     uint32                          // session short version
+	versionNum   uint32                          // session version num
 	version      string                          // session version
 	uid          int64                           // binding user id
 	entity       NetworkEntity                   // low-level network entity

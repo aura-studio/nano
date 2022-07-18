@@ -25,8 +25,6 @@ package env
 import (
 	"time"
 
-	"github.com/aura-studio/nano/serialize"
-	"github.com/aura-studio/nano/serialize/protobuf"
 	"google.golang.org/grpc"
 )
 
@@ -53,20 +51,14 @@ var (
 	// in globalTicker.
 	GlobalTicker *time.Ticker
 
-	// Serializer is message serializer, json or protobuf
-	Serializer serialize.Serializer
-
-	// Serializer is message serializer, json or protobuf
-	SerializerType uint32
-
 	// GrpcOptions is options for grpc
 	GrpcOptions = []grpc.DialOption{grpc.WithInsecure()}
 
 	// Version
 	Version string
 
-	// ShortVersion is short for Version
-	ShortVersion uint32
+	// VersionNum is Version num case
+	VersionNum uint32
 )
 
 func init() {
@@ -74,5 +66,4 @@ func init() {
 	ConnDie = make(chan bool)
 	Debug = false
 	Safe = true
-	Serializer = protobuf.NewSerializer()
 }

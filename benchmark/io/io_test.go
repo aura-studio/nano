@@ -12,7 +12,7 @@ import (
 	"github.com/aura-studio/nano/benchmark/testdata"
 	"github.com/aura-studio/nano/component"
 	"github.com/aura-studio/nano/connector"
-	"github.com/aura-studio/nano/serialize/protobuf"
+	"github.com/aura-studio/nano/message"
 )
 
 const (
@@ -50,7 +50,7 @@ func server(t *testing.T) {
 	nano.Serve(
 		nano.WithMemberAddr(addr),
 		nano.WithComponents(&components),
-		nano.WithSerializer(protobuf.NewSerializer()),
+		nano.WithSerializer(message.Protobuf),
 	)
 }
 

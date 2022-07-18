@@ -31,10 +31,9 @@ var (
 )
 
 type CodecEntity struct {
-	writeBuf   *bytes.Buffer
-	readBuf    *bytes.Buffer
-	size       int // last packet length
-	dictionary message.Dictionary
+	writeBuf *bytes.Buffer
+	readBuf  *bytes.Buffer
+	size     int // last packet length
 }
 
 func NewCodecEntity() *CodecEntity {
@@ -125,7 +124,7 @@ func (c *CodecEntity) DecodeMessage(data []byte) (*message.Message, error) {
 	m.Type = message.Request
 
 	// decode version ID
-	m.ShortVer = binary.LittleEndian.Uint32(data[offset:])
+	m.VersionNum = binary.LittleEndian.Uint32(data[offset:])
 	offset += 4
 
 	// decode msg ID
@@ -145,6 +144,6 @@ func NewCodec() *Codec {
 	return &Codec{}
 }
 
-func (c *Codec) Entity(message.Dictionary) codec.CodecEntity {
+func (c *Codec) Entity() codec.CodecEntity {
 	return NewCodecEntity()
 }

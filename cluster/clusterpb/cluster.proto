@@ -3,11 +3,12 @@ package clusterpb;
 
 option go_package = "../clusterpb";
 
-message DictionaryItem {
+message MessageItem {
   string route = 1;
   uint32 code = 2;
   string type = 3;
   uint32 serializer = 4;
+  uint32 versionNum = 5;
 };
 
 message MemberInfo {
@@ -15,7 +16,7 @@ message MemberInfo {
   string serviceAddr = 2;
   string version = 3;
   repeated string services = 4;
-  repeated DictionaryItem dictionary = 5;
+  repeated MessageItem messages = 5;
 }
 
 message RegisterRequest {
@@ -45,7 +46,7 @@ message NetAddr {
 message RequestMessage {
   string gateAddr = 1;
   int64 sessionID = 2;
-  uint32 shortVer = 3;
+  uint32 versionNum = 3;
   uint64 ID = 4;
   int64 UID = 5;
   string route = 6;
@@ -57,7 +58,7 @@ message RequestMessage {
 message NotifyMessage {
   string gateAddr = 1;
   int64 sessionID = 2;
-  uint32 shortVer = 3;
+  uint32 versionNum = 3;
   uint64 ID = 4;
   int64 UID = 5;
   string route = 6;
@@ -68,7 +69,7 @@ message NotifyMessage {
 
 message ResponseMessage {
   int64 sessionID = 1;
-  uint32 shortVer = 2;
+  uint32 versionNum = 2;
   uint64 ID = 3;
   string route = 4;
   bytes data = 5;
@@ -76,7 +77,7 @@ message ResponseMessage {
 
 message PushMessage {
   int64 sessionID = 1;
-  uint32 shortVer = 2;
+  uint32 versionNum = 2;
   string route = 3;
   bytes data = 4;
 }
