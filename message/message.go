@@ -72,6 +72,16 @@ func (m *Message) TypeValid() bool {
 	return m.Type >= Request && m.Type <= Push
 }
 
+func (m *Message) Deserialize(v interface{}) error {
+	return Serializer.Deserialize(m.Route, m.Data, v)
+}
+
+func (m *Message) Serialize(v interface{}) error {
+	var err error
+	m.Data, err = Serializer.Serialize(m.Route, v)
+	return err
+}
+
 func Register(items []*clusterpb.MessageItem) {
 	Dictionary.Register(items)
 	Serializer.Register(items)
