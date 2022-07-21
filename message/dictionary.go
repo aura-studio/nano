@@ -67,7 +67,13 @@ func (d *dictionary) Register(items []*clusterpb.MessageItem) {
 
 	for _, item := range items {
 		if item.Code > 0 {
+			if _, ok := d.routeMap[item.VersionNum]; !ok {
+				d.routeMap[item.VersionNum] = make(map[string]uint32)
+			}
 			d.routeMap[item.VersionNum][item.Route] = item.Code
+			if _, ok := d.codeMap[item.VersionNum]; !ok {
+				d.codeMap[item.VersionNum] = make(map[uint32]string)
+			}
 			d.codeMap[item.VersionNum][item.Code] = item.Route
 		}
 	}
