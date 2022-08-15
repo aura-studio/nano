@@ -44,6 +44,8 @@ import (
 	"github.com/aura-studio/nano/upgrader/wsupgrader"
 	"github.com/gorilla/mux"
 	"google.golang.org/grpc"
+
+	_ "net/http/pprof"
 )
 
 // Options contains some configurations for current node
