@@ -6,6 +6,7 @@ import (
 	"io"
 	"net"
 	"net/url"
+	"strings"
 	"sync"
 	"sync/atomic"
 
@@ -345,7 +346,7 @@ func (c *Connector) read() {
 	for {
 		n, err := c.conn.Read(buf)
 		if err != nil {
-			if err != io.EOF {
+			if err != io.EOF && !strings.Contains(err.Error(), "use of closed network connection") {
 				log.Infof("Read [%s], connector will be closed immediately", err.Error())
 			}
 			c.Close()
