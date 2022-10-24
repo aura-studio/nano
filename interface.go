@@ -49,11 +49,12 @@ var chReady = make(chan struct{}, 1)
 var (
 	// app represents the current server process
 	app = &struct {
-		running int32
-		name    string    // current application name
-		startAt time.Time // startup time
-		mode    string    // cluster mode
-		typ     string    // frontend or backend
+		running  int32
+		name     string    // current application name
+		startAt  time.Time // startup time
+		mode     string    // cluster mode
+		typ      string    // frontend or backend
+		stopping int32
 	}{}
 )
 
@@ -149,6 +150,7 @@ func Serve(opts ...Option) {
 		log.Infoln("Nano server got signal", s)
 	}
 
+	atomic.StoreInt32(&app.stopping, 1)
 	log.Infoln("Nano server is stopping...")
 
 	node.Shutdown()
@@ -164,4 +166,8 @@ func Shutdown() {
 
 func Ready() <-chan struct{} {
 	return chReady
+}
+
+func Stopping() bool {
+	return atomic.LoadInt32(&app.stopping) > 0
 }
