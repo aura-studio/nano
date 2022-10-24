@@ -484,6 +484,7 @@ func (h *LocalHandler) processMessage(s *session.Session, msg *message.Message, 
 }
 
 func (h *LocalHandler) localProcess(handler *component.Handler, lastMid uint64, s *session.Session, msg *message.Message) {
+	s = session.Context(s, lastMid)
 	if pipe := h.pipeline; pipe != nil {
 		err := pipe.Inbound().Process(s, msg)
 		if err != nil {
@@ -509,14 +510,14 @@ func (h *LocalHandler) localProcess(handler *component.Handler, lastMid uint64, 
 		switch d := data.(type) {
 		case []byte:
 			log.Infof("Type=%s, Route=%s, SSID=%d, SID=%d, Version=%s, Branch=%d, UID=%d, MID=%d, Data=%dbytes",
-				msg.Type.String(), msg.Route, s.SSID(), s.SID(), s.Version(), s.Branch(), s.UID(), msg.ID, len(d))
+				msg.Type.String(), msg.Route, s.SSID(), s.SID(), s.Version(), s.Branch(), s.UID(), s.LastMid(), len(d))
 		default:
 			log.Infof("Type=%s, Route=%s, SSID=%d, SID=%d, Version=%s, Branch=%d, UID=%d, MID=%d, Data=%+v",
-				msg.Type.String(), msg.Route, s.SSID(), s.SID(), s.Version(), s.Branch(), s.UID(), msg.ID, data)
+				msg.Type.String(), msg.Route, s.SSID(), s.SID(), s.Version(), s.Branch(), s.UID(), s.LastMid(), data)
 		}
 	}
 
-	args := []reflect.Value{handler.Receiver, reflect.ValueOf(session.Context(s, lastMid)), reflect.ValueOf(data)}
+	args := []reflect.Value{handler.Receiver, reflect.ValueOf(s), reflect.ValueOf(data)}
 
 	task := func() {
 		result := handler.Method.Func.Call(args)
