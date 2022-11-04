@@ -158,7 +158,9 @@ func (c *Conn) Read(b []byte) (int, error) {
 					}
 				}
 			} else {
-				data = bodyData
+				if len(data) == 0 {
+					data = bodyData
+				}
 			}
 		}
 
