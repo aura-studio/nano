@@ -115,29 +115,17 @@ func (c *Conn) Read(b []byte) (int, error) {
 				if err != nil {
 					return 0, err
 				}
-			} else if c.brw.Reader.Buffered() > 0 {
-				dataBuf := new(bytes.Buffer)
-				for {
-					buf := make([]byte, 2048)
-					n, err := c.brw.Read(buf)
-					if err != nil && err != io.EOF {
-						return 0, err
-					}
-					dataBuf.Write(buf[:n])
-					if err == io.EOF {
-						break
-					}
-					if json.Valid(dataBuf.Bytes()) {
-						break
-					}
-				}
-				bodyData = dataBuf.Bytes()
+			} else {
+				return 0, fmt.Errorf("content length is: %d", c.r.ContentLength)
 			}
-			if json.Valid(bodyData) {
-				jsonMap := make(map[string]string)
-				if err := json.Unmarshal(bodyData, &jsonMap); err != nil {
-					return 0, err
+
+			jsonMap := make(map[string]string)
+			if err := json.Unmarshal(bodyData, &jsonMap); err != nil {
+				// binary
+				if len(data) == 0 {
+					data = bodyData
 				}
+			} else {
 				// json
 				if len(route) == 0 {
 					route, _ = jsonMap["__route__"]
@@ -156,10 +144,6 @@ func (c *Conn) Read(b []byte) (int, error) {
 					if err != nil {
 						return 0, err
 					}
-				}
-			} else {
-				if len(data) == 0 {
-					data = bodyData
 				}
 			}
 		}
