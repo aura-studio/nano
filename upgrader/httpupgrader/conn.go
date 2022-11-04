@@ -9,6 +9,7 @@ import (
 	"net"
 	"net/http"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/aura-studio/nano/codec/plaincodec"
@@ -30,7 +31,9 @@ type Conn struct {
 	params      map[string]string
 	codecEntity codec.CodecEntity
 	readBuf     io.Reader
-	readEOF     bool
+	readDone    atomic.Bool
+	writeDone   atomic.Bool
+	startTime   time.Time
 }
 
 // NewConn return an initialized *WSConn
@@ -43,6 +46,7 @@ func NewConn(w http.ResponseWriter, r *http.Request, conn net.Conn, brw *bufio.R
 		params:      params,
 		codecEntity: plaincodec.NewCodec().Entity(nil),
 		readBuf:     nil,
+		startTime:   time.Now(),
 	}
 }
 
@@ -50,8 +54,13 @@ func NewConn(w http.ResponseWriter, r *http.Request, conn net.Conn, brw *bufio.R
 // Read can be made to time out and return an Error with Timeout() == true
 // after a fixed time limit; see SetDeadline and SetReadDeadline.
 func (c *Conn) Read(b []byte) (int, error) {
-	if c.readEOF {
-		return c.brw.Read(b)
+	if c.readDone.Load() {
+		if c.writeDone.Load() {
+			return 0, io.EOF
+		} else if time.Now().UnixMilli()-c.startTime.UnixMilli() > 10*1000 {
+			return 0, io.EOF
+		}
+		return 0, nil
 	}
 
 	if c.readBuf == nil {
@@ -59,27 +68,11 @@ func (c *Conn) Read(b []byte) (int, error) {
 			err     error
 			data    []byte
 			route   string
-			dataMap = make(map[string]string)
+			dataMap = make(map[string]interface{})
 		)
 
-		// params
-		if len(route) == 0 {
-			route = c.params["__route__"]
-		}
-		if len(data) == 0 {
-			data = []byte(c.params["__data__"])
-		}
-
-		// query
+		route = c.params["route"]
 		query := c.r.URL.Query()
-		if len(route) == 0 {
-			route = query.Get("__route__")
-		}
-		if len(data) == 0 {
-			data = []byte(query.Get("__data__"))
-		}
-
-		// query -> m
 		if len(data) == 0 {
 			for k, v := range query {
 				dataMap[k] = v[0]
@@ -89,61 +82,39 @@ func (c *Conn) Read(b []byte) (int, error) {
 		contentType := strings.Split(c.r.Header.Get("Content-Type"), ";")[0]
 		switch contentType {
 		case "multipart/form-data", "application/x-www-form-urlencoded":
-			// form
-			if len(route) == 0 {
-				route = c.r.FormValue("__route__")
-			}
-			if len(data) == 0 {
-				data = []byte(c.r.FormValue("__data__"))
-			}
-			// body -> dataMap
+			_ = c.r.FormValue("")
 			for k, v := range c.r.Form {
 				dataMap[k] = v[0]
 			}
-			// dataMap -> data
-			if len(data) == 0 {
-				data, err = json.Marshal(dataMap)
-				if err != nil {
-					return 0, err
-				}
+			data, err = json.Marshal(dataMap)
+			if err != nil {
+				return 0, err
 			}
 		default:
 			var bodyData []byte
-			if c.r.ContentLength > 0 {
-				bodyData = make([]byte, int(c.r.ContentLength))
-				_, err := io.ReadFull(c.brw, bodyData)
-				if err != nil {
-					return 0, err
-				}
-			} else {
+			if c.r.ContentLength < 0 {
 				return 0, fmt.Errorf("content length is: %d", c.r.ContentLength)
 			}
 
-			jsonMap := make(map[string]string)
-			if err := json.Unmarshal(bodyData, &jsonMap); err != nil {
-				// binary
-				if len(data) == 0 {
-					data = bodyData
-				}
-			} else {
-				// json
-				if len(route) == 0 {
-					route, _ = jsonMap["__route__"]
-				}
-				if len(data) == 0 {
-					dataStr, _ := jsonMap["__data__"]
-					data = []byte(dataStr)
-				}
-				// body -> dataMap
+			bodyData = make([]byte, int(c.r.ContentLength))
+			_, err := io.ReadFull(c.brw, bodyData)
+			if err != nil {
+				return 0, err
+			}
+
+			jsonMap := make(map[string]interface{})
+			if err := json.Unmarshal(bodyData, &jsonMap); err == nil {
 				for k, v := range jsonMap {
 					dataMap[k] = v
 				}
-				// dataMap -> data
-				if len(data) == 0 {
-					data, err = json.Marshal(dataMap)
-					if err != nil {
-						return 0, err
-					}
+			}
+
+			if len(bodyData) > 0 { // binary
+				data = bodyData
+			} else { // json
+				data, err = json.Marshal(dataMap)
+				if err != nil {
+					return 0, err
 				}
 			}
 		}
@@ -178,7 +149,7 @@ func (c *Conn) Read(b []byte) (int, error) {
 
 	n, err := c.readBuf.Read(b)
 	if err == io.EOF {
-		c.readEOF = true
+		c.readDone.Store(true)
 		return n, nil
 	}
 
@@ -219,6 +190,8 @@ func (c *Conn) Write(b []byte) (int, error) {
 		return 0, err
 	}
 	n := nHeader + nBody
+
+	c.writeDone.Store(true)
 
 	return n, nil
 }

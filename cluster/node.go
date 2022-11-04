@@ -325,13 +325,13 @@ func (n *Node) listenAndServeTCP() {
 
 func (n *Node) listenAndServeHttp() {
 	router := mux.NewRouter()
-	router.HandleFunc("/{__route__:[A-Za-z\\.]*}", func(w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc("/{route:[A-Za-z\\.]*}", func(w http.ResponseWriter, r *http.Request) {
 		var (
 			conn net.Conn
 			err  error
 		)
 		params := mux.Vars(r)
-		if route, ok := params["__route__"]; ok && route == "websocket" {
+		if route, ok := params["route"]; ok && route == "websocket" {
 			conn, err = wsupgrader.Default().Upgrade(w, r, params)
 		} else {
 			conn, err = httpupgrader.Default().Upgrade(w, r, params)
