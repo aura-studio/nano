@@ -50,6 +50,10 @@ func NewConn(w http.ResponseWriter, r *http.Request, conn net.Conn, brw *bufio.R
 // Read can be made to time out and return an Error with Timeout() == true
 // after a fixed time limit; see SetDeadline and SetReadDeadline.
 func (c *Conn) Read(b []byte) (int, error) {
+	if c.readEOF {
+		return c.brw.Read(b)
+	}
+
 	if c.readBuf == nil {
 		var (
 			err     error
@@ -186,7 +190,13 @@ func (c *Conn) Read(b []byte) (int, error) {
 		c.readBuf = buf
 	}
 
-	return c.readBuf.Read(b)
+	n, err := c.readBuf.Read(b)
+	if err == io.EOF {
+		c.readEOF = true
+		return n, nil
+	}
+
+	return n, err
 }
 
 // Write writes data to the connection.
