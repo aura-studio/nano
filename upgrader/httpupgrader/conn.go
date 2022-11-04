@@ -13,11 +13,11 @@ import (
 
 	"github.com/aura-studio/nano/codec/plaincodec"
 	"github.com/aura-studio/nano/log"
+	"github.com/aura-studio/nano/message"
+	"github.com/aura-studio/nano/packet"
 
 	"github.com/aura-studio/nano/codec"
 	"github.com/aura-studio/nano/env"
-	"github.com/aura-studio/nano/message"
-	"github.com/aura-studio/nano/packet"
 )
 
 // Conn is an adapter to t.Conn, which implements all t.Conn
@@ -50,22 +50,64 @@ func NewConn(w http.ResponseWriter, r *http.Request, conn net.Conn, brw *bufio.R
 // Read can be made to time out and return an Error with Timeout() == true
 // after a fixed time limit; see SetDeadline and SetReadDeadline.
 func (c *Conn) Read(b []byte) (int, error) {
-	if c.readEOF {
-		return c.brw.Read(b)
-	}
-
 	if c.readBuf == nil {
 		var (
-			err   error
-			data  []byte
-			route string
+			err     error
+			data    []byte
+			route   string
+			dataMap = make(map[string]string)
 		)
 
-		data = []byte(c.r.URL.Query().Get("data"))
+		// params
+		if len(route) == 0 {
+			route = c.params["__route__"]
+		}
 		if len(data) == 0 {
+			data = []byte(c.params["__data__"])
+		}
+
+		// query
+		query := c.r.URL.Query()
+		if len(route) == 0 {
+			route = query.Get("__route__")
+		}
+		if len(data) == 0 {
+			data = []byte(query.Get("__data__"))
+		}
+
+		// query -> m
+		if len(data) == 0 {
+			for k, v := range query {
+				dataMap[k] = v[0]
+			}
+		}
+
+		contentType := strings.Split(c.r.Header.Get("Content-Type"), ";")[0]
+		switch contentType {
+		case "multipart/form-data", "application/x-www-form-urlencoded":
+			// form
+			if len(route) == 0 {
+				route = c.r.FormValue("__route__")
+			}
+			if len(data) == 0 {
+				data = []byte(c.r.FormValue("__data__"))
+			}
+			// body -> dataMap
+			for k, v := range c.r.Form {
+				dataMap[k] = v[0]
+			}
+			// dataMap -> data
+			if len(data) == 0 {
+				data, err = json.Marshal(dataMap)
+				if err != nil {
+					return 0, err
+				}
+			}
+		default:
+			var bodyData []byte
 			if c.r.ContentLength > 0 {
-				data = make([]byte, int(c.r.ContentLength))
-				_, err := io.ReadFull(c.brw, data)
+				bodyData = make([]byte, int(c.r.ContentLength))
+				_, err := io.ReadFull(c.brw, bodyData)
 				if err != nil {
 					return 0, err
 				}
@@ -77,21 +119,43 @@ func (c *Conn) Read(b []byte) (int, error) {
 					if err != nil && err != io.EOF {
 						return 0, err
 					}
+					dataBuf.Write(buf[:n])
 					if err == io.EOF {
 						break
 					}
-					dataBuf.Write(buf[:n])
 					if json.Valid(dataBuf.Bytes()) {
 						break
 					}
 				}
-				data = dataBuf.Bytes()
+				bodyData = dataBuf.Bytes()
 			}
-		}
-
-		route = c.r.URL.Query().Get("route")
-		if len(route) == 0 {
-			route = c.params["route"]
+			if json.Valid(bodyData) {
+				jsonMap := make(map[string]string)
+				if err := json.Unmarshal(bodyData, &jsonMap); err != nil {
+					return 0, err
+				}
+				// json
+				if len(route) == 0 {
+					route, _ = jsonMap["__route__"]
+				}
+				if len(data) == 0 {
+					dataStr, _ := jsonMap["__data__"]
+					data = []byte(dataStr)
+				}
+				// body -> dataMap
+				for k, v := range jsonMap {
+					dataMap[k] = v
+				}
+				// dataMap -> data
+				if len(data) == 0 {
+					data, err = json.Marshal(dataMap)
+					if err != nil {
+						return 0, err
+					}
+				}
+			} else {
+				data = bodyData
+			}
 		}
 
 		if env.Debug {
@@ -122,13 +186,7 @@ func (c *Conn) Read(b []byte) (int, error) {
 		c.readBuf = buf
 	}
 
-	n, err := c.readBuf.Read(b)
-	if err == io.EOF {
-		c.readEOF = true
-		return n, nil
-	}
-
-	return n, err
+	return c.readBuf.Read(b)
 }
 
 // Write writes data to the connection.
