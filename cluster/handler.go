@@ -381,26 +381,37 @@ func (h *LocalHandler) remoteProcess(s *session.Session, msg *message.Message, n
 	}
 
 	service := msg.Route[:index]
-	version, members := h.findMembers(service, msg.ShortVer)
-	if len(members) == 0 {
-		log.Errorf("nano/handler: %s (version:%s) not found(forgot registered?)", msg.Route, version)
-		return
-	}
+	var (
+		remoteAddr string
+	)
+	if h.currentNode.Etcd {
+		remoteAddr = fmt.Sprintf("etcd:///%s", service)
 
-	if env.Debug {
-		log.Infof("Type=%s, Route=%s, SSID=%d, SID=%d, Version=%s, Branch=%d, UID=%d, MID=%d, Data=%dbytes",
-			msg.Type.String(), msg.Route, s.SSID(), s.SID(), s.Version(), s.Branch(), s.UID(), msg.ID, len(msg.Data))
-	}
-
-	// Select a remote service address
-	// 1. Use the service address directly if the router contains binding item
-	// 2. Select a remote service address randomly and bind to router
-	var remoteAddr string
-	if addr, found := s.Router().Find(service); found {
-		remoteAddr = addr
+		if env.Debug {
+			log.Infof("Type=%s, Route=%s, SSID=%d, SID=%d, Version=%s, Branch=%d, UID=%d, MID=%d, Data=%dbytes",
+				msg.Type.String(), msg.Route, s.SSID(), s.SID(), s.Version(), s.Branch(), s.UID(), msg.ID, len(msg.Data))
+		}
 	} else {
-		remoteAddr = members[rand.Intn(len(members))].ServiceAddr
-		s.Router().Bind(service, remoteAddr)
+		version, members := h.findMembers(service, msg.ShortVer)
+		if len(members) == 0 {
+			log.Errorf("nano/handler: %s (version:%s) not found(forgot registered?)", msg.Route, version)
+			return
+		}
+
+		if env.Debug {
+			log.Infof("Type=%s, Route=%s, SSID=%d, SID=%d, Version=%s, Branch=%d, UID=%d, MID=%d, Data=%dbytes",
+				msg.Type.String(), msg.Route, s.SSID(), s.SID(), s.Version(), s.Branch(), s.UID(), msg.ID, len(msg.Data))
+		}
+
+		// Select a remote service address
+		// 1. Use the service address directly if the router contains binding item
+		// 2. Select a remote service address randomly and bind to router
+		if addr, found := s.Router().Find(service); found {
+			remoteAddr = addr
+		} else {
+			remoteAddr = members[rand.Intn(len(members))].ServiceAddr
+			s.Router().Bind(service, remoteAddr)
+		}
 	}
 	pool, err := h.currentNode.rpcClient.getConnPool(remoteAddr)
 	if err != nil {

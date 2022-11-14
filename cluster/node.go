@@ -44,6 +44,11 @@ import (
 	"github.com/aura-studio/nano/upgrader/wsupgrader"
 	"github.com/gorilla/mux"
 	"google.golang.org/grpc"
+	grpcresolver "google.golang.org/grpc/resolver"
+
+	clientv3 "go.etcd.io/etcd/client/v3"
+	"go.etcd.io/etcd/client/v3/naming/endpoints"
+	etcdresolver "go.etcd.io/etcd/client/v3/naming/resolver"
 
 	_ "net/http/pprof"
 )
@@ -66,6 +71,7 @@ type Options struct {
 	TSLKey         string
 	Logger         log.Logger
 	Codec          codec.Codec
+	Etcd           bool
 }
 
 // Node represents a node in nano cluster, which will contains a group of services.
@@ -81,6 +87,10 @@ type Node struct {
 	rpcClient   *rpcClient
 	transmitter *transmitter
 
+	etcdClient   *clientv3.Client
+	etcdManagers map[string]endpoints.Manager
+	grpcResolver grpcresolver.Builder
+
 	mu       sync.RWMutex
 	sessions map[int64]*session.Session
 	state    uint32
@@ -90,6 +100,7 @@ type Node struct {
 func (n *Node) Startup() error {
 	n.setServerID()
 
+	n.etcdManagers = map[string]endpoints.Manager{}
 	n.sessions = map[int64]*session.Session{}
 	n.cluster = newCluster(n)
 	n.handler = newHandler(n)
@@ -161,6 +172,7 @@ func (n *Node) setServerID() {
 		}
 	}
 	n.ServerID = serverID
+
 }
 
 func (n *Node) WholeInterface(addr string) string {
@@ -196,56 +208,80 @@ func (n *Node) initNode() error {
 		}
 	}()
 
-	if n.IsMaster {
-		clusterpb.RegisterMasterServer(n.server, n.cluster)
-		member := &Member{
-			isMaster: true,
-			memberInfo: &clusterpb.MemberInfo{
-				Label:       n.Label,
-				Version:     env.Version,
-				ServiceAddr: n.MemberAddr,
-				Services:    n.handler.LocalService(),
-				Dictionary:  n.handler.LocalDictionary(),
-			},
-		}
-		n.cluster.members = append(n.cluster.members, member)
-		n.cluster.setRPCClient(n.rpcClient)
-		if n.MasterPersist != nil {
-			var memberInfos []*clusterpb.MemberInfo
-			if err := n.MasterPersist.Get(&memberInfos); err != nil {
+	// etcd mode
+	if n.Etcd {
+		n.etcdClient, err = clientv3.New(clientv3.Config{
+			Endpoints:   strings.Split(n.AdvertiseAddr, ","), // etcd address
+			DialTimeout: 10 * time.Second,
+		})
+
+		for _, service := range n.handler.LocalService() {
+			etcdManager, err := endpoints.NewManager(n.etcdClient, service)
+			if err != nil {
 				return err
 			}
-			for _, memberInfo := range memberInfos {
-				n.cluster.members = append(n.cluster.members, &Member{isMaster: false, memberInfo: memberInfo})
-				n.handler.addMember(memberInfo)
+			n.etcdManagers[service] = etcdManager
+			if err := etcdManager.AddEndpoint(n.etcdClient.Ctx(), service+"/"+n.MemberAddr, endpoints.Endpoint{Addr: n.MemberAddr}); err != nil {
+				return err
 			}
 		}
-	} else {
-		pool, err := n.rpcClient.getConnPool(n.AdvertiseAddr)
+		n.grpcResolver, err = etcdresolver.NewBuilder(n.etcdClient)
 		if err != nil {
 			return err
 		}
-		client := clusterpb.NewMasterClient(pool.Get())
-		request := &clusterpb.RegisterRequest{
-			MemberInfo: &clusterpb.MemberInfo{
-				Label:       n.Label,
-				Version:     env.Version,
-				ServiceAddr: n.MemberAddr,
-				Services:    n.handler.LocalService(),
-				Dictionary:  n.handler.LocalDictionary(),
-			},
-		}
-		for {
-			resp, err := client.Register(context.Background(), request)
-			if err == nil {
-				n.handler.initMembers(resp.Members)
-				n.cluster.initMembers(resp.Members)
-				break
-			}
-			log.Errorln("Register current node to cluster failed", err, "and will retry in", n.RetryInterval.String())
-			time.Sleep(n.RetryInterval)
-		}
+		env.GrpcOptions = append(env.GrpcOptions, grpc.WithResolvers(n.grpcResolver)) // load balancer
 
+	} else {
+		if n.IsMaster {
+			clusterpb.RegisterMasterServer(n.server, n.cluster)
+			member := &Member{
+				isMaster: true,
+				memberInfo: &clusterpb.MemberInfo{
+					Label:       n.Label,
+					Version:     env.Version,
+					ServiceAddr: n.MemberAddr,
+					Services:    n.handler.LocalService(),
+					Dictionary:  n.handler.LocalDictionary(),
+				},
+			}
+			n.cluster.members = append(n.cluster.members, member)
+			n.cluster.setRPCClient(n.rpcClient)
+			if n.MasterPersist != nil {
+				var memberInfos []*clusterpb.MemberInfo
+				if err := n.MasterPersist.Get(&memberInfos); err != nil {
+					return err
+				}
+				for _, memberInfo := range memberInfos {
+					n.cluster.members = append(n.cluster.members, &Member{isMaster: false, memberInfo: memberInfo})
+					n.handler.addMember(memberInfo)
+				}
+			}
+		} else {
+			pool, err := n.rpcClient.getConnPool(n.AdvertiseAddr)
+			if err != nil {
+				return err
+			}
+			client := clusterpb.NewMasterClient(pool.Get())
+			request := &clusterpb.RegisterRequest{
+				MemberInfo: &clusterpb.MemberInfo{
+					Label:       n.Label,
+					Version:     env.Version,
+					ServiceAddr: n.MemberAddr,
+					Services:    n.handler.LocalService(),
+					Dictionary:  n.handler.LocalDictionary(),
+				},
+			}
+			for {
+				resp, err := client.Register(context.Background(), request)
+				if err == nil {
+					n.handler.initMembers(resp.Members)
+					n.cluster.initMembers(resp.Members)
+					break
+				}
+				log.Errorln("Register current node to cluster failed", err, "and will retry in", n.RetryInterval.String())
+				time.Sleep(n.RetryInterval)
+			}
+		}
 	}
 
 	return nil
@@ -277,20 +313,28 @@ CLOSE:
 		components[i].Comp.Shutdown()
 	}
 
-	if !n.IsMaster && n.AdvertiseAddr != "" {
-		pool, err := n.rpcClient.getConnPool(n.AdvertiseAddr)
-		if err != nil {
-			log.Errorln("Retrieve master address error", err)
-			goto EXIT
+	// etcd mode
+	if n.Etcd {
+		for service, etcdManager := range n.etcdManagers {
+			etcdManager.DeleteEndpoint(n.etcdClient.Ctx(), service+"/"+n.MemberAddr)
 		}
-		client := clusterpb.NewMasterClient(pool.Get())
-		request := &clusterpb.UnregisterRequest{
-			ServiceAddr: n.MemberAddr,
-		}
-		_, err = client.Unregister(context.Background(), request)
-		if err != nil {
-			log.Errorln("Unregister current node failed", err)
-			goto EXIT
+		n.etcdClient.Close()
+	} else {
+		if !n.IsMaster && n.AdvertiseAddr != "" {
+			pool, err := n.rpcClient.getConnPool(n.AdvertiseAddr)
+			if err != nil {
+				log.Errorln("Retrieve master address error", err)
+				goto EXIT
+			}
+			client := clusterpb.NewMasterClient(pool.Get())
+			request := &clusterpb.UnregisterRequest{
+				ServiceAddr: n.MemberAddr,
+			}
+			_, err = client.Unregister(context.Background(), request)
+			if err != nil {
+				log.Errorln("Unregister current node failed", err)
+				goto EXIT
+			}
 		}
 	}
 

@@ -55,7 +55,7 @@ func newConnArray(maxSize uint, addr string) (*connPool, error) {
 
 func (a *connPool) init(addr string) error {
 	for i := range a.v {
-		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		conn, err := grpc.DialContext(
 			ctx,
 			addr,

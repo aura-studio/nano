@@ -26,7 +26,7 @@ import (
 	"time"
 
 	"github.com/aura-studio/nano/serialize"
-	"github.com/aura-studio/nano/serialize/protobuf"
+	"github.com/aura-studio/nano/serialize/auto"
 	"google.golang.org/grpc"
 )
 
@@ -74,5 +74,5 @@ func init() {
 	ConnDie = make(chan bool)
 	Debug = false
 	Safe = true
-	Serializer = protobuf.NewSerializer()
+	Serializer = auto.NewSerializer()
 }

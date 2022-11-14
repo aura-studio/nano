@@ -170,3 +170,9 @@ func WithCodec(c codec.Codec) Option {
 		opt.Codec = c
 	}
 }
+
+func WithEtcd() Option {
+	return func(opt *cluster.Options) {
+		opt.Etcd = true
+	}
+}
