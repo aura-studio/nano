@@ -484,6 +484,19 @@ func (n *Node) findOrCreateSession(sid int64, gateAddr string, uid int64, shortV
 		n.mu.Unlock()
 
 		session.Inited(s)
+
+		go func() {
+			defer func() {
+				if err := recover(); err != nil {
+					log.Errorln("Session goroutine panic", err)
+				}
+			}()
+
+			_, err = ac.gateClient.SessionCreated(context.Background(), &clusterpb.SessionCreatedRequest{
+				Addr:      n.MemberAddr,
+				SessionID: sid,
+			})
+		}()
 	}
 	return s, nil
 }
@@ -588,6 +601,35 @@ func (n *Node) CloseSession(_ context.Context, req *clusterpb.CloseSessionReques
 		s.Close()
 	}
 	return &clusterpb.CloseSessionResponse{}, nil
+}
+
+// SessionCreated implements the MemberServer interface
+func (n *Node) SessionCreated(_ context.Context, req *clusterpb.SessionCreatedRequest) (*clusterpb.SessionCreatedResponse, error) {
+	s := n.findSession(req.SessionID)
+	if s != nil {
+		s.AddRemoteSessionAddr(req.Addr)
+	} else {
+		go func() {
+			defer func() {
+				if err := recover(); err != nil {
+					log.Errorf("session created panic: %v", err)
+				}
+			}()
+
+			pool, err := n.rpcClient.getConnPool(req.Addr)
+			if err != nil {
+				log.Error(err)
+			}
+			client := clusterpb.NewMemberClient(pool.Get())
+			_, err = client.SessionClosed(context.Background(), &clusterpb.SessionClosedRequest{
+				SessionID: req.SessionID,
+			})
+			if err != nil {
+				log.Error(err)
+			}
+		}()
+	}
+	return &clusterpb.SessionCreatedResponse{}, nil
 }
 
 // PerformConvention implements the MemberServer interface

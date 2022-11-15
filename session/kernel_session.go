@@ -42,18 +42,18 @@ type EventCallback func(*Session, ...interface{})
 // Session instance related to the client will be passed to Handler method as the first
 // parameter.
 type KernelSession struct {
-	sync.RWMutex                                 // protect data
-	id           int64                           // session global unique id
-	branch       uint32                          // logic branch
-	VersionBound bool                            // session version bound
-	shortVer     uint32                          // session short version
-	version      string                          // session version
-	uid          int64                           // binding user id
-	entity       NetworkEntity                   // low-level network entity
-	data         map[string]interface{}          // session data store
-	router       *Router                         // store remote addr
-	onEvents     map[interface{}][]EventCallback // call EventCallback after event trigged
-
+	sync.RWMutex                                       // protect data
+	id                 int64                           // session global unique id
+	branch             uint32                          // logic branch
+	VersionBound       bool                            // session version bound
+	shortVer           uint32                          // session short version
+	version            string                          // session version
+	uid                int64                           // binding user id
+	entity             NetworkEntity                   // low-level network entity
+	data               map[string]interface{}          // session data store
+	router             *Router                         // store remote addr
+	onEvents           map[interface{}][]EventCallback // call EventCallback after event trigged
+	remoteSessionAddrs sync.Map                        // rpc addr
 }
 
 // New returns a new session instance
@@ -91,4 +91,17 @@ func (s *KernelSession) Push(route string, v interface{}) error {
 // Response message to client
 func (s *KernelSession) Response(mid uint64, route string, v interface{}) error {
 	return s.entity.Response(mid, route, v)
+}
+
+func (s *KernelSession) AddRemoteSessionAddr(addr string) {
+	s.remoteSessionAddrs.Store(addr, struct{}{})
+}
+
+func (s *KernelSession) RemoteSessionAddrs() []string {
+	addrs := make([]string, 0)
+	s.remoteSessionAddrs.Range(func(key, value interface{}) bool {
+		addrs = append(addrs, key.(string))
+		return true
+	})
+	return addrs
 }

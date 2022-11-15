@@ -107,6 +107,14 @@ message CloseSessionRequest {
 
 message CloseSessionResponse {}
 
+message SessionCreatedRequest {
+  string addr = 1;
+  int64 sessionID = 2;
+}
+
+message SessionCreatedResponse {
+}
+
 message PerformConventionRequest {
   int64 sig = 1;
   bytes data = 2;
@@ -116,6 +124,7 @@ message PerformConventionResponse {
   string label = 1;
   bytes data = 2;
 }
+
 
 service Member {
   rpc HandleRequest(RequestMessage) returns (MemberHandleResponse) {}
@@ -127,6 +136,7 @@ service Member {
   rpc DelMember(DelMemberRequest) returns (DelMemberResponse) {}
   rpc SessionClosed(SessionClosedRequest) returns (SessionClosedResponse) {}
   rpc CloseSession(CloseSessionRequest) returns (CloseSessionResponse) {}
+  rpc SessionCreated(SessionCreatedRequest) returns (SessionCreatedResponse) {}
 
   rpc PerformConvention(PerformConventionRequest)
       returns (PerformConventionResponse) {}
