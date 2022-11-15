@@ -27,6 +27,7 @@ import (
 
 	"github.com/aura-studio/nano/serialize"
 	"github.com/aura-studio/nano/serialize/auto"
+	"github.com/aura-studio/snowflake"
 	"google.golang.org/grpc"
 )
 
@@ -67,6 +68,9 @@ var (
 
 	// ShortVersion is short for Version
 	ShortVersion uint32
+
+	// SnowflakeNode is snowflake node
+	SnowflakeNode *snowflake.Node
 )
 
 func init() {

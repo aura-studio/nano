@@ -39,9 +39,11 @@ import (
 	"github.com/aura-studio/nano/message"
 	"github.com/aura-studio/nano/persist"
 	"github.com/aura-studio/nano/pipeline"
+	"github.com/aura-studio/nano/service"
 	"github.com/aura-studio/nano/session"
 	"github.com/aura-studio/nano/upgrader/httpupgrader"
 	"github.com/aura-studio/nano/upgrader/wsupgrader"
+	"github.com/aura-studio/snowflake"
 	"github.com/gorilla/mux"
 	"google.golang.org/grpc"
 	grpcresolver "google.golang.org/grpc/resolver"
@@ -141,38 +143,48 @@ func (n *Node) Startup() error {
 }
 
 func (n *Node) setServerID() {
-	if n.MemberAddr == "" {
-		n.ServerID = 0
-		return
-	}
-
-	parts := strings.Split(n.MemberAddr, ":")
-	var host string
-	if parts[0] == "" {
-		host = "0.0.0.0"
+	if n.Etcd {
+		snowflakeNode, err := snowflake.NewNode(0)
+		if err != nil {
+			log.Fatal(err)
+		}
+		snowflakeNode.WithEtcd("/ServerID/", n.AdvertiseAddr,
+			10*time.Second, time.Minute, time.Minute-10*time.Second)
+		env.SnowflakeNode = snowflakeNode
+		n.ServerID = uint32(snowflakeNode.Generate().Node(snowflakeNode))
 	} else {
-		host = parts[0]
-	}
-	port, _ := strconv.Atoi(parts[1])
-	addrs, _ := net.LookupHost(host)
-	var serverID = uint32(0)
-	for _, addr := range addrs {
-		bits := strings.Split(addr, ".")
-		if len(bits) != 4 {
-			continue
+		if n.MemberAddr == "" {
+			n.ServerID = 0
+			return
 		}
-		b2, _ := strconv.Atoi(bits[2])
-		b3, _ := strconv.Atoi(bits[3])
-		var sum uint32
-		sum += uint32(b2) << 24
-		sum += uint32(b3) << 16
-		sum += uint32(port)
-		if sum > serverID {
-			serverID = sum
-		}
-	}
-	n.ServerID = serverID
 
+		parts := strings.Split(n.MemberAddr, ":")
+		var host string
+		if parts[0] == "" {
+			host = "0.0.0.0"
+		} else {
+			host = parts[0]
+		}
+		port, _ := strconv.Atoi(parts[1])
+		addrs, _ := net.LookupHost(host)
+		var serverID = uint32(0)
+		for _, addr := range addrs {
+			bits := strings.Split(addr, ".")
+			if len(bits) != 4 {
+				continue
+			}
+			b2, _ := strconv.Atoi(bits[2])
+			b3, _ := strconv.Atoi(bits[3])
+			var sum uint32
+			sum += uint32(b2) << 24
+			sum += uint32(b3) << 16
+			sum += uint32(port)
+			if sum > serverID {
+				serverID = sum
+			}
+		}
+		n.ServerID = serverID
+	}
 }
 
 func (n *Node) WholeInterface(addr string) string {

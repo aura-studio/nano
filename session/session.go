@@ -4,6 +4,8 @@ import (
 	"net"
 	"sync/atomic"
 
+	"github.com/aura-studio/nano/env"
+	"github.com/aura-studio/snowflake"
 	"github.com/mohae/deepcopy"
 )
 
@@ -45,10 +47,16 @@ func (s *Session) ID() int64 {
 }
 
 func (s *Session) SID() int64 {
+	if env.SnowflakeNode != nil {
+		return snowflake.ID(s.id).Node(env.SnowflakeNode)
+	}
 	return s.id >> 32
 }
 
 func (s *Session) SSID() int64 {
+	if env.SnowflakeNode != nil {
+		return s.id
+	}
 	return s.id % (1 << 32)
 }
 

@@ -95,7 +95,13 @@ func newAgent(conn net.Conn, pipeline pipeline.Pipeline, rpcHandler rpcHandler,
 	}
 
 	// binding session
-	sid := int64(serverID) + service.Connections.SessionID()<<32
+	var sid uint64
+	if env.SnowflakeNode != nil {
+		sid = env.SnowflakeNode.Generate()
+	} else {
+		sid := int64(serverID) + service.Connections.SessionID()<<32
+	}
+
 	s := session.New(a, sid)
 	a.session = s
 	a.srv = reflect.ValueOf(s)
@@ -103,7 +109,7 @@ func newAgent(conn net.Conn, pipeline pipeline.Pipeline, rpcHandler rpcHandler,
 	return a
 }
 
-func (a *agent) send(m pendingMessage) (err error) {
+@func (a *agent) send(m pendingMessage) (err error) {
 	defer func() {
 		if e := recover(); e != nil {
 			err = ErrBrokenPipe
