@@ -43,12 +43,14 @@ func Context(s *Session, lastMid uint64) *Session {
 
 // ID returns the session id
 func (s *Session) ID() int64 {
-	return s.id
+	id := snowflake.ID(s.id)
+	return id.Time(env.SnowflakeNode)<<10 + id.Step(env.SnowflakeNode)
 }
 
 func (s *Session) SID() int64 {
 	if env.SnowflakeNode != nil {
-		return snowflake.ID(s.id).Node(env.SnowflakeNode)
+		id := snowflake.ID(s.id)
+		return id.Node(env.SnowflakeNode)
 	}
 	return s.id >> 32
 }

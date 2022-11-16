@@ -148,10 +148,10 @@ func (n *Node) setServerID() {
 			log.Fatal(err)
 		}
 		pattern := snowflake.NewPattern(
-			epoch, time.Second,
-			[2]uint8{0, 16},
-			[2]uint8{47, 16},
-			[2]uint8{16, 31},
+			epoch, time.Millisecond,
+			[2]uint8{0, 10},  // 1,024,000 iops
+			[2]uint8{51, 12}, // 4096 nodes
+			[2]uint8{10, 41}, // 68 Years
 		)
 		etcd := &snowflake.Etcd{
 			Prefix:        "/ServerID/",
