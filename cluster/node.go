@@ -143,14 +143,28 @@ func (n *Node) Startup() error {
 
 func (n *Node) setServerID() {
 	if n.Etcd {
-		snowflakeNode, err := snowflake.NewNode(0)
+		epoch, err := time.Parse("2006-01-02 15:04:05", "2022-02-22 22:22:22")
 		if err != nil {
 			log.Fatal(err)
 		}
-		snowflakeNode.WithEtcd("/ServerID/", n.AdvertiseAddr,
-			10*time.Second, time.Minute, time.Minute-10*time.Second)
-		env.SnowflakeNode = snowflakeNode
-		n.ServerID = uint32(snowflakeNode.Generate().Node(snowflakeNode))
+		pattern := snowflake.NewPattern(
+			epoch, time.Second,
+			[2]uint8{0, 16},
+			[2]uint8{47, 16},
+			[2]uint8{16, 31},
+		)
+		etcd := &snowflake.Etcd{
+			Prefix:        "/ServerID/",
+			Addr:          n.AdvertiseAddr,
+			Timeout:       10 * time.Second,
+			LeaseTime:     time.Minute,
+			LeaseInterval: time.Minute - 10*time.Second,
+		}
+		env.SnowflakeNode, err = pattern.NewNode(snowflake.WithEtcdNode(etcd))
+		if err != nil {
+			log.Fatal(err)
+		}
+		n.ServerID = uint32(env.SnowflakeNode.Node())
 	} else {
 		if n.MemberAddr == "" {
 			n.ServerID = 0
