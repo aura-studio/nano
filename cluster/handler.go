@@ -386,7 +386,7 @@ func (h *LocalHandler) remoteProcess(s *session.Session, msg *message.Message, n
 		remoteAddr string
 	)
 	if h.currentNode.Etcd {
-		remoteAddr = fmt.Sprintf("etcd:///%s", service)
+		remoteAddr = fmt.Sprintf("etcd:///%s/%s", service, s.Version())
 
 		if env.Debug {
 			log.Infof("Type=%s, Route=%s, SSID=%d, SID=%d, Version=%s, Branch=%d, UID=%d, MID=%d, Data=%dbytes",

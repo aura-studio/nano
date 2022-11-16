@@ -39,7 +39,6 @@ import (
 	"github.com/aura-studio/nano/message"
 	"github.com/aura-studio/nano/persist"
 	"github.com/aura-studio/nano/pipeline"
-	"github.com/aura-studio/nano/service"
 	"github.com/aura-studio/nano/session"
 	"github.com/aura-studio/nano/upgrader/httpupgrader"
 	"github.com/aura-studio/nano/upgrader/wsupgrader"
@@ -233,7 +232,8 @@ func (n *Node) initNode() error {
 				return err
 			}
 			n.etcdManagers[service] = etcdManager
-			if err := etcdManager.AddEndpoint(n.etcdClient.Ctx(), service+"/"+n.MemberAddr, endpoints.Endpoint{Addr: n.MemberAddr}); err != nil {
+			if err := etcdManager.AddEndpoint(n.etcdClient.Ctx(),
+				fmt.Sprintf("%s/%s/%s", service, env.Version, n.MemberAddr), endpoints.Endpoint{Addr: n.MemberAddr}); err != nil {
 				return err
 			}
 		}
