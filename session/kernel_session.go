@@ -23,6 +23,7 @@ package session
 import (
 	"net"
 	"sync"
+	"sync/atomic"
 )
 
 // NetworkEntity represent low-level network instance
@@ -54,6 +55,7 @@ type KernelSession struct {
 	router             *Router                         // store remote addr
 	onEvents           map[interface{}][]EventCallback // call EventCallback after event trigged
 	remoteSessionAddrs sync.Map                        // rpc addr
+	MaxMid             atomic.Uint64
 }
 
 // New returns a new session instance

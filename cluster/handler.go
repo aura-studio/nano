@@ -357,6 +357,11 @@ func (h *LocalHandler) processPacket(agent *agent, p *packet.Packet) error {
 		session.Inited(agent.session)
 	}
 
+	if msg.ID <= agent.session.MaxMid.Load() {
+		return fmt.Errorf("invalid message id: %d", msg.ID)
+	}
+	agent.session.MaxMid.Store(msg.ID)
+
 	h.processMessage(agent.session, msg, false)
 
 	agent.lastAt = time.Now().Unix()
