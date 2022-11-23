@@ -8,10 +8,10 @@ import (
 	"sync/atomic"
 
 	"github.com/aura-studio/nano/codec"
-	"github.com/aura-studio/nano/crypto/aes"
 	"github.com/aura-studio/nano/env"
 	"github.com/aura-studio/nano/message"
 	"github.com/aura-studio/nano/packet"
+	"github.com/forgoer/openssl"
 )
 
 const (
@@ -34,9 +34,7 @@ var (
 )
 
 var (
-	aesKey = []byte{0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
-		0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f,
-	}
+	aesKey = []byte{0x50, 0x5a, 0x48, 0x70, 0x59, 0x30, 0x69, 0x63, 0x64, 0x63, 0x36, 0x63, 0x73, 0x46, 0x51, 0x6c}
 )
 
 type CodecEntity struct {
@@ -162,23 +160,12 @@ func (c *CodecEntity) EncodeMessage(m *message.Message) ([]byte, error) {
 		buf = append(buf, []byte(m.Route)...)
 	}
 
-	// encode body
-	var plain = make([]byte, len(m.Data)+4)
-	binary.BigEndian.PutUint32(plain, uint32(len(m.Data)))
-
-	copy(plain[4:], m.Data)
-
-	r := len(plain) % aes.BlockSize
-	if r != 0 {
-		plain = append(plain, make([]byte, aes.BlockSize-r)...)
-	}
-
-	cryptData, err := aes.Encode(aesKey, plain)
+	crypt, err := openssl.AesECBEncrypt(m.Data, aesKey, openssl.PKCS7_PADDING)
 	if err != nil {
 		return nil, err
 	}
 
-	buf = append(buf, cryptData...)
+	buf = append(buf, crypt...)
 
 	return buf, nil
 }
@@ -232,14 +219,11 @@ func (c *CodecEntity) DecodeMessage(data []byte) (*message.Message, error) {
 		offset += uint64(rl)
 	}
 
-	// decode body
-	plain, err := aes.Decode(aesKey, data[offset:])
+	plain, err := openssl.AesECBDecrypt(data[offset:], aesKey, openssl.PKCS7_PADDING)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
-
-	length := binary.BigEndian.Uint32(plain)
-	m.Data = plain[4 : 4+length]
+	m.Data = plain
 
 	return m, nil
 }

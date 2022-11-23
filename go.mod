@@ -5,6 +5,7 @@ go 1.12
 require (
 	github.com/aura-studio/snowflake v1.1.3
 	github.com/coreos/go-systemd/v22 v22.5.0 // indirect
+	github.com/forgoer/openssl v1.4.0
 	github.com/golang/protobuf v1.5.2
 	github.com/gorilla/mux v1.8.0
 	github.com/gorilla/websocket v1.4.2
