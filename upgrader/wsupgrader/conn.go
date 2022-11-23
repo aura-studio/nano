@@ -1,8 +1,11 @@
 package wsupgrader
 
 import (
+	"fmt"
 	"io"
 	"net"
+	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -11,14 +14,15 @@ import (
 // Conn is an adapter to t.Conn, which implements all t.Conn
 // interface base on *websocket.Conn
 type Conn struct {
+	r      *http.Request
 	conn   *websocket.Conn
 	typ    int // message type
 	reader io.Reader
 }
 
 // NewWSConn return an initialized *WSConn
-func NewConn(conn *websocket.Conn) *Conn {
-	return &Conn{conn: conn}
+func NewConn(r *http.Request, conn *websocket.Conn) *Conn {
+	return &Conn{r: r, conn: conn}
 }
 
 // Read reads data from the connection.
@@ -73,7 +77,7 @@ func (c *Conn) LocalAddr() net.Addr {
 
 // RemoteAddr returns the remote network address.
 func (c *Conn) RemoteAddr() net.Addr {
-	return c.conn.RemoteAddr()
+	return newWSRemoteAddr(c.conn, c.r)
 }
 
 // SetDeadline sets the read and write deadlines associated
@@ -113,4 +117,29 @@ func (c *Conn) SetReadDeadline(t time.Time) error {
 // A zero value for t means Write will not time out.
 func (c *Conn) SetWriteDeadline(t time.Time) error {
 	return c.conn.SetWriteDeadline(t)
+}
+
+type wsRemoteAddr struct {
+	conn *websocket.Conn
+	r    *http.Request
+}
+
+func newWSRemoteAddr(conn *websocket.Conn, r *http.Request) *wsRemoteAddr {
+	return &wsRemoteAddr{
+		conn: conn,
+		r:    r,
+	}
+}
+
+func (ws *wsRemoteAddr) Network() string {
+	return ws.conn.RemoteAddr().Network()
+}
+
+func (ws *wsRemoteAddr) String() string {
+	XForwardFor := ws.r.Header.Get("X-Forwarded-For")
+	if len(XForwardFor) == 0 {
+		return ws.r.RemoteAddr
+	}
+	index := strings.LastIndex(ws.r.RemoteAddr, ":")
+	return fmt.Sprintf("%s%s", XForwardFor, ws.r.RemoteAddr[index:])
 }
