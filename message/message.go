@@ -52,6 +52,7 @@ type Message struct {
 	Branch   uint32 // client branch
 	ShortVer uint32 // message short version
 	ID       uint64 // unique id, zero while notify mode
+	UnixTime uint32 // unix time in seconds
 	Route    string // route for locating service
 	Data     []byte // payload
 }

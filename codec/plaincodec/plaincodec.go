@@ -141,6 +141,10 @@ func (c *CodecEntity) EncodeMessage(m *message.Message) ([]byte, error) {
 	binary.BigEndian.PutUint64(buf[offset:], m.ID)
 	offset += 8
 
+	// encode unix time
+	binary.BigEndian.PutUint32(buf[offset:], m.UnixTime)
+	offset += 4
+
 	// encode route
 	if compressed {
 		// encode compressed route ID
@@ -184,6 +188,10 @@ func (c *CodecEntity) DecodeMessage(data []byte) (*message.Message, error) {
 	// decode msg ID
 	m.ID = binary.BigEndian.Uint64(data[offset:])
 	offset += 8
+
+	// decode unix time
+	m.UnixTime = binary.BigEndian.Uint32(data[offset:])
+	offset += 4
 
 	// decode route
 	if c.compressed.Load() {
