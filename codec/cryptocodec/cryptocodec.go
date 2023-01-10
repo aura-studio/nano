@@ -2,6 +2,7 @@ package cryptocodec
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -235,14 +236,14 @@ func (c *CodecEntity) DecodeMessage(data []byte) (*message.Message, error) {
 }
 
 type Codec struct {
-	method Method
-	key    []byte
+	method    Method
+	base64Key string
 }
 
-func NewCodec(method Method, key []byte) *Codec {
+func NewCodec(method Method, base64Key string) *Codec {
 	return &Codec{
-		method: method,
-		key:    key,
+		method:    method,
+		base64Key: base64Key,
 	}
 }
 
@@ -250,5 +251,11 @@ func (c *Codec) Entity(dictionary message.Dictionary) codec.CodecEntity {
 	if dictionary == nil {
 		dictionary = message.EmptyDictionary
 	}
-	return NewCodecEntity(dictionary, c.method, c.key)
+
+	key, err := base64.StdEncoding.DecodeString(c.base64Key)
+	if err != nil {
+		panic(err)
+	}
+
+	return NewCodecEntity(dictionary, c.method, key)
 }
