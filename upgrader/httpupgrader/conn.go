@@ -124,10 +124,11 @@ func (c *Conn) Read(b []byte) (int, error) {
 		}
 
 		msg := &message.Message{
-			Type:  message.Request,
-			Route: route,
-			ID:    1,
-			Data:  data,
+			Type:     message.Request,
+			Route:    route,
+			ID:       1,
+			UnixTime: uint32(time.Now().Unix()),
+			Data:     data,
 		}
 		m, err := c.codecEntity.EncodeMessage(msg)
 		if err != nil {

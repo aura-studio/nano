@@ -12,7 +12,7 @@ type (
 	Options struct {
 		name        string               // component name
 		serializer  serialize.Serializer // serializer for connector
-		wsPath      string               //websocket path
+		wsPath      string               // websocket path
 		isWebSocket bool                 // is websocket
 		logger      log.Logger           // logger
 		codec       codec.Codec          // codec

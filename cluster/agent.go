@@ -289,6 +289,7 @@ func (a *agent) write() {
 				Branch:   a.session.Branch(),
 				ShortVer: a.session.ShortVer(),
 				ID:       data.mid,
+				UnixTime: uint32(time.Now().Unix()),
 				Route:    data.route,
 				Data:     payload,
 			}

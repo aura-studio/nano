@@ -9,6 +9,7 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/aura-studio/nano/cluster"
 	"github.com/aura-studio/nano/codec"
@@ -170,6 +171,7 @@ func (c *Connector) Request(route string, v interface{}, callback Callback) erro
 		ShortVer: env.ShortVersion,
 		Route:    route,
 		ID:       c.mid,
+		UnixTime: uint32(time.Now().Unix()),
 		Data:     data,
 	}
 
@@ -201,6 +203,7 @@ func (c *Connector) Notify(route string, v interface{}) error {
 		Branch:   c.branch,
 		ShortVer: env.ShortVersion,
 		Route:    route,
+		UnixTime: uint32(time.Now().Unix()),
 		Data:     data,
 	}
 	return c.sendMessage(msg)
