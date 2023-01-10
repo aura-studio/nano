@@ -5,13 +5,13 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"log"
 	"sync/atomic"
 
 	"github.com/aura-studio/nano/codec"
 	"github.com/aura-studio/nano/env"
 	"github.com/aura-studio/nano/message"
 	"github.com/aura-studio/nano/packet"
-	"github.com/forgoer/openssl"
 )
 
 const (
@@ -33,11 +33,8 @@ var (
 	ErrInvalidRouteLength = errors.New("codec: invalid route length")
 )
 
-var (
-	aesKey = []byte{0x50, 0x5a, 0x48, 0x70, 0x59, 0x30, 0x69, 0x63, 0x64, 0x63, 0x36, 0x63, 0x73, 0x46, 0x51, 0x6c}
-)
-
 type CodecEntity struct {
+	crypto     *Crypto
 	dictionary message.Dictionary
 	writeBuf   *bytes.Buffer
 	readBuf    *bytes.Buffer
@@ -45,8 +42,13 @@ type CodecEntity struct {
 	compressed *atomic.Bool // whether to use compressed msg to client
 }
 
-func NewCodecEntity(dictionary message.Dictionary) *CodecEntity {
+func NewCodecEntity(dictionary message.Dictionary, method Method, key []byte) *CodecEntity {
+	crypto, err := NewCrypto(method, key)
+	if err != nil {
+		log.Panic(err)
+	}
 	return &CodecEntity{
+		crypto:     crypto,
 		writeBuf:   bytes.NewBuffer(nil),
 		readBuf:    bytes.NewBuffer(nil),
 		size:       -1,
@@ -160,17 +162,17 @@ func (c *CodecEntity) EncodeMessage(m *message.Message) ([]byte, error) {
 		buf = append(buf, []byte(m.Route)...)
 	}
 
-	crypt, err := openssl.AesECBEncrypt(m.Data, aesKey, openssl.PKCS7_PADDING)
+	buf = append(buf, m.Data...)
+
+	return c.crypto.Encode(buf)
+}
+
+func (c *CodecEntity) DecodeMessage(data []byte) (*message.Message, error) {
+	data, err := c.crypto.Decode(data)
 	if err != nil {
 		return nil, err
 	}
 
-	buf = append(buf, crypt...)
-
-	return buf, nil
-}
-
-func (c *CodecEntity) DecodeMessage(data []byte) (*message.Message, error) {
 	if len(data) < msgHeadLength {
 		return nil, ErrInvalidMessage
 	}
@@ -219,25 +221,26 @@ func (c *CodecEntity) DecodeMessage(data []byte) (*message.Message, error) {
 		offset += uint64(rl)
 	}
 
-	plain, err := openssl.AesECBDecrypt(data[offset:], aesKey, openssl.PKCS7_PADDING)
-	if err != nil {
-		panic(err)
-	}
-	m.Data = plain
+	m.Data = data[offset:]
 
 	return m, nil
 }
 
 type Codec struct {
+	method Method
+	key    []byte
 }
 
-func NewCodec() *Codec {
-	return &Codec{}
+func NewCodec(method Method, key []byte) *Codec {
+	return &Codec{
+		method: method,
+		key:    key,
+	}
 }
 
 func (c *Codec) Entity(dictionary message.Dictionary) codec.CodecEntity {
 	if dictionary == nil {
 		dictionary = message.EmptyDictionary
 	}
-	return NewCodecEntity(dictionary)
+	return NewCodecEntity(dictionary, c.method, c.key)
 }
