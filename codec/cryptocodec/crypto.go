@@ -63,6 +63,14 @@ type AESGCM struct{}
 var aesgcm = &AESGCM{}
 
 func (*AESGCM) Encrypt(plaintext, key []byte) ([]byte, error) {
+	nonce := make([]byte, 12)
+	if _, err := rand.Read(nonce); err != nil {
+		return nil, err
+	}
+	return aesgcm.EncryptWithNonce(plaintext, key, nonce)
+}
+
+func (*AESGCM) EncryptWithNonce(plaintext, key []byte, nonce []byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err
@@ -70,11 +78,6 @@ func (*AESGCM) Encrypt(plaintext, key []byte) ([]byte, error) {
 
 	aesgcm, err := cipher.NewGCM(block)
 	if err != nil {
-		return nil, err
-	}
-
-	nonce := make([]byte, 12)
-	if _, err := rand.Read(nonce); err != nil {
 		return nil, err
 	}
 
