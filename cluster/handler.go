@@ -24,6 +24,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"math"
 	"math/rand"
 	"net"
 	"reflect"
@@ -361,8 +362,8 @@ func (h *LocalHandler) processPacket(agent *agent, p *packet.Packet) error {
 		return fmt.Errorf("invalid message id: %d", msg.ID)
 	}
 	agent.session.MaxMid.Store(msg.ID)
-	
-	if uint32(time.Now().Unix())-msg.UnixTime > 10 {
+
+	if math.Abs(float64(time.Now().Unix())-float64(msg.UnixTime)) > 10 {
 		return fmt.Errorf("invalid message time: %d", msg.UnixTime)
 	}
 
