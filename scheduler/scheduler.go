@@ -30,11 +30,6 @@ import (
 	"github.com/aura-studio/nano/session"
 )
 
-const (
-	messageQueueBacklog = 1 << 10
-	sessionCloseBacklog = 1 << 8
-)
-
 // Task is the unit to be scheduled
 type Task func()
 
