@@ -18,13 +18,16 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package json
+package rawstring
 
 import (
-	"encoding/json"
+	"errors"
 )
 
-// Serializer implements the serialize.Serializer interface
+// ErrWrongValueType is the error used for marshal the value with protobuf encoding.
+var ErrWrongValueType = errors.New("rawstring: convert on wrong type value")
+
+// Serializer implements the serializer.Serializer interface
 type Serializer struct{}
 
 // NewSerializer returns a new Serializer.
@@ -32,13 +35,26 @@ func NewSerializer() *Serializer {
 	return &Serializer{}
 }
 
-// Marshal returns the JSON encoding of v.
+// Marshal returns the protobuf encoding of v.
 func (s *Serializer) Marshal(v interface{}) ([]byte, error) {
-	return json.Marshal(v)
+	str, ok := v.(*string)
+	if !ok {
+		return nil, ErrWrongValueType
+	}
+	return []byte(*str), nil
 }
 
-// Unmarshal parses the JSON-encoded data and stores the result
+// Unmarshal parses the protobuf-encoded data and stores the result
 // in the value pointed to by v.
 func (s *Serializer) Unmarshal(data []byte, v interface{}) error {
-	return json.Unmarshal(data, v)
+	str, ok := v.(*string)
+	if !ok {
+		return ErrWrongValueType
+	}
+	*str = string(data)
+	return nil
+}
+
+func (s *Serializer) String() string {
+	return "rawstring"
 }

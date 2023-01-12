@@ -18,7 +18,16 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-package serialize
+package serializer
+
+import (
+	"fmt"
+
+	"github.com/aura-studio/nano/serializer/auto"
+	"github.com/aura-studio/nano/serializer/json"
+	"github.com/aura-studio/nano/serializer/protobuf"
+	"github.com/aura-studio/nano/serializer/rawstring"
+)
 
 type (
 
@@ -38,3 +47,40 @@ type (
 		Unmarshaler
 	}
 )
+
+type SerializerType uint32
+
+const (
+	Auto SerializerType = iota
+	JSON
+	Protobuf
+	RawString
+)
+
+var serializerTypeStrMap = map[SerializerType]string{
+	Auto:      "Auto",
+	JSON:      "JSON",
+	Protobuf:  "Protobuf",
+	RawString: "RawString",
+}
+
+var serializerTypeSerializerMap = map[SerializerType]Serializer{
+	Auto:      auto.NewSerializer(),
+	JSON:      json.NewSerializer(),
+	Protobuf:  protobuf.NewSerializer(),
+	RawString: rawstring.NewSerializer(),
+}
+
+func (t SerializerType) String() string {
+	if s, ok := serializerTypeStrMap[t]; ok {
+		return s
+	}
+	return "Unknown"
+}
+
+func (t SerializerType) Serializer() Serializer {
+	if s, ok := serializerTypeSerializerMap[t]; ok {
+		return s
+	}
+	panic(fmt.Errorf("serializer type %v not found", t))
+}

@@ -11,7 +11,7 @@ import (
 	"github.com/aura-studio/nano/message"
 	"github.com/aura-studio/nano/persist"
 	"github.com/aura-studio/nano/pipeline"
-	"github.com/aura-studio/nano/serialize"
+	"github.com/aura-studio/nano/serializer"
 	"google.golang.org/grpc"
 )
 
@@ -114,10 +114,10 @@ func WithTimerPrecision(precision time.Duration) Option {
 
 // WithSerializer customizes application serializer, which automatically Marshal
 // and UnMarshal handler payload
-func WithSerializer(serializer serialize.Serializer) Option {
+func WithSerializer(serializerType serializer.SerializerType) Option {
 	return func(opt *cluster.Options) {
-		env.Serializer = serializer
-		env.SerializerType = message.GetSerializerType(serializer)
+		env.Serializer = serializerType.Serializer()
+		env.SerializerType = serializerType
 	}
 }
 

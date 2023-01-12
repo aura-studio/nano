@@ -5,60 +5,18 @@ import (
 
 	"github.com/aura-studio/nano/cluster/clusterpb"
 	"github.com/aura-studio/nano/env"
-	"github.com/aura-studio/nano/serialize"
-	"github.com/aura-studio/nano/serialize/json"
-	"github.com/aura-studio/nano/serialize/protobuf"
-	"github.com/aura-studio/nano/serialize/rawstring"
-)
-
-const (
-	Unknown uint32 = iota
-	JSON
-	Protobuf
-	RawString
-)
-
-var (
-	jsonSerializer      = json.NewSerializer()
-	protobufSerializer  = protobuf.NewSerializer()
-	rawStringSerializer = rawstring.NewSerializer()
+	"github.com/aura-studio/nano/serializer"
 )
 
 var (
 	// Serializers is a map from route to serializer
-	Serializers = make(map[string]serialize.Serializer)
+	Serializers = make(map[string]serializer.Serializer)
 
 	rw sync.RWMutex
 )
 
-func GetSerializerType(s serialize.Serializer) uint32 {
-	switch s.(type) {
-	case *json.Serializer:
-		return JSON
-	case *protobuf.Serializer:
-		return Protobuf
-	case *rawstring.Serializer:
-		return RawString
-	default:
-		return Unknown
-	}
-}
-
-func GetSerializer(typ uint32) serialize.Serializer {
-	switch typ {
-	case JSON:
-		return jsonSerializer
-	case Protobuf:
-		return protobufSerializer
-	case RawString:
-		return rawStringSerializer
-	default:
-		return env.Serializer
-	}
-}
-
 // DuplicateSerializers returns serializers for compressed route.
-func DuplicateSerializers() map[string]serialize.Serializer {
+func DuplicateSerializers() map[string]serializer.Serializer {
 	rw.RLock()
 	defer rw.RUnlock()
 
@@ -66,22 +24,22 @@ func DuplicateSerializers() map[string]serialize.Serializer {
 }
 
 // WriteSerializerItem is to set serializer item when server registers.
-func WriteSerializerItem(route string, typ uint32) map[string]serialize.Serializer {
+func WriteSerializerItem(route string, typ serializer.SerializerType) map[string]serializer.Serializer {
 	rw.Lock()
 	defer rw.Unlock()
 
-	Serializers[route] = GetSerializer(typ)
+	Serializers[route] = serializer.SerializerType(typ).Serializer()
 
 	return Serializers
 }
 
 // WriteSerializers is to set serializers when new serializer dictionary is found.
-func WriteSerializers(items []*clusterpb.DictionaryItem) map[string]serialize.Serializer {
+func WriteSerializers(items []*clusterpb.DictionaryItem) map[string]serializer.Serializer {
 	rw.Lock()
 	defer rw.Unlock()
 
 	for _, item := range items {
-		Serializers[item.Route] = GetSerializer(item.Serializer)
+		Serializers[item.Route] = serializer.SerializerType(item.Serializer).Serializer()
 	}
 
 	return Serializers
@@ -98,7 +56,7 @@ func Serialize(v interface{}) ([]byte, error) {
 	return data, nil
 }
 
-func RouteSerialize(serializers map[string]serialize.Serializer, route string, v interface{}) ([]byte, error) {
+func RouteSerialize(serializers map[string]serializer.Serializer, route string, v interface{}) ([]byte, error) {
 	if data, ok := v.([]byte); ok {
 		return data, nil
 	}

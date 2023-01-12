@@ -25,8 +25,8 @@ package env
 import (
 	"time"
 
-	"github.com/aura-studio/nano/serialize"
-	"github.com/aura-studio/nano/serialize/auto"
+	"github.com/aura-studio/nano/serializer"
+	"github.com/aura-studio/nano/serializer/auto"
 	"github.com/aura-studio/snowflake"
 	"google.golang.org/grpc"
 )
@@ -55,10 +55,10 @@ var (
 	GlobalTicker *time.Ticker
 
 	// Serializer is message serializer, json or protobuf
-	Serializer serialize.Serializer
+	Serializer serializer.Serializer
 
 	// Serializer is message serializer, json or protobuf
-	SerializerType uint32
+	SerializerType serializer.SerializerType
 
 	// GrpcOptions is options for grpc
 	GrpcOptions = []grpc.DialOption{grpc.WithInsecure()}

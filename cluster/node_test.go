@@ -6,7 +6,7 @@ import (
 
 	"github.com/aura-studio/nano/message"
 
-	"github.com/aura-studio/nano/serialize/protobuf"
+	"github.com/aura-studio/nano/serializer/protobuf"
 
 	"github.com/aura-studio/nano/benchmark/testdata"
 	"github.com/aura-studio/nano/cluster"

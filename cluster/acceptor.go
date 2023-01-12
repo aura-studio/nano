@@ -8,7 +8,7 @@ import (
 	"github.com/aura-studio/nano/env"
 	"github.com/aura-studio/nano/log"
 	"github.com/aura-studio/nano/message"
-	"github.com/aura-studio/nano/serialize"
+	"github.com/aura-studio/nano/serializer"
 	"github.com/aura-studio/nano/session"
 )
 
@@ -18,7 +18,7 @@ type acceptor struct {
 	session     *session.Session
 	rpcHandler  rpcHandler
 	gateAddr    string
-	serializers map[string]serialize.Serializer // copy system serializers for agent
+	serializers map[string]serializer.Serializer // copy system serializers for agent
 	remoteAddr  net.Addr
 }
 

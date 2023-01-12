@@ -16,7 +16,7 @@ import (
 	"github.com/aura-studio/nano/codec/plaincodec"
 	"github.com/aura-studio/nano/env"
 	"github.com/aura-studio/nano/log"
-	"github.com/aura-studio/nano/serialize/protobuf"
+	"github.com/aura-studio/nano/serializer/protobuf"
 	"github.com/gorilla/websocket"
 
 	"github.com/aura-studio/nano/message"

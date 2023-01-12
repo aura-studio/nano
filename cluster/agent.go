@@ -34,7 +34,7 @@ import (
 	"github.com/aura-studio/nano/message"
 	"github.com/aura-studio/nano/packet"
 	"github.com/aura-studio/nano/pipeline"
-	"github.com/aura-studio/nano/serialize"
+	"github.com/aura-studio/nano/serializer"
 	"github.com/aura-studio/nano/service"
 	"github.com/aura-studio/nano/session"
 )
@@ -64,8 +64,8 @@ type (
 		pipeline pipeline.Pipeline
 
 		rpcHandler  rpcHandler
-		srv         reflect.Value                   // cached session reflect.Value
-		serializers map[string]serialize.Serializer // copy system serializers for agent
+		srv         reflect.Value                    // cached session reflect.Value
+		serializers map[string]serializer.Serializer // copy system serializers for agent
 
 		codecEntity   codec.CodecEntity
 		payloadLength int
