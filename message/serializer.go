@@ -28,7 +28,7 @@ func WriteSerializerItem(route string, typ serializer.SerializerType) map[string
 	rw.Lock()
 	defer rw.Unlock()
 
-	Serializers[route] = serializer.SerializerType(typ).Serializer()
+	Serializers[route] = typ.Serializer()
 
 	return Serializers
 }
