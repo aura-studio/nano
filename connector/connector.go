@@ -77,7 +77,7 @@ func NewConnector(opts ...Option) *Connector {
 	}
 
 	if c.Options.logger != nil {
-		log.SetLogger(c.logger)
+		log.Use(c.logger)
 	}
 
 	if c.Options.codec == nil {

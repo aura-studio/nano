@@ -85,7 +85,7 @@ func Serve(opts ...Option) {
 		option(&opt)
 	}
 
-	log.SetLogger(opt.Logger)
+	log.Use(opt.Logger)
 	log.Infoln("Nano server is starting...")
 
 	// Use listen address as client address in non-cluster mode

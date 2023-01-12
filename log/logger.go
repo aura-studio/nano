@@ -80,7 +80,7 @@ type LevelLogger interface {
 }
 
 func init() {
-	SetLogger(log.New(os.Stderr, "", log.LstdFlags|log.Lshortfile))
+	Use(log.New(os.Stderr, "", log.LstdFlags|log.Lshortfile))
 }
 
 // log
@@ -96,10 +96,7 @@ var (
 	Panicf  func(format string, v ...interface{})
 	Panic   func(v ...interface{})
 	Panicln func(v ...interface{})
-)
 
-//logext
-var (
 	Tracef  func(format string, v ...interface{})
 	Trace   func(v ...interface{})
 	Traceln func(v ...interface{})
@@ -125,8 +122,8 @@ var (
 	Errorln func(v ...interface{})
 )
 
-// SetLogger rewrites the default logger
-func SetLogger(logger Logger) {
+// Use rewrites the default logger
+func Use(logger Logger) {
 	if logger == nil {
 		return
 	}
