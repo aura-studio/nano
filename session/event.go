@@ -27,7 +27,7 @@ func OnClosed(f func(*Session)) {
 	onClosed = append(onClosed, f)
 }
 
-// Inited call all funcs that was registerd by OnInited
+// Inited call all funcs that was registered by OnInited
 func Inited(s *Session) {
 	for _, f := range onInited {
 		f(s)

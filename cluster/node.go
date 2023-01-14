@@ -93,7 +93,7 @@ type Node struct {
 	grpcResolver grpcresolver.Builder
 
 	mu       sync.RWMutex
-	sessions map[int64]*session.Session
+	sessions map[uint64]*session.Session
 	state    uint32
 }
 
@@ -102,7 +102,7 @@ func (n *Node) Startup() error {
 	n.setServerID()
 
 	n.etcdManagers = map[string]endpoints.Manager{}
-	n.sessions = map[int64]*session.Session{}
+	n.sessions = map[uint64]*session.Session{}
 	n.cluster = newCluster(n)
 	n.handler = newHandler(n)
 	n.transmitter = newTransmitter(n)
@@ -459,7 +459,7 @@ func (n *Node) storeSession(s *session.Session) {
 	n.mu.Unlock()
 }
 
-func (n *Node) findSession(sid int64) *session.Session {
+func (n *Node) findSession(sid uint64) *session.Session {
 	n.mu.RLock()
 	s := n.sessions[sid]
 	n.mu.RUnlock()
@@ -475,7 +475,7 @@ func (n *Node) deleteSession(s *session.Session) {
 	n.mu.Unlock()
 }
 
-func (n *Node) findOrCreateSession(sid int64, gateAddr string, uid int64, shortVer uint32, remoteAddr net.Addr, branch uint32) (*session.Session, error) {
+func (n *Node) findOrCreateSession(sid uint64, gateAddr string, uid int64, shortVer uint32, remoteAddr net.Addr, branch uint32) (*session.Session, error) {
 	n.mu.RLock()
 	s, found := n.sessions[sid]
 	n.mu.RUnlock()

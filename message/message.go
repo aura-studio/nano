@@ -48,13 +48,14 @@ func (t Type) String() string {
 
 // Message represents a unmarshaled message or a message which to be marshaled
 type Message struct {
-	Type     Type   // message type
-	Branch   uint32 // client branch
-	ShortVer uint32 // message short version
-	ID       uint64 // unique id, zero while notify mode
-	UnixTime uint32 // unix time in seconds
-	Route    string // route for locating service
-	Data     []byte // payload
+	Type      Type   // message type
+	Branch    uint32 // client branch
+	ShortVer  uint32 // message short version
+	ID        uint64 // unique id, zero while notify mode
+	UnixTime  uint32 // unix time in seconds
+	SessionID uint64 // server session id int64
+	Route     string // route for locating service
+	Data      []byte // payload
 }
 
 // New returns a new message instance

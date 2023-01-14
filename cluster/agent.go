@@ -95,11 +95,11 @@ func newAgent(conn net.Conn, pipeline pipeline.Pipeline, rpcHandler rpcHandler,
 	}
 
 	// binding session
-	var sid int64
+	var sid uint64
 	if env.SnowflakeNode != nil {
-		sid = env.SnowflakeNode.Generate().Int64()
+		sid = uint64(env.SnowflakeNode.Generate().Int64())
 	} else {
-		sid = int64(serverID) + service.Connections.SessionID()<<32
+		sid = uint64(serverID) + uint64(service.Connections.SessionID()<<32)
 	}
 
 	s := session.New(a, sid)
@@ -285,13 +285,14 @@ func (a *agent) write() {
 
 			// construct message and encode
 			m := &message.Message{
-				Type:     data.typ,
-				Branch:   a.session.Branch(),
-				ShortVer: a.session.ShortVer(),
-				ID:       data.mid,
-				UnixTime: uint32(time.Now().Unix()),
-				Route:    data.route,
-				Data:     payload,
+				Type:      data.typ,
+				Branch:    a.session.Branch(),
+				ShortVer:  a.session.ShortVer(),
+				ID:        data.mid,
+				UnixTime:  uint32(time.Now().Unix()),
+				SessionID: a.session.SID(),
+				Route:     data.route,
+				Data:      payload,
 			}
 			if pipe := a.pipeline; pipe != nil {
 				err := pipe.Outbound().Process(a.session, m)

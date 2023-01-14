@@ -43,9 +43,9 @@ type SessionFilter func(*session.Session) bool
 // sessions, data send to the group will send to all session in it.
 type Group struct {
 	mu       sync.RWMutex
-	status   int32                      // channel current status
-	name     string                     // channel name
-	sessions map[int64]*session.Session // session id map to session instance
+	status   int32                       // channel current status
+	name     string                      // channel name
+	sessions map[uint64]*session.Session // session id map to session instance
 }
 
 // NewGroup returns a new group instance
@@ -53,7 +53,7 @@ func NewGroup(n string) *Group {
 	return &Group{
 		status:   groupStatusWorking,
 		name:     n,
-		sessions: make(map[int64]*session.Session),
+		sessions: make(map[uint64]*session.Session),
 	}
 }
 
@@ -195,7 +195,7 @@ func (c *Group) LeaveAll() error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	c.sessions = make(map[int64]*session.Session)
+	c.sessions = make(map[uint64]*session.Session)
 	return nil
 }
 
@@ -223,6 +223,6 @@ func (c *Group) Close() error {
 	atomic.StoreInt32(&c.status, groupStatusClosed)
 
 	// release all reference
-	c.sessions = make(map[int64]*session.Session)
+	c.sessions = make(map[uint64]*session.Session)
 	return nil
 }

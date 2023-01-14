@@ -44,7 +44,7 @@ type EventCallback func(*Session, ...interface{})
 // parameter.
 type KernelSession struct {
 	sync.RWMutex                                       // protect data
-	id                 int64                           // session global unique id
+	id                 uint64                          // session global unique id
 	branch             uint32                          // logic branch
 	VersionBound       bool                            // session version bound
 	shortVer           uint32                          // session short version
@@ -60,7 +60,7 @@ type KernelSession struct {
 
 // New returns a new session instance
 // a NetworkEntity is a low-level network instance
-func NewKernelSession(entity NetworkEntity, id int64) *KernelSession {
+func NewKernelSession(entity NetworkEntity, id uint64) *KernelSession {
 	return &KernelSession{
 		id:       id,
 		entity:   entity,

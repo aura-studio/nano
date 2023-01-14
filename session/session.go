@@ -28,7 +28,7 @@ func (s *Session) Response(route string, v interface{}) error {
 
 // New returns a new session instance
 // a NetworkEntity is a low-level network instance
-func New(entity NetworkEntity, id int64) *Session {
+func New(entity NetworkEntity, id uint64) *Session {
 	return &Session{
 		KernelSession: NewKernelSession(entity, id),
 	}
@@ -42,27 +42,24 @@ func Context(s *Session, lastMid uint64) *Session {
 }
 
 // ID returns the session id
-func (s *Session) ID() int64 {
-	if env.SnowflakeNode != nil {
-		id := snowflake.ID(s.id)
-		return id.Time(env.SnowflakeNode)<<10 + id.Step(env.SnowflakeNode)
-	}
+func (s *Session) ID() uint64 {
 	return s.id
 }
 
-func (s *Session) SID() int64 {
+func (s *Session) SID() uint64 {
 	if env.SnowflakeNode != nil {
 		id := snowflake.ID(s.id)
-		return id.Node(env.SnowflakeNode)
+		return uint64(id.Time(env.SnowflakeNode)<<10 + id.Step(env.SnowflakeNode))
 	}
-	return s.id >> 32
+	return s.id >> 32 // SID is high 32 bit of id
 }
 
-func (s *Session) SSID() int64 {
+func (s *Session) SSID() uint64 {
 	if env.SnowflakeNode != nil {
-		return s.id
+		id := snowflake.ID(s.id)
+		return uint64(id.Node(env.SnowflakeNode))
 	}
-	return s.id % (1 << 32)
+	return s.id % (1 << 32) // SSID is low 32 bit of id
 }
 
 // UID returns uid that bind to current session

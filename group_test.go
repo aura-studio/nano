@@ -14,7 +14,7 @@ func TestChannel_Add(t *testing.T) {
 	w := make(chan bool, paraCount)
 	for i := 0; i < paraCount; i++ {
 		go func(id int) {
-			s := session.New(nil, int64(id+1))
+			s := session.New(nil, uint64(id+1))
 			s.BindUID(int64(id + 1))
 			c.Add(s)
 			w <- true

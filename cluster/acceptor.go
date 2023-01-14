@@ -13,7 +13,7 @@ import (
 )
 
 type acceptor struct {
-	sid         int64
+	sid         uint64
 	gateClient  clusterpb.MemberClient
 	session     *session.Session
 	rpcHandler  rpcHandler
