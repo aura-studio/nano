@@ -357,15 +357,22 @@ func (h *LocalHandler) processPacket(agent *agent, p *packet.Packet) error {
 		session.Inited(agent.session)
 	}
 
+	// Check message id
 	maxMid := agent.session.MaxMid.Load()
-	if msg.ID != +1 {
+	if msg.ID != maxMid+1 {
 		return fmt.Errorf("invalid message id: send: %d, maxID: %d, delta: %d", msg.ID, maxMid, msg.ID-maxMid)
 	}
 	agent.session.MaxMid.Store(msg.ID)
 
+	// Check message time
 	now := time.Now().Unix()
 	if int64(msg.UnixTime) > now+10 || int64(msg.UnixTime) < now-10 {
 		return fmt.Errorf("invalid message time: send: %d, recv: %d, cost: %d(s)", msg.UnixTime, now, now-int64(msg.UnixTime))
+	}
+
+	// Check message session id
+	if msg.ID > 1 && msg.SessionID != agent.session.ID() {
+		return fmt.Errorf("invalid message session id: send: %d, recv: %d", msg.SessionID, agent.session.ID())
 	}
 
 	h.processMessage(agent.session, msg, false)

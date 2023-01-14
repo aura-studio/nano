@@ -37,6 +37,7 @@ type (
 		die            chan struct{} // connector close channel
 		chSend         chan []byte   // send queue
 		mid            uint64        // message id
+		sid            uint64        // session id
 		connected      int32         // connected state 1: disconnected : 0
 		connectedEvent Callback      // connected callback
 		chReady        chan struct{} // connector ready channel
@@ -63,6 +64,7 @@ func NewConnector(opts ...Option) *Connector {
 		die:             make(chan struct{}),
 		chSend:          make(chan []byte, 256),
 		mid:             1,
+		sid:             0,
 		connected:       0,
 		connectedEvent:  func(data interface{}) {},
 		chReady:         make(chan struct{}, 1),
@@ -166,13 +168,14 @@ func (c *Connector) Request(route string, v interface{}, callback Callback) erro
 	}
 
 	msg := &message.Message{
-		Type:     message.Request,
-		Branch:   c.branch,
-		ShortVer: env.ShortVersion,
-		Route:    route,
-		ID:       c.mid,
-		UnixTime: uint32(time.Now().Unix()),
-		Data:     data,
+		Type:      message.Request,
+		Branch:    c.branch,
+		ShortVer:  env.ShortVersion,
+		Route:     route,
+		ID:        c.mid,
+		UnixTime:  uint32(time.Now().Unix()),
+		SessionID: atomic.LoadUint64(&c.mid),
+		Data:      data,
 	}
 
 	c.setResponseHandler(c.mid, callback)
@@ -199,12 +202,13 @@ func (c *Connector) Notify(route string, v interface{}) error {
 	}
 
 	msg := &message.Message{
-		Type:     message.Notify,
-		Branch:   c.branch,
-		ShortVer: env.ShortVersion,
-		Route:    route,
-		UnixTime: uint32(time.Now().Unix()),
-		Data:     data,
+		Type:      message.Notify,
+		Branch:    c.branch,
+		ShortVer:  env.ShortVersion,
+		Route:     route,
+		UnixTime:  uint32(time.Now().Unix()),
+		SessionID: atomic.LoadUint64(&c.mid),
+		Data:      data,
 	}
 	return c.sendMessage(msg)
 }
@@ -380,6 +384,8 @@ func (c *Connector) processPacket(p *packet.Packet) {
 }
 
 func (c *Connector) processMessage(msg *message.Message) {
+	atomic.StoreUint64(&c.mid, msg.SessionID)
+
 	switch msg.Type {
 	case message.Push:
 		cb, ok := c.eventHandler(msg.Route)
