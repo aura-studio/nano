@@ -93,3 +93,11 @@ func ParseSerializerType(s string) (SerializerType, error) {
 	}
 	return 0, fmt.Errorf("serializer type %v not found", s)
 }
+
+func MustSerializerType(s string) SerializerType {
+	t, err := ParseSerializerType(s)
+	if err != nil {
+		panic(err)
+	}
+	return t
+}
