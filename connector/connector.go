@@ -2,7 +2,6 @@ package connector
 
 import (
 	"crypto/tls"
-	"fmt"
 	"io"
 	"net"
 	"net/url"
@@ -16,7 +15,7 @@ import (
 	"github.com/aura-studio/nano/codec/plaincodec"
 	"github.com/aura-studio/nano/env"
 	"github.com/aura-studio/nano/log"
-	"github.com/aura-studio/nano/serializer/protobuf"
+	"github.com/aura-studio/nano/serializer"
 	"github.com/gorilla/websocket"
 
 	"github.com/aura-studio/nano/message"
@@ -59,7 +58,7 @@ type (
 func NewConnector(opts ...Option) *Connector {
 	c := &Connector{
 		Options: Options{
-			serializer: protobuf.NewSerializer(),
+			serializerType: serializer.Protobuf,
 		},
 		die:             make(chan struct{}),
 		chSend:          make(chan []byte, 256),
@@ -246,11 +245,7 @@ func (c *Connector) Serialize(v interface{}) ([]byte, error) {
 		return data, nil
 	}
 
-	if c.serializer == nil {
-		return nil, fmt.Errorf("Serializer is not set")
-	}
-
-	data, err := c.serializer.Marshal(v)
+	data, err := c.serializerType.Serializer().Marshal(v)
 	if err != nil {
 		return nil, err
 	}
@@ -261,15 +256,7 @@ func (c *Connector) Serialize(v interface{}) ([]byte, error) {
 // Deserialize Unmarshals byte slice into customized data
 func (c *Connector) Deserialize(data []byte, v interface{}) error {
 	var err error
-	if c.serializer == nil {
-		v = data
-	}
-
-	if c.serializer == nil {
-		return fmt.Errorf("Serializer is not set")
-	}
-
-	if err = c.serializer.Unmarshal(data, v); err != nil {
+	if err = c.serializerType.Serializer().Unmarshal(data, v); err != nil {
 		return err
 	}
 
@@ -404,5 +391,11 @@ func (c *Connector) processMessage(msg *message.Message) {
 
 		cb(msg)
 		c.setResponseHandler(msg.ID, nil)
+
+	case message.Request, message.Notify:
+		log.Errorln("unsuported message type", msg.Type)
+
+	default:
+		log.Errorln("unsuported message type", msg.Type)
 	}
 }

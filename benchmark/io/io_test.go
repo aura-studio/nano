@@ -50,7 +50,7 @@ func server(t *testing.T) {
 	nano.Serve(
 		nano.WithMemberAddr(addr),
 		nano.WithComponents(&components),
-		nano.WithSerializer(serializer.Protobuf),
+		nano.WithSerializerType(serializer.Protobuf),
 	)
 }
 

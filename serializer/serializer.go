@@ -84,3 +84,12 @@ func (t SerializerType) Serializer() Serializer {
 	}
 	panic(fmt.Errorf("serializer type %v not found", t))
 }
+
+func ParseSerializerType(s string) (SerializerType, error) {
+	for k, v := range serializerTypeStrMap {
+		if v == s {
+			return k, nil
+		}
+	}
+	return 0, fmt.Errorf("serializer type %v not found", s)
+}

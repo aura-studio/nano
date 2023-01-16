@@ -112,11 +112,10 @@ func WithTimerPrecision(precision time.Duration) Option {
 	}
 }
 
-// WithSerializer customizes application serializer, which automatically Marshal
+// WithSerializerType customizes application serializer, which automatically Marshal
 // and UnMarshal handler payload
-func WithSerializer(serializerType serializer.SerializerType) Option {
+func WithSerializerType(serializerType serializer.SerializerType) Option {
 	return func(opt *cluster.Options) {
-		env.Serializer = serializerType.Serializer()
 		env.SerializerType = serializerType
 	}
 }

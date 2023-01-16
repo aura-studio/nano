@@ -10,14 +10,14 @@ import (
 type (
 	// Options contains some configurations for connector
 	Options struct {
-		name        string                // component name
-		serializer  serializer.Serializer // serializer for connector
-		wsPath      string                // websocket path
-		isWebSocket bool                  // is websocket
-		logger      log.Logger            // logger
-		codec       codec.Codec           // codec
-		dictionary  message.Dictionary    // dictionary
-		branch      uint32
+		name           string                    // component name
+		serializerType serializer.SerializerType // serializer for connector
+		wsPath         string                    // websocket path
+		isWebSocket    bool                      // is websocket
+		logger         log.Logger                // logger
+		codec          codec.Codec               // codec
+		dictionary     message.Dictionary        // dictionary
+		branch         uint32
 	}
 
 	// Option used to customize handler
@@ -31,11 +31,11 @@ func WithName(name string) Option {
 	}
 }
 
-// WithSerializer customizes application serializer, which automatically Marshal
+// WithSerializerType customizes application serializer, which automatically Marshal
 // and UnMarshal handler payload
-func WithSerializer(serializer serializer.Serializer) Option {
+func WithSerializerType(serializerType serializer.SerializerType) Option {
 	return func(opt *Options) {
-		opt.serializer = serializer
+		opt.serializerType = serializerType
 	}
 }
 
