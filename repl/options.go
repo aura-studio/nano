@@ -61,9 +61,9 @@ func WithPrettyJSON(prettyJSON bool) Option {
 	}
 }
 
-// WithSerializer customizes application serializer, which automatically Marshal
+// WithSerializerType customizes application serializer, which automatically Marshal
 // and UnMarshal handler payload
-func WithSerializer(serializer serializer.SerializerType) Option {
+func WithSerializerType(serializer serializer.SerializerType) Option {
 	return func(o *Options) {
 		o.SerializerType = serializer
 	}
