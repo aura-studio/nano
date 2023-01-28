@@ -529,7 +529,7 @@ func (h *LocalHandler) localProcess(handler *component.Handler, lastMid uint64, 
 		data = payload
 	} else {
 		data = reflect.New(handler.Type.Elem()).Interface()
-		err := env.Serializer.Unmarshal(payload, data)
+		err := env.SerializerType.Serializer().Unmarshal(payload, data)
 		if err != nil {
 			log.Errorf("Deserialize to %T failed: %+v (%v)", data, err, payload)
 			return

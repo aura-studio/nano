@@ -26,7 +26,6 @@ import (
 	"time"
 
 	"github.com/aura-studio/nano/serializer"
-	"github.com/aura-studio/nano/serializer/auto"
 	"github.com/aura-studio/snowflake"
 	"google.golang.org/grpc"
 )
@@ -50,13 +49,6 @@ var (
 	// TimerPrecision indicates the precision of timer, default is time.Second
 	TimerPrecision = time.Second
 
-	// GlobalTicker represents global ticker that all cron job will be executed
-	// in globalTicker.
-	GlobalTicker *time.Ticker
-
-	// Serializer is message serializer, json or protobuf
-	Serializer serializer.Serializer
-
 	// Serializer is message serializer, json or protobuf
 	SerializerType serializer.SerializerType
 
@@ -78,5 +70,5 @@ func init() {
 	ConnDie = make(chan bool)
 	Debug = false
 	Safe = true
-	Serializer = auto.NewSerializer()
+	SerializerType = serializer.Auto
 }

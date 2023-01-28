@@ -13,13 +13,13 @@ import (
 )
 
 type acceptor struct {
-	sid         uint64
-	gateClient  clusterpb.MemberClient
-	session     *session.Session
-	rpcHandler  rpcHandler
-	gateAddr    string
-	serializers map[string]serializer.Serializer // copy system serializers for agent
-	remoteAddr  net.Addr
+	sid               uint64
+	gateClient        clusterpb.MemberClient
+	session           *session.Session
+	rpcHandler        rpcHandler
+	gateAddr          string
+	serializerTypeMap map[string]serializer.SerializerType // copy system serializers for agent
+	remoteAddr        net.Addr
 }
 
 // Push implements the session.NetworkEntity interface
@@ -52,7 +52,7 @@ func (a *acceptor) Push(route string, v interface{}) error {
 
 // RPC implements the session.NetworkEntity interface
 func (a *acceptor) RPC(mid uint64, route string, v interface{}) error {
-	data, err := message.RouteSerialize(a.serializers, route, v)
+	data, err := message.RouteSerialize(a.serializerTypeMap, route, v)
 	if err != nil {
 		return err
 	}

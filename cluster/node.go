@@ -485,12 +485,12 @@ func (n *Node) findOrCreateSession(sid uint64, gateAddr string, uid int64, short
 			return nil, err
 		}
 		ac := &acceptor{
-			sid:         sid,
-			gateClient:  clusterpb.NewMemberClient(conns.Get()),
-			rpcHandler:  n.handler.processMessage,
-			gateAddr:    gateAddr,
-			serializers: message.DuplicateSerializers(),
-			remoteAddr:  remoteAddr,
+			sid:               sid,
+			gateClient:        clusterpb.NewMemberClient(conns.Get()),
+			rpcHandler:        n.handler.processMessage,
+			gateAddr:          gateAddr,
+			serializerTypeMap: message.DuplicateSerializerTypeMap(),
+			remoteAddr:        remoteAddr,
 		}
 		s = session.New(ac, sid)
 

@@ -63,9 +63,9 @@ type (
 		lastAt   int64               // last heartbeat unix time stamp
 		pipeline pipeline.Pipeline
 
-		rpcHandler  rpcHandler
-		srv         reflect.Value                    // cached session reflect.Value
-		serializers map[string]serializer.Serializer // copy system serializers for agent
+		rpcHandler        rpcHandler
+		srv               reflect.Value                        // cached session reflect.Value
+		serializerTypeMap map[string]serializer.SerializerType // copy system serializers for agent
 
 		codecEntity   codec.CodecEntity
 		payloadLength int
@@ -83,15 +83,15 @@ type (
 func newAgent(conn net.Conn, pipeline pipeline.Pipeline, rpcHandler rpcHandler,
 	codec codec.Codec, serverID uint32) *agent {
 	a := &agent{
-		conn:        conn,
-		state:       statusStart,
-		chDie:       make(chan struct{}),
-		lastAt:      time.Now().Unix(),
-		chSend:      make(chan pendingMessage, agentWriteBacklog),
-		pipeline:    pipeline,
-		rpcHandler:  rpcHandler,
-		serializers: message.DuplicateSerializers(),
-		codecEntity: codec.Entity(message.DuplicateDictionary()),
+		conn:              conn,
+		state:             statusStart,
+		chDie:             make(chan struct{}),
+		lastAt:            time.Now().Unix(),
+		chSend:            make(chan pendingMessage, agentWriteBacklog),
+		pipeline:          pipeline,
+		rpcHandler:        rpcHandler,
+		serializerTypeMap: message.DuplicateSerializerTypeMap(),
+		codecEntity:       codec.Entity(message.DuplicateDictionary()),
 	}
 
 	// binding session
@@ -148,7 +148,7 @@ func (a *agent) RPC(mid uint64, route string, v interface{}) error {
 		return ErrBrokenPipe
 	}
 
-	data, err := message.RouteSerialize(a.serializers, route, v)
+	data, err := message.RouteSerialize(a.serializerTypeMap, route, v)
 	if err != nil {
 		return err
 	}
