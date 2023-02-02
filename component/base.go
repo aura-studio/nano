@@ -29,8 +29,8 @@ func (c *Base) Init() {}
 // AfterInit was called after the component is initialized.
 func (c *Base) AfterInit() {}
 
-// BeforeShutdown was called before the component to shutdown.
-func (c *Base) BeforeShutdown() {}
+// BeforeClose was called before the component to shutdown.
+func (c *Base) BeforeClose() {}
 
-// Shutdown was called to shutdown the component.
-func (c *Base) Shutdown() {}
+// Close was called to shutdown the component.
+func (c *Base) Close() {}

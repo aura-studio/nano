@@ -28,7 +28,7 @@ import (
 )
 
 type (
-	//Handler represents a message.Message's handler's meta information.
+	// Handler represents a message.Message's handler's meta information.
 	Handler struct {
 		Receiver reflect.Value  // receiver of method
 		Method   reflect.Method // method stub

@@ -145,7 +145,7 @@ func Serve(opts ...Option) {
 
 	select {
 	case <-env.Die:
-		log.Infoln("The app will shutdown in a few seconds")
+		log.Infoln("The app will close in a few seconds")
 	case s := <-sg:
 		log.Infoln("Nano server got signal", s)
 	}
@@ -153,14 +153,14 @@ func Serve(opts ...Option) {
 	atomic.StoreInt32(&app.stopping, 1)
 	log.Infoln("Nano server is stopping...")
 
-	node.Shutdown()
+	node.Close()
 	scheduler.Close()
 	atomic.StoreInt32(&app.running, 0)
 	log.Infoln("Nano server stopped")
 }
 
-// Shutdown send a signal to let 'nano' shutdown itself.
-func Shutdown() {
+// Close send a signal to let 'nano' close itself.
+func Close() {
 	close(env.Die)
 }
 

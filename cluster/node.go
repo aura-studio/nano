@@ -313,9 +313,9 @@ func (n *Node) initNode() error {
 	return nil
 }
 
-// Shutdown all components registered by application, that
+// Close all components registered by application, that
 // call by reverse order against register
-func (n *Node) Shutdown() {
+func (n *Node) Close() {
 	atomic.AddUint32(&n.state, 1)
 
 	for {
@@ -327,16 +327,16 @@ func (n *Node) Shutdown() {
 		}
 	}
 CLOSE:
-	// reverse call `BeforeShutdown` hooks
+	// reverse call `BeforeClose` hooks
 	components := n.Components.List()
 	length := len(components)
 	for i := length - 1; i >= 0; i-- {
-		components[i].Comp.BeforeShutdown()
+		components[i].Comp.BeforeClose()
 	}
 
-	// reverse call `Shutdown` hooks
+	// reverse call `Close` hooks
 	for i := length - 1; i >= 0; i-- {
-		components[i].Comp.Shutdown()
+		components[i].Comp.Close()
 	}
 
 	// etcd mode
