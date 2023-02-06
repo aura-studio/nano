@@ -366,7 +366,7 @@ func (h *LocalHandler) processPacket(agent *agent, p *packet.Packet) error {
 
 	// Check message time
 	now := time.Now().Unix()
-	if int64(msg.UnixTime) > now+10 || int64(msg.UnixTime) < now-10 {
+	if msg.ID > 1 && int64(msg.UnixTime) > now+10 || int64(msg.UnixTime) < now-10 {
 		return fmt.Errorf("invalid message time: send: %d, recv: %d, cost: %d(s)", msg.UnixTime, now, now-int64(msg.UnixTime))
 	}
 
