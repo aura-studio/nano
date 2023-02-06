@@ -435,7 +435,7 @@ func registerRemove(shell *ishell.Shell) {
 			if err != nil {
 				c.Err(err)
 			}
-			logger.Printf("successfully removed %s in local command set\n", name)
+			log.Printf("successfully removed %s in local command set\n", name)
 		},
 		Help: "remove a command set in local, usage:remove name",
 	}
@@ -455,7 +455,7 @@ func registerRemove(shell *ishell.Shell) {
 			if err != nil {
 				c.Err(err)
 			}
-			logger.Printf("successfully removed %s in local command set\n", name)
+			log.Printf("successfully removed %s in local command set\n", name)
 		},
 		Help: "remove a command set in local, usage:remove local name",
 	})
@@ -476,7 +476,7 @@ func registerRemove(shell *ishell.Shell) {
 			if err != nil {
 				c.Err(err)
 			}
-			logger.Printf("successfully removed %s in remote command set\n", name)
+			log.Printf("successfully removed %s in remote command set\n", name)
 		},
 		Help: "remove a command set in remote, usage:remove remote name",
 	})
@@ -497,7 +497,7 @@ func registerRemove(shell *ishell.Shell) {
 			if err != nil {
 				c.Err(err)
 			}
-			logger.Printf("successfully removed %s in account command set\n", name)
+			log.Printf("successfully removed %s in account command set\n", name)
 		},
 		Help: "remove a command set in account, usage:remove account name",
 	})

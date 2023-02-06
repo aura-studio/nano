@@ -3,6 +3,7 @@ package repl
 import (
 	"encoding/json"
 
+	"github.com/aura-studio/nano/log"
 	"github.com/go-redis/redis"
 )
 
@@ -37,8 +38,8 @@ func (a *Account) Load() (bool, error) {
 		if err != nil {
 			return isNew, err
 		}
-		logger.Printf("new cli account: %s created", a.Username)
-		logger.Printf("%s logined successfully\n", a.Username)
+		log.Printf("new cli account: %s created", a.Username)
+		log.Printf("%s logined successfully\n", a.Username)
 		return isNew, nil
 	}
 	isNew = false
@@ -49,7 +50,7 @@ func (a *Account) Load() (bool, error) {
 	}
 
 	currentAccount = &tmpAccount
-	logger.Printf("%s logined successfully\n", a.Username)
+	log.Printf("%s logined successfully\n", a.Username)
 	return isNew, nil
 }
 

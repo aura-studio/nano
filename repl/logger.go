@@ -4,6 +4,7 @@ import (
 	l "log"
 	"os"
 
+	"github.com/aura-studio/nano/log"
 	"gopkg.in/abiosoft/ishell.v2"
 )
 
@@ -12,6 +13,13 @@ type Logger interface {
 	Printf(format string, v ...interface{})
 	Print(v ...interface{})
 	Println(v ...interface{})
+}
+
+var logger *CliLogger
+
+func initLogger() {
+	logger = NewCliLogger(nil)
+	log.Use(logger)
 }
 
 // CliLogger log by *ishell.Shell

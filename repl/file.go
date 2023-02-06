@@ -109,7 +109,7 @@ var (
 )
 
 func init() {
-	log.Use(NewCliLogger(nil))
+	initLogger()
 	home, err := homedir.Dir()
 	if err != nil {
 		panic(err)

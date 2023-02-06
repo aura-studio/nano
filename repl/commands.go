@@ -35,6 +35,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/aura-studio/nano/log"
 	"github.com/aura-studio/nano/serializer"
 	"github.com/go-redis/redis"
 
@@ -78,11 +79,11 @@ func connect(addr string, onMessageCallback func(route string, data []byte)) (er
 	}
 
 	pClient.OnConnected(func(data interface{}) {
-		logger.Println("Successfully connected to ", addr)
+		log.Println("Successfully connected to ", addr)
 	})
 
 	if err = tryConnect(addr); err != nil {
-		logger.Println("Failed to connect!")
+		log.Println("Failed to connect!")
 		return err
 	}
 
@@ -97,7 +98,7 @@ func get(args []string) error {
 		var err error
 		defer func() {
 			if err != nil {
-				logger.Println(err.Error())
+				log.Println(err.Error())
 			}
 		}()
 		url := args[0]
@@ -124,7 +125,7 @@ func get(args []string) error {
 		if err != nil {
 			return
 		}
-		logger.Printf("server-> %s\n", string(data))
+		log.Printf("server-> %s\n", string(data))
 	}()
 
 	return nil
@@ -135,7 +136,7 @@ func post(args []string) error {
 		var err error
 		defer func() {
 			if err != nil {
-				logger.Println(err.Error())
+				log.Println(err.Error())
 			}
 		}()
 		url := args[0]
@@ -163,7 +164,7 @@ func post(args []string) error {
 		if err != nil {
 			return
 		}
-		logger.Printf("server-> %s\n", string(data))
+		log.Printf("server-> %s\n", string(data))
 	}()
 
 	return nil
@@ -242,7 +243,7 @@ func notify(args []string) error {
 // disconnect 断开连接
 func disconnect() {
 	if pClient == nil {
-		logger.Println("already disconnected")
+		log.Println("already disconnected")
 		return
 	}
 	if pClient.ConnectedStatus() {
@@ -262,7 +263,7 @@ func history(args []string) error {
 	}
 	f, err := readFile(historyPath)
 	if err != nil {
-		logger.Println(err)
+		log.Println(err)
 		return err
 	}
 	defer f.Close()
@@ -276,7 +277,7 @@ func history(args []string) error {
 			if err == io.EOF {
 				break
 			}
-			logger.Println(err)
+			log.Println(err)
 			return err
 		}
 	}
@@ -287,7 +288,7 @@ func history(args []string) error {
 	}
 	latestLines := allLines[start:]
 	for _, hisCmd := range latestLines {
-		logger.Println(hisCmd)
+		log.Println(hisCmd)
 	}
 	return nil
 }
@@ -327,7 +328,7 @@ func setCommand(shell *ishell.Shell, args []string) error {
 		if exists(args[1]) {
 			f, err := readFile(args[1])
 			if err != nil {
-				logger.Println("open file:%s error:%v", args[1], err)
+				log.Println("open file:%s error:%v", args[1], err)
 				return err
 			}
 			defer f.Close()
@@ -341,7 +342,7 @@ func setCommand(shell *ishell.Shell, args []string) error {
 					if err == io.EOF {
 						break
 					}
-					logger.Println(err)
+					log.Println(err)
 					return err
 				}
 			}
@@ -463,24 +464,24 @@ func upload(localName, remoteName string) error {
 	if err != nil {
 		return err
 	}
-	logger.Printf("upload success, %d bytes transferred\n", length)
+	log.Printf("upload success, %d bytes transferred\n", length)
 	return nil
 }
 
 // listAll show all command sets
 func listAll() error {
-	logger.Println("local:")
+	log.Println("local:")
 	err := listLocal()
 	if err != nil {
 		return err
 	}
-	logger.Println("account:")
+	log.Println("account:")
 	err = listAccount()
 	if err != nil {
 		return err
 	}
 
-	logger.Println("remote:")
+	log.Println("remote:")
 	err = listRemote()
 	if err != nil {
 		return err
@@ -505,7 +506,7 @@ func listLocal() error {
 			} else {
 				prefix = "    "
 			}
-			logger.Printf("%s%s\t%s\t%d bytes\n", prefix, info.Name(), info.ModTime().Format(time.UnixDate), info.Size())
+			log.Printf("%s%s\t%s\t%d bytes\n", prefix, info.Name(), info.ModTime().Format(time.UnixDate), info.Size())
 		}
 		return nil
 	})
@@ -526,7 +527,7 @@ func listRemote() error {
 		return err
 	}
 	for k, v := range result {
-		logger.Printf("    %s\t%d bytes\n", k, len(v))
+		log.Printf("    %s\t%d bytes\n", k, len(v))
 	}
 	return nil
 }
@@ -546,7 +547,7 @@ func listAccount() error {
 			} else {
 				prefix = "    "
 			}
-			logger.Printf("%s%s\t%d bytes\n", prefix, cmdName, calCmdSetLength(cmd))
+			log.Printf("%s%s\t%d bytes\n", prefix, cmdName, calCmdSetLength(cmd))
 		}
 	}
 	return nil
@@ -586,7 +587,7 @@ func download(remoteName, localName string) error {
 		panic(err)
 	}
 
-	logger.Printf("download success, %d bytes transferred\n", len(result))
+	log.Printf("download success, %d bytes transferred\n", len(result))
 	return nil
 }
 

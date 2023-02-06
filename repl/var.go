@@ -15,7 +15,6 @@ const (
 var (
 	pClient        *Client
 	disconnectedCh chan bool
-	logger         *CliLogger
 	currentAccount *Account
 )
 

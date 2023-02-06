@@ -332,7 +332,7 @@ func unloadCurrentCommands(shell *ishell.Shell) error {
 	case LOCAL:
 		cmdPath := filepath.Join(cmdDir, currentSet)
 		if !exists(cmdPath) {
-			logger.Printf("current command set:%s does not exist in local\n", currentSet)
+			log.Printf("current command set:%s does not exist in local\n", currentSet)
 			return nil
 		}
 		f, err := readFile(cmdPath)
@@ -364,7 +364,7 @@ func unloadCurrentCommands(shell *ishell.Shell) error {
 				shell.DeleteCmd(cmdName)
 			}
 		} else {
-			logger.Printf("current command set:%s does not exist in account\n", currentSet)
+			log.Printf("current command set:%s does not exist in account\n", currentSet)
 			return nil
 		}
 	}
