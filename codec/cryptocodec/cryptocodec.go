@@ -128,7 +128,7 @@ func (c *CodecEntity) EncodeMessage(m *message.Message) ([]byte, error) {
 		return nil, ErrWrongMessageType
 	}
 	var offset uint64 = 0
-	buf := make([]byte, 19)
+	buf := make([]byte, 27)
 
 	// encode flag
 	flag := byte(m.Type)
