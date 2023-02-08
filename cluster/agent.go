@@ -81,7 +81,7 @@ type (
 
 // Create new agent instance
 func newAgent(conn net.Conn, pipeline pipeline.Pipeline, rpcHandler rpcHandler,
-	codec codec.Codec, serverID uint32) *agent {
+	codec codec.Codec, nodeID uint32) *agent {
 	a := &agent{
 		conn:              conn,
 		state:             statusStart,
@@ -99,7 +99,7 @@ func newAgent(conn net.Conn, pipeline pipeline.Pipeline, rpcHandler rpcHandler,
 	if env.SnowflakeNode != nil {
 		sid = uint64(env.SnowflakeNode.Generate().Int64())
 	} else {
-		sid = uint64(serverID)<<32 + uint64(service.Connections.SessionID())
+		sid = uint64(nodeID)<<32 + uint64(service.Connections.SessionID())
 	}
 
 	s := session.New(a, sid)

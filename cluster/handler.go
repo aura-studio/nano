@@ -259,7 +259,7 @@ func (h *LocalHandler) RouteHandler(route string) (*component.Handler, error) {
 
 func (h *LocalHandler) handle(conn net.Conn) {
 	// create a client agent and startup write gorontine
-	agent := newAgent(conn, h.pipeline, h.processMessage, h.currentNode.Codec, h.currentNode.ServerID)
+	agent := newAgent(conn, h.pipeline, h.processMessage, h.currentNode.Codec, h.currentNode.NodeID)
 	h.currentNode.storeSession(agent.session)
 
 	// startup write goroutine

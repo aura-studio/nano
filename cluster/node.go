@@ -80,8 +80,8 @@ type Options struct {
 // All services will register to cluster and messages will be forwarded to the node
 // which provides respective service
 type Node struct {
-	Options         // current node options
-	ServerID uint32 // current server service ID
+	Options        // current node options
+	NodeID  uint32 // current node ID
 
 	cluster     *cluster
 	handler     *LocalHandler
@@ -165,10 +165,10 @@ func (n *Node) setServerID() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		n.ServerID = uint32(env.SnowflakeNode.Node())
+		n.NodeID = uint32(env.SnowflakeNode.Node())
 	} else {
 		if n.MemberAddr == "" {
-			n.ServerID = 0
+			n.NodeID = 0
 			return
 		}
 
@@ -181,7 +181,7 @@ func (n *Node) setServerID() {
 		}
 		port, _ := strconv.Atoi(parts[1])
 		addrs, _ := net.LookupHost(host)
-		var serverID = uint32(0)
+		var nodeID = uint32(0)
 		for _, addr := range addrs {
 			bits := strings.Split(addr, ".")
 			if len(bits) != 4 {
@@ -193,16 +193,16 @@ func (n *Node) setServerID() {
 			sum += uint32(b2) << 24
 			sum += uint32(b3) << 16
 			sum += uint32(port)
-			if sum > serverID {
-				serverID = sum
+			if sum > nodeID {
+				nodeID = sum
 			}
 		}
 
-		if serverID == 0 {
-			serverID = rand.Uint32()
+		if nodeID == 0 {
+			nodeID = rand.Uint32()
 		}
 
-		n.ServerID = serverID
+		n.NodeID = nodeID
 	}
 }
 
