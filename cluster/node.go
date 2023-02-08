@@ -23,6 +23,7 @@ package cluster
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"net"
 	"net/http"
 	"strconv"
@@ -196,6 +197,11 @@ func (n *Node) setServerID() {
 				serverID = sum
 			}
 		}
+
+		if serverID == 0 {
+			serverID = rand.Uint32()
+		}
+
 		n.ServerID = serverID
 	}
 }
