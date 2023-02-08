@@ -173,7 +173,7 @@ func (c *Connector) Request(route string, v interface{}, callback Callback) erro
 		Route:     route,
 		ID:        c.mid,
 		UnixTime:  uint32(time.Now().Unix()),
-		SessionID: atomic.LoadUint64(&c.mid),
+		SessionID: atomic.LoadUint64(&c.sid),
 		Data:      data,
 	}
 
@@ -205,8 +205,9 @@ func (c *Connector) Notify(route string, v interface{}) error {
 		Branch:    c.branch,
 		ShortVer:  env.ShortVersion,
 		Route:     route,
+		ID:        0,
 		UnixTime:  uint32(time.Now().Unix()),
-		SessionID: atomic.LoadUint64(&c.mid),
+		SessionID: atomic.LoadUint64(&c.sid),
 		Data:      data,
 	}
 	return c.sendMessage(msg)
@@ -371,7 +372,7 @@ func (c *Connector) processPacket(p *packet.Packet) {
 }
 
 func (c *Connector) processMessage(msg *message.Message) {
-	atomic.StoreUint64(&c.mid, msg.SessionID)
+	atomic.StoreUint64(&c.sid, msg.SessionID)
 
 	switch msg.Type {
 	case message.Push:
