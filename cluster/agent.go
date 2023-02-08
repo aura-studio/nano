@@ -99,7 +99,7 @@ func newAgent(conn net.Conn, pipeline pipeline.Pipeline, rpcHandler rpcHandler,
 	if env.SnowflakeNode != nil {
 		sid = uint64(env.SnowflakeNode.Generate().Int64())
 	} else {
-		sid = uint64(serverID) + uint64(service.Connections.SessionID()<<32)
+		sid = uint64(serverID)<<32 + uint64(service.Connections.SessionID())
 	}
 
 	s := session.New(a, sid)
@@ -132,11 +132,11 @@ func (a *agent) Push(route string, v interface{}) error {
 	if env.Debug {
 		switch d := v.(type) {
 		case []byte:
-			log.Infof("Type=Push, Route=%s, SSID=%d, SID=%d, Version=%s, Branch=%d, UID=%d, MID=%d, Data=%dbytes",
-				route, a.session.SSID(), a.session.SID(), a.session.Version(), a.session.Branch(), a.session.UID(), 0, len(d))
+			log.Infof("Type=Push, Route=%s, NID=%d, SID=%d, Version=%s, Branch=%d, UID=%d, MID=%d, Data=%dbytes",
+				route, a.session.NID(), a.session.SID(), a.session.Version(), a.session.Branch(), a.session.UID(), 0, len(d))
 		default:
-			log.Infof("Type=Push, Route=%s, SSID=%d, SID=%d, Version=%s, Branch=%d, UID=%d, MID=%d, Data=%+v",
-				route, a.session.SSID(), a.session.SID(), a.session.Version(), a.session.Branch(), a.session.UID(), 0, v)
+			log.Infof("Type=Push, Route=%s, NID=%d, SID=%d, Version=%s, Branch=%d, UID=%d, MID=%d, Data=%+v",
+				route, a.session.NID(), a.session.SID(), a.session.Version(), a.session.Branch(), a.session.UID(), 0, v)
 		}
 	}
 
@@ -156,11 +156,11 @@ func (a *agent) RPC(mid uint64, route string, v interface{}) error {
 	if env.Debug {
 		switch d := v.(type) {
 		case []byte:
-			log.Infof("Type=Notify, Route=%s, SSID=%d, SID=%d, Version=%s, Branch=%d, UID=%d, MID=%d, Data=%dbytes",
-				route, a.session.SSID(), a.session.SID(), a.session.Version(), a.session.Branch(), a.session.UID(), mid, len(d))
+			log.Infof("Type=Notify, Route=%s, NID=%d, SID=%d, Version=%s, Branch=%d, UID=%d, MID=%d, Data=%dbytes",
+				route, a.session.NID(), a.session.SID(), a.session.Version(), a.session.Branch(), a.session.UID(), mid, len(d))
 		default:
-			log.Infof("Type=Notify, Route=%s, SSID=%d, SID=%d, Version=%s, Branch=%d, UID=%d, MID=%d, Data=%+v",
-				route, a.session.SSID(), a.session.SID(), a.session.Version(), a.session.Branch(), a.session.UID(), mid, v)
+			log.Infof("Type=Notify, Route=%s, NID=%d, SID=%d, Version=%s, Branch=%d, UID=%d, MID=%d, Data=%+v",
+				route, a.session.NID(), a.session.SID(), a.session.Version(), a.session.Branch(), a.session.UID(), mid, v)
 		}
 	}
 
@@ -190,11 +190,11 @@ func (a *agent) Response(mid uint64, route string, v interface{}) error {
 	if env.Debug {
 		switch d := v.(type) {
 		case []byte:
-			log.Infof("Type=Response, Route=%s, SSID=%d, SID=%d, Version=%s, Branch=%d, UID=%d, MID=%d, Data=%dbytes",
-				route, a.session.SSID(), a.session.SID(), a.session.Version(), a.session.Branch(), a.session.UID(), mid, len(d))
+			log.Infof("Type=Response, Route=%s, NID=%d, SID=%d, Version=%s, Branch=%d, UID=%d, MID=%d, Data=%dbytes",
+				route, a.session.NID(), a.session.SID(), a.session.Version(), a.session.Branch(), a.session.UID(), mid, len(d))
 		default:
-			log.Infof("Type=Response, Route=%s, SSID=%d, SID=%d, Version=%s, Branch=%d, UID=%d, MID=%d, Data=%+v",
-				route, a.session.SSID(), a.session.SID(), a.session.Version(), a.session.Branch(), a.session.UID(), mid, v)
+			log.Infof("Type=Response, Route=%s, NID=%d, SID=%d, Version=%s, Branch=%d, UID=%d, MID=%d, Data=%+v",
+				route, a.session.NID(), a.session.SID(), a.session.Version(), a.session.Branch(), a.session.UID(), mid, v)
 		}
 	}
 
@@ -211,8 +211,8 @@ func (a *agent) Close() error {
 	a.setStatus(statusClosed)
 
 	if env.Debug {
-		log.Infof("Session closed, SSID=%d, SID=%d, UID=%d, IP=%s",
-			a.session.SSID(), a.session.SID(), a.session.UID(), a.conn.RemoteAddr())
+		log.Infof("Session closed, NID=%d, SID=%d, UID=%d, IP=%s",
+			a.session.NID(), a.session.SID(), a.session.UID(), a.conn.RemoteAddr())
 	}
 
 	// prevent closing closed channel
@@ -255,8 +255,8 @@ func (a *agent) write() {
 		close(chWrite)
 		a.Close()
 		if env.Debug {
-			log.Infof("Session write goroutine exit, SSID=%d, SID=%d, UID=%d",
-				a.session.SSID(), a.session.SID(), a.session.UID())
+			log.Infof("Session write goroutine exit, NID=%d, SID=%d, UID=%d",
+				a.session.NID(), a.session.SID(), a.session.UID())
 		}
 	}()
 
@@ -290,7 +290,7 @@ func (a *agent) write() {
 				ShortVer:  a.session.ShortVer(),
 				ID:        data.mid,
 				UnixTime:  uint32(time.Now().Unix()),
-				SessionID: a.session.SID(),
+				SessionID: a.session.ID(),
 				Route:     data.route,
 				Data:      payload,
 			}

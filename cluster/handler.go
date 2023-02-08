@@ -300,7 +300,7 @@ func (h *LocalHandler) handle(conn net.Conn) {
 		agent.Close()
 
 		if env.Debug {
-			log.Infof("Session read goroutine exit, SSID=%d, SID=%d, UID=%d", agent.session.SSID(), agent.session.SID(), agent.session.UID())
+			log.Infof("Session read goroutine exit, NID=%d, SID=%d, UID=%d", agent.session.NID(), agent.session.SID(), agent.session.UID())
 		}
 	}()
 
@@ -360,19 +360,19 @@ func (h *LocalHandler) processPacket(agent *agent, p *packet.Packet) error {
 	// Check message id
 	maxMid := agent.session.MaxMid.Load()
 	if msg.ID != maxMid+1 {
-		return fmt.Errorf("invalid message id: send: %d, maxID: %d, delta: %d", msg.ID, maxMid, msg.ID-maxMid)
+		return fmt.Errorf("invalid message id: remote: %d, local: %d, delta: %d", msg.ID, maxMid+1, msg.ID-maxMid-1)
 	}
 	agent.session.MaxMid.Store(msg.ID)
 
 	// Check message time
 	now := time.Now().Unix()
 	if msg.ID > 1 && int64(msg.UnixTime) > now+10 || int64(msg.UnixTime) < now-10 {
-		return fmt.Errorf("invalid message time: send: %d, recv: %d, cost: %d(s)", msg.UnixTime, now, now-int64(msg.UnixTime))
+		return fmt.Errorf("invalid message time: remote: %d, local: %d, cost: %d(s)", msg.UnixTime, now, now-int64(msg.UnixTime))
 	}
 
 	// Check message session id
 	if msg.ID > 1 && msg.SessionID != agent.session.ID() {
-		return fmt.Errorf("invalid message session id: send: %d, recv: %d", msg.SessionID, agent.session.ID())
+		return fmt.Errorf("invalid message session id: remote: %d, local: %d", msg.SessionID, agent.session.ID())
 	}
 
 	h.processMessage(agent.session, msg, false)
@@ -407,8 +407,8 @@ func (h *LocalHandler) remoteProcess(s *session.Session, msg *message.Message, n
 		remoteAddr = fmt.Sprintf("etcd:///%s/%s", service, s.Version())
 
 		if env.Debug {
-			log.Infof("Type=%s, Route=%s, SSID=%d, SID=%d, Version=%s, Branch=%d, UID=%d, MID=%d, Data=%dbytes",
-				msg.Type.String(), msg.Route, s.SSID(), s.SID(), s.Version(), s.Branch(), s.UID(), msg.ID, len(msg.Data))
+			log.Infof("Type=%s, Route=%s, NID=%d, SID=%d, Version=%s, Branch=%d, UID=%d, MID=%d, Data=%dbytes",
+				msg.Type.String(), msg.Route, s.NID(), s.SID(), s.Version(), s.Branch(), s.UID(), msg.ID, len(msg.Data))
 		}
 	} else {
 		version, members := h.findMembers(service, msg.ShortVer)
@@ -418,8 +418,8 @@ func (h *LocalHandler) remoteProcess(s *session.Session, msg *message.Message, n
 		}
 
 		if env.Debug {
-			log.Infof("Type=%s, Route=%s, SSID=%d, SID=%d, Version=%s, Branch=%d, UID=%d, MID=%d, Data=%dbytes",
-				msg.Type.String(), msg.Route, s.SSID(), s.SID(), s.Version(), s.Branch(), s.UID(), msg.ID, len(msg.Data))
+			log.Infof("Type=%s, Route=%s, NID=%d, SID=%d, Version=%s, Branch=%d, UID=%d, MID=%d, Data=%dbytes",
+				msg.Type.String(), msg.Route, s.NID(), s.SID(), s.Version(), s.Branch(), s.UID(), msg.ID, len(msg.Data))
 		}
 
 		// Select a remote service address
@@ -539,11 +539,11 @@ func (h *LocalHandler) localProcess(handler *component.Handler, lastMid uint64, 
 	if env.Debug {
 		switch d := data.(type) {
 		case []byte:
-			log.Infof("Type=%s, Route=%s, SSID=%d, SID=%d, Version=%s, Branch=%d, UID=%d, MID=%d, Data=%dbytes",
-				msg.Type.String(), msg.Route, s.SSID(), s.SID(), s.Version(), s.Branch(), s.UID(), s.LastMid(), len(d))
+			log.Infof("Type=%s, Route=%s, NID=%d, SID=%d, Version=%s, Branch=%d, UID=%d, MID=%d, Data=%dbytes",
+				msg.Type.String(), msg.Route, s.NID(), s.SID(), s.Version(), s.Branch(), s.UID(), s.LastMid(), len(d))
 		default:
-			log.Infof("Type=%s, Route=%s, SSID=%d, SID=%d, Version=%s, Branch=%d, UID=%d, MID=%d, Data=%+v",
-				msg.Type.String(), msg.Route, s.SSID(), s.SID(), s.Version(), s.Branch(), s.UID(), s.LastMid(), data)
+			log.Infof("Type=%s, Route=%s, NID=%d, SID=%d, Version=%s, Branch=%d, UID=%d, MID=%d, Data=%+v",
+				msg.Type.String(), msg.Route, s.NID(), s.SID(), s.Version(), s.Branch(), s.UID(), s.LastMid(), data)
 		}
 	}
 

@@ -51,15 +51,15 @@ func (s *Session) SID() uint64 {
 		id := snowflake.ID(s.id)
 		return uint64(id.Time(env.SnowflakeNode)<<10 + id.Step(env.SnowflakeNode))
 	}
-	return s.id >> 32 // SID is high 32 bit of id
+	return s.id % (1 << 32) // SID is low 32 bit of id
 }
 
-func (s *Session) SSID() uint64 {
+func (s *Session) NID() uint64 { // NodeID
 	if env.SnowflakeNode != nil {
 		id := snowflake.ID(s.id)
 		return uint64(id.Node(env.SnowflakeNode))
 	}
-	return s.id % (1 << 32) // SSID is low 32 bit of id
+	return s.id >> 32 // SID is high 32 bit of id
 }
 
 // UID returns uid that bind to current session
