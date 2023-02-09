@@ -173,14 +173,15 @@ func (c *CodecEntity) EncodeMessage(m *message.Message) ([]byte, error) {
 
 	buf = append(buf, m.Data...)
 
-	return c.crypto.Encode(buf)
+	return buf, nil
+	// return c.crypto.Encode(buf)
 }
 
 func (c *CodecEntity) DecodeMessage(data []byte) (*message.Message, error) {
-	data, err := c.crypto.Decode(data)
-	if err != nil {
-		return nil, err
-	}
+	// data, err := c.crypto.Decode(data)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	if len(data) < msgHeadLength {
 		return nil, ErrInvalidMessage
