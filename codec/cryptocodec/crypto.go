@@ -67,6 +67,9 @@ func (*AESGCM) Encrypt(plaintext, key []byte) ([]byte, error) {
 	if _, err := rand.Read(nonce); err != nil {
 		return nil, err
 	}
+
+	// test code:
+	// nonce := []byte("123456789012")
 	return aesgcm.EncryptWithNonce(plaintext, key, nonce)
 }
 
