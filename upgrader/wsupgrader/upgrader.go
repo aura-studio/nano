@@ -15,9 +15,10 @@ type Upgrader struct {
 func NewWSUpgrader() *Upgrader {
 	return &Upgrader{
 		Upgrader: &websocket.Upgrader{
-			ReadBufferSize:  1024,
-			WriteBufferSize: 1024,
-			CheckOrigin:     func(_ *http.Request) bool { return true },
+			ReadBufferSize:    1024,
+			WriteBufferSize:   1024,
+			CheckOrigin:       func(_ *http.Request) bool { return true },
+			EnableCompression: true,
 		},
 	}
 }
