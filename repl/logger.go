@@ -47,17 +47,7 @@ func (l CliLogger) Warning(v ...interface{}) {
 
 // Warningln comment
 func (l CliLogger) Warningln(v ...interface{}) {
-	err, ok := v[0].(error)
-	if ok {
-		l.shell.Println(err)
-		s, ok := l.shell.(*ishell.Shell)
-		if ok {
-			l.shell.Print(">>> ")
-			s.ShowPrompt(true)
-		}
-	} else {
-		l.shell.Println(v...)
-	}
+	l.shell.Println(v...)
 }
 
 // Warnf comment
@@ -72,17 +62,7 @@ func (l CliLogger) Warn(v ...interface{}) {
 
 // Warnln comment
 func (l CliLogger) Warnln(v ...interface{}) {
-	err, ok := v[0].(error)
-	if ok {
-		l.shell.Println(err)
-		s, ok := l.shell.(*ishell.Shell)
-		if ok {
-			l.shell.Print(">>> ")
-			s.ShowPrompt(true)
-		}
-	} else {
-		l.shell.Println(v...)
-	}
+	l.shell.Println(v...)
 }
 
 // Tracef comment
@@ -97,17 +77,7 @@ func (l CliLogger) Trace(v ...interface{}) {
 
 // Traceln comment
 func (l CliLogger) Traceln(v ...interface{}) {
-	err, ok := v[0].(error)
-	if ok {
-		l.shell.Println(err)
-		s, ok := l.shell.(*ishell.Shell)
-		if ok {
-			l.shell.Print(">>> ")
-			s.ShowPrompt(true)
-		}
-	} else {
-		l.shell.Println(v...)
-	}
+	l.shell.Println(v...)
 }
 
 // Debugf comment
@@ -122,17 +92,7 @@ func (l CliLogger) Debug(v ...interface{}) {
 
 // Debugln comment
 func (l CliLogger) Debugln(v ...interface{}) {
-	err, ok := v[0].(error)
-	if ok {
-		l.shell.Println(err)
-		s, ok := l.shell.(*ishell.Shell)
-		if ok {
-			l.shell.Print(">>> ")
-			s.ShowPrompt(true)
-		}
-	} else {
-		l.shell.Println(v...)
-	}
+	l.shell.Println(v...)
 }
 
 // Errorf comment
@@ -147,17 +107,7 @@ func (l CliLogger) Error(v ...interface{}) {
 
 // Errorln comment
 func (l CliLogger) Errorln(v ...interface{}) {
-	err, ok := v[0].(error)
-	if ok {
-		l.shell.Println(err)
-		s, ok := l.shell.(*ishell.Shell)
-		if ok {
-			l.shell.Print(">>> ")
-			s.ShowPrompt(true)
-		}
-	} else {
-		l.shell.Println(v...)
-	}
+	l.shell.Println(v...)
 }
 
 // Infof comment
@@ -172,17 +122,7 @@ func (l CliLogger) Info(v ...interface{}) {
 
 // Infoln comment
 func (l CliLogger) Infoln(v ...interface{}) {
-	err, ok := v[0].(error)
-	if ok {
-		l.shell.Println(err)
-		s, ok := l.shell.(*ishell.Shell)
-		if ok {
-			l.shell.Print(">>> ")
-			s.ShowPrompt(true)
-		}
-	} else {
-		l.shell.Println(v...)
-	}
+	l.shell.Println(v...)
 }
 
 // Printf comment
@@ -197,17 +137,7 @@ func (l CliLogger) Print(v ...interface{}) {
 
 // Println comment
 func (l CliLogger) Println(v ...interface{}) {
-	err, ok := v[0].(error)
-	if ok {
-		l.shell.Println(err)
-		s, ok := l.shell.(*ishell.Shell)
-		if ok {
-			l.shell.Print(">>> ")
-			s.ShowPrompt(true)
-		}
-	} else {
-		l.shell.Println(v...)
-	}
+	l.shell.Println(v...)
 }
 
 // Fatalf comment
