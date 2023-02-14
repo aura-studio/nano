@@ -124,6 +124,7 @@ func (c *Connector) getWebSocketConn(addr string) (net.Conn, error) {
 	if err != nil {
 		u.Scheme = "wss"
 		dialer.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+		dialer.EnableCompression = true
 		conn, _, err = dialer.Dial(u.String(), nil)
 		if err != nil {
 			return nil, err
