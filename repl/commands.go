@@ -72,11 +72,7 @@ func connect(addr string, onMessageCallback func(route string, data []byte)) (er
 		return errors.New("already connected")
 	}
 
-	err = client()
-
-	if err != nil {
-		return err
-	}
+	initClient()
 
 	pClient.OnConnected(func(data interface{}) {
 		log.Println("Successfully connected to ", addr)

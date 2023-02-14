@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"encoding/json"
@@ -16,11 +17,12 @@ import (
 	"gopkg.in/abiosoft/ishell.v2"
 )
 
-func client() error {
-	log.Printf("Use serializer=%v", options.SerializerType)
+var initOnce sync.Once
 
-	pClient = NewClient()
-	return nil
+func initClient() {
+	initOnce.Do(func() {
+		pClient = NewClient()
+	})
 }
 
 func tryConnect(addr string) error {
