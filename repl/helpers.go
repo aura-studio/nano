@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"sync"
+	_sync "sync"
 	"time"
 
 	"encoding/json"
@@ -17,7 +17,7 @@ import (
 	"gopkg.in/abiosoft/ishell.v2"
 )
 
-var initOnce sync.Once
+var initOnce _sync.Once
 
 func initClient() {
 	initOnce.Do(func() {
