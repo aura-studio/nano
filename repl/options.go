@@ -16,18 +16,19 @@ type ReasonReader func(int64) string
 
 // Options contains some configurations for current node
 type Options struct {
-	IsWebSocket      bool
-	WSPath           string
-	PrettyJSON       bool
-	SerializerType   serializer.SerializerType // serializer for connector
-	ErrorReader      ErrorReader
-	ReasonReader     ReasonReader
-	Components       *component.Components
-	RedisOptions     *redis.Options
-	Codec            codec.Codec
-	Dictionary       message.Dictionary
-	Branch           uint32
-	EnableUnexpected bool
+	IsWebSocket          bool
+	WebSocketPath        string
+	WebSocketCompression bool
+	PrettyJSON           bool
+	SerializerType       serializer.SerializerType // serializer for connector
+	ErrorReader          ErrorReader
+	ReasonReader         ReasonReader
+	Components           *component.Components
+	RedisOptions         *redis.Options
+	Codec                codec.Codec
+	Dictionary           message.Dictionary
+	Branch               uint32
+	EnableUnexpected     bool
 }
 
 // Option defines a type for option, an option is a func operate cluster.Options
@@ -40,8 +41,8 @@ var (
 	}
 )
 
-// WithIsWebsocket indicates whether current node WebSocket is enabled
-func WithIsWebsocket(isWebSocket bool) Option {
+// WithIsWebSocket indicates whether current node WebSocket is enabled
+func WithIsWebSocket(isWebSocket bool) Option {
 	return func(o *Options) {
 		o.IsWebSocket = isWebSocket
 	}
@@ -50,7 +51,7 @@ func WithIsWebsocket(isWebSocket bool) Option {
 // WithWSPath sets root path for ws
 func WithWSPath(wsPath string) Option {
 	return func(o *Options) {
-		o.WSPath = wsPath
+		o.WebSocketPath = wsPath
 	}
 }
 
@@ -125,5 +126,11 @@ func WithBranch(branch uint32) Option {
 func WithEnableUnexpected(enableUnexpected bool) Option {
 	return func(o *Options) {
 		o.EnableUnexpected = enableUnexpected
+	}
+}
+
+func WithWebSocketCompression(webSocketCompression bool) Option {
+	return func(o *Options) {
+		o.WebSocketCompression = webSocketCompression
 	}
 }

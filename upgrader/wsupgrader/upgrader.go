@@ -4,6 +4,7 @@ import (
 	"net"
 	"net/http"
 
+	"github.com/aura-studio/nano/env"
 	"github.com/aura-studio/nano/upgrader"
 	"github.com/gorilla/websocket"
 )
@@ -12,18 +13,18 @@ type Upgrader struct {
 	*websocket.Upgrader
 }
 
-func NewWSUpgrader() *Upgrader {
+func NewUpgrader() *Upgrader {
 	return &Upgrader{
 		Upgrader: &websocket.Upgrader{
 			ReadBufferSize:    1024,
 			WriteBufferSize:   1024,
 			CheckOrigin:       func(_ *http.Request) bool { return true },
-			EnableCompression: true,
+			EnableCompression: env.WebSocketCompression,
 		},
 	}
 }
 
-var defaultUpgrader = NewWSUpgrader()
+var defaultUpgrader = NewUpgrader()
 
 func Default() upgrader.Upgrader {
 	return defaultUpgrader

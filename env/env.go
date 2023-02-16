@@ -63,6 +63,9 @@ var (
 
 	// SnowflakeNode is snowflake node
 	SnowflakeNode *snowflake.Node
+
+	// WebSocketCompression enables message compression
+	WebSocketCompression bool
 )
 
 func init() {

@@ -58,7 +58,7 @@ type (
 func NewConnector(opts ...Option) *Connector {
 	c := &Connector{
 		Options: Options{
-			serializerType: serializer.Protobuf,
+			SerializerType: serializer.Protobuf,
 		},
 		die:             make(chan struct{}),
 		chSend:          make(chan []byte, 256),
@@ -77,21 +77,21 @@ func NewConnector(opts ...Option) *Connector {
 		opt(&c.Options)
 	}
 
-	if c.Options.logger != nil {
-		log.Use(c.logger)
+	if c.Options.Logger != nil {
+		log.Use(c.Logger)
 	}
 
-	if c.Options.codec == nil {
-		c.codec = plaincodec.NewCodec()
+	if c.Options.Codec == nil {
+		c.Codec = plaincodec.NewCodec()
 	}
-	c.codecEntity = c.codec.Entity(c.Options.dictionary)
+	c.codecEntity = c.Codec.Entity(c.Options.Dictionary)
 
 	return c
 }
 
 // Start connects to the server and send/recv between the c/s
 func (c *Connector) Start(addr string) (err error) {
-	if c.isWebSocket {
+	if c.IsWebSocket {
 		c.conn, err = c.getWebSocketConn(addr)
 	} else {
 		c.conn, err = c.getConn(addr)
@@ -116,7 +116,7 @@ func (c *Connector) getConn(addr string) (net.Conn, error) {
 }
 
 func (c *Connector) getWebSocketConn(addr string) (net.Conn, error) {
-	u := url.URL{Scheme: "ws", Host: addr, Path: c.wsPath}
+	u := url.URL{Scheme: "ws", Host: addr, Path: c.WebSocketPath}
 	dialer := websocket.DefaultDialer
 	var conn *websocket.Conn
 	var err error
@@ -124,7 +124,7 @@ func (c *Connector) getWebSocketConn(addr string) (net.Conn, error) {
 	if err != nil {
 		u.Scheme = "wss"
 		dialer.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-		dialer.EnableCompression = true
+		dialer.EnableCompression = c.WebSocketCompression
 		conn, _, err = dialer.Dial(u.String(), nil)
 		if err != nil {
 			return nil, err
@@ -169,7 +169,7 @@ func (c *Connector) Request(route string, v interface{}, callback Callback) erro
 
 	msg := &message.Message{
 		Type:      message.Request,
-		Branch:    c.branch,
+		Branch:    c.Branch,
 		ShortVer:  env.ShortVersion,
 		Route:     route,
 		ID:        c.mid,
@@ -203,7 +203,7 @@ func (c *Connector) Notify(route string, v interface{}) error {
 
 	msg := &message.Message{
 		Type:      message.Notify,
-		Branch:    c.branch,
+		Branch:    c.Branch,
 		ShortVer:  env.ShortVersion,
 		Route:     route,
 		ID:        0,
@@ -247,7 +247,7 @@ func (c *Connector) Serialize(v interface{}) ([]byte, error) {
 		return data, nil
 	}
 
-	data, err := c.serializerType.Serializer().Marshal(v)
+	data, err := c.SerializerType.Serializer().Marshal(v)
 	if err != nil {
 		return nil, err
 	}
@@ -258,7 +258,7 @@ func (c *Connector) Serialize(v interface{}) ([]byte, error) {
 // Deserialize Unmarshals byte slice into customized data
 func (c *Connector) Deserialize(data []byte, v interface{}) error {
 	var err error
-	if err = c.serializerType.Serializer().Unmarshal(data, v); err != nil {
+	if err = c.SerializerType.Serializer().Unmarshal(data, v); err != nil {
 		return err
 	}
 

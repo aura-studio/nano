@@ -175,3 +175,9 @@ func WithEtcd() Option {
 		opt.Etcd = true
 	}
 }
+
+func WithWebSocketCompression() Option {
+	return func(opt *cluster.Options) {
+		env.WebSocketCompression = true
+	}
+}

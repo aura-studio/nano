@@ -51,11 +51,12 @@ func newClient() *Client {
 	return &Client{
 		Connector: *connector.NewConnector(
 			connector.WithIsWebSocket(options.IsWebSocket),
+			connector.WithWebSocketPath(options.WebSocketPath),
+			connector.WithWebSocketCompression(options.WebSocketCompression),
 			connector.WithCodec(options.Codec),
 			connector.WithDictionary(options.Dictionary),
 			connector.WithSerializerType(options.SerializerType),
 			connector.WithLogger(logger),
-			connector.WithWSPath(options.WSPath),
 			connector.WithBranch(options.Branch),
 		),
 		IncomingMsgChan: make(chan *message.Message, 10),

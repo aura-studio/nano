@@ -10,14 +10,15 @@ import (
 type (
 	// Options contains some configurations for connector
 	Options struct {
-		name           string                    // component name
-		serializerType serializer.SerializerType // serializer for connector
-		wsPath         string                    // websocket path
-		isWebSocket    bool                      // is websocket
-		logger         log.Logger                // logger
-		codec          codec.Codec               // codec
-		dictionary     message.Dictionary        // dictionary
-		branch         uint32
+		name                 string                    // component name
+		SerializerType       serializer.SerializerType // serializer for connector
+		WebSocketPath        string                    // websocket path
+		IsWebSocket          bool                      // is websocket
+		Logger               log.Logger                // logger
+		Codec                codec.Codec               // codec
+		Dictionary           message.Dictionary        // dictionary
+		Branch               uint32
+		WebSocketCompression bool
 	}
 
 	// Option used to customize handler
@@ -35,45 +36,51 @@ func WithName(name string) Option {
 // and UnMarshal handler payload
 func WithSerializerType(serializerType serializer.SerializerType) Option {
 	return func(opt *Options) {
-		opt.serializerType = serializerType
+		opt.SerializerType = serializerType
 	}
 }
 
-// WithWSPath set the websocket path
-func WithWSPath(path string) Option {
+// WithWebSocketPath set the websocket path
+func WithWebSocketPath(path string) Option {
 	return func(opt *Options) {
-		opt.wsPath = path
+		opt.WebSocketPath = path
 	}
 }
 
 func WithIsWebSocket(isWebSocket bool) Option {
 	return func(opt *Options) {
-		opt.isWebSocket = isWebSocket
+		opt.IsWebSocket = isWebSocket
 	}
 }
 
 // WithLogger overrides the default logger
 func WithLogger(l log.Logger) Option {
 	return func(opt *Options) {
-		opt.logger = l
+		opt.Logger = l
 	}
 }
 
 // WithCodec sets codec instead of default codec
 func WithCodec(codec codec.Codec) Option {
 	return func(opt *Options) {
-		opt.codec = codec
+		opt.Codec = codec
 	}
 }
 
 func WithDictionary(dictionary message.Dictionary) Option {
 	return func(opt *Options) {
-		opt.dictionary = dictionary
+		opt.Dictionary = dictionary
 	}
 }
 
 func WithBranch(branch uint32) Option {
 	return func(opt *Options) {
-		opt.branch = branch
+		opt.Branch = branch
+	}
+}
+
+func WithWebSocketCompression(webSocketCompression bool) Option {
+	return func(opt *Options) {
+		opt.WebSocketCompression = webSocketCompression
 	}
 }
