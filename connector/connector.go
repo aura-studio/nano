@@ -120,11 +120,11 @@ func (c *Connector) getWebSocketConn(addr string) (net.Conn, error) {
 	dialer := websocket.DefaultDialer
 	var conn *websocket.Conn
 	var err error
+	dialer.EnableCompression = c.WebSocketCompression
 	conn, _, err = dialer.Dial(u.String(), nil)
 	if err != nil {
 		u.Scheme = "wss"
 		dialer.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-		dialer.EnableCompression = c.WebSocketCompression
 		conn, _, err = dialer.Dial(u.String(), nil)
 		if err != nil {
 			return nil, err

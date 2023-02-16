@@ -408,9 +408,9 @@ func (n *Node) listenAndServeHttp() {
 		)
 		params := mux.Vars(r)
 		if route, ok := params["route"]; ok && route == "websocket" {
-			conn, err = wsupgrader.Default().Upgrade(w, r, params)
+			conn, err = wsupgrader.NewUpgrader().Upgrade(w, r, params)
 		} else {
-			conn, err = httpupgrader.Default().Upgrade(w, r, params)
+			conn, err = httpupgrader.NewUpgrader().Upgrade(w, r, params)
 		}
 
 		if err != nil {

@@ -48,8 +48,8 @@ func WithIsWebSocket(isWebSocket bool) Option {
 	}
 }
 
-// WithWebSocketSPath sets root path for ws
-func WithWebSocketSPath(wsPath string) Option {
+// WithWebSocketPath sets root path for ws
+func WithWebSocketPath(wsPath string) Option {
 	return func(o *Options) {
 		o.WebSocketPath = wsPath
 	}
