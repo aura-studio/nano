@@ -13,7 +13,6 @@ import (
 	"github.com/aura-studio/nano/cluster"
 	"github.com/aura-studio/nano/codec"
 	"github.com/aura-studio/nano/codec/plaincodec"
-	"github.com/aura-studio/nano/env"
 	"github.com/aura-studio/nano/log"
 	"github.com/aura-studio/nano/serializer"
 	"github.com/gorilla/websocket"
@@ -170,7 +169,7 @@ func (c *Connector) Request(route string, v interface{}, callback Callback) erro
 	msg := &message.Message{
 		Type:      message.Request,
 		Branch:    c.Branch,
-		ShortVer:  env.ShortVersion,
+		ShortVer:  c.ShortVersion,
 		Route:     route,
 		ID:        c.mid,
 		UnixTime:  uint32(time.Now().Unix()),
@@ -204,7 +203,7 @@ func (c *Connector) Notify(route string, v interface{}) error {
 	msg := &message.Message{
 		Type:      message.Notify,
 		Branch:    c.Branch,
-		ShortVer:  env.ShortVersion,
+		ShortVer:  c.ShortVersion,
 		Route:     route,
 		ID:        0,
 		UnixTime:  uint32(time.Now().Unix()),

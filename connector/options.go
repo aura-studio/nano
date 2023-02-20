@@ -18,6 +18,7 @@ type (
 		Codec                codec.Codec               // codec
 		Dictionary           message.Dictionary        // dictionary
 		Branch               uint32
+		ShortVersion         uint32
 		WebSocketCompression bool
 	}
 
@@ -76,6 +77,12 @@ func WithDictionary(dictionary message.Dictionary) Option {
 func WithBranch(branch uint32) Option {
 	return func(opt *Options) {
 		opt.Branch = branch
+	}
+}
+
+func WithShortVersion(shortVersion uint32) Option {
+	return func(opt *Options) {
+		opt.ShortVersion = shortVersion
 	}
 }
 
