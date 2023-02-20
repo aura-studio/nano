@@ -10,14 +10,15 @@ import (
 type (
 	// Options contains some configurations for connector
 	Options struct {
-		name        string               // component name
-		serializer  serialize.Serializer // serializer for connector
-		wsPath      string               //websocket path
-		isWebSocket bool                 // is websocket
-		logger      log.Logger           // logger
-		codec       codec.Codec          // codec
-		dictionary  message.Dictionary   // dictionary
-		branch      uint32
+		name         string               // component name
+		serializer   serialize.Serializer // serializer for connector
+		wsPath       string               // websocket path
+		isWebSocket  bool                 // is websocket
+		logger       log.Logger           // logger
+		codec        codec.Codec          // codec
+		dictionary   message.Dictionary   // dictionary
+		branch       uint32
+		shortVersion uint32
 	}
 
 	// Option used to customize handler
@@ -75,5 +76,11 @@ func WithDictionary(dictionary message.Dictionary) Option {
 func WithBranch(branch uint32) Option {
 	return func(opt *Options) {
 		opt.branch = branch
+	}
+}
+
+func WithShortVersion(shortVersion uint32) Option {
+	return func(opt *Options) {
+		opt.shortVersion = shortVersion
 	}
 }

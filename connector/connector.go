@@ -13,7 +13,6 @@ import (
 	"github.com/aura-studio/nano/cluster"
 	"github.com/aura-studio/nano/codec"
 	"github.com/aura-studio/nano/codec/plaincodec"
-	"github.com/aura-studio/nano/env"
 	"github.com/aura-studio/nano/log"
 	"github.com/aura-studio/nano/serialize/protobuf"
 	"github.com/gorilla/websocket"
@@ -167,7 +166,7 @@ func (c *Connector) Request(route string, v interface{}, callback Callback) erro
 	msg := &message.Message{
 		Type:     message.Request,
 		Branch:   c.branch,
-		ShortVer: env.ShortVersion,
+		ShortVer: c.shortVersion,
 		Route:    route,
 		ID:       c.mid,
 		Data:     data,
@@ -199,7 +198,7 @@ func (c *Connector) Notify(route string, v interface{}) error {
 	msg := &message.Message{
 		Type:     message.Notify,
 		Branch:   c.branch,
-		ShortVer: env.ShortVersion,
+		ShortVer: c.shortVersion,
 		Route:    route,
 		Data:     data,
 	}
@@ -240,7 +239,7 @@ func (c *Connector) Serialize(v interface{}) ([]byte, error) {
 	}
 
 	if c.serializer == nil {
-		return nil, fmt.Errorf("Serializer is not set")
+		return nil, fmt.Errorf("serializer is not set")
 	}
 
 	data, err := c.serializer.Marshal(v)
