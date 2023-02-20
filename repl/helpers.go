@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	_sync "sync"
 	"time"
 
 	"encoding/json"
@@ -16,8 +15,6 @@ import (
 	"github.com/aura-studio/nano/log"
 	"gopkg.in/abiosoft/ishell.v2"
 )
-
-var initOnce _sync.Once
 
 func initClient() {
 	pClient = NewClient()
