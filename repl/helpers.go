@@ -20,9 +20,7 @@ import (
 var initOnce _sync.Once
 
 func initClient() {
-	initOnce.Do(func() {
-		pClient = NewClient()
-	})
+	pClient = NewClient()
 }
 
 func tryConnect(addr string) error {
