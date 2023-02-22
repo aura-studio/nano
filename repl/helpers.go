@@ -481,7 +481,7 @@ func addCustomCommand(shell *ishell.Shell, cmds []string, cmdName, cmdStr string
 				c.Err(err)
 			}
 		},
-		Help: joinShotHelpText(cmdStr) + "with repeat",
+		Help: joinShotHelpText(cmdStr) + " with repeat",
 	})
 
 	shell.AddCmd(newCmd)
