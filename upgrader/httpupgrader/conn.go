@@ -119,16 +119,19 @@ func (c *Conn) Read(b []byte) (int, error) {
 				if err != nil {
 					return 0, err
 				}
-				if xDataType := c.r.Header.Get("X-Data-Type"); xDataType != "" {
-					dataType = serializer.StrToType(xDataType)
-				} else {
+				switch c.r.Header.Get("Content-Type") {
+				case "application/json":
+					dataType = serializer.JSONType
+				case "application/x-protobuf":
+					dataType = serializer.ProtobufType
+				default:
 					dataType = serializer.AutoType
 				}
 			}
 		}
 
 		if env.Debug {
-			log.Infof("http: Type=Request, Route=%s, Len=%d, Data=%+v", route, len(data), string(data))
+			log.Infof("http: Type=Request, Route=%s, Len=%d, DataType=%s", route, len(data), serializer.TypeToStr(dataType))
 		}
 
 		msg := &message.Message{
