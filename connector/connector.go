@@ -14,6 +14,7 @@ import (
 	"github.com/aura-studio/nano/codec"
 	"github.com/aura-studio/nano/codec/plaincodec"
 	"github.com/aura-studio/nano/log"
+	"github.com/aura-studio/nano/serializer"
 	"github.com/aura-studio/nano/serializer/auto"
 	"github.com/gorilla/websocket"
 
@@ -174,6 +175,7 @@ func (c *Connector) Request(route string, v interface{}, callback Callback) erro
 		ID:        c.mid,
 		UnixTime:  uint32(time.Now().Unix()),
 		SessionID: atomic.LoadUint64(&c.sid),
+		DataType:  uint32(serializer.ToType(c.Serializer)),
 		Data:      data,
 	}
 
@@ -208,6 +210,7 @@ func (c *Connector) Notify(route string, v interface{}) error {
 		ID:        0,
 		UnixTime:  uint32(time.Now().Unix()),
 		SessionID: atomic.LoadUint64(&c.sid),
+		DataType:  uint32(serializer.ToType(c.Serializer)),
 		Data:      data,
 	}
 	return c.sendMessage(msg)

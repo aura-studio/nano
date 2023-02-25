@@ -459,6 +459,7 @@ func (h *LocalHandler) remoteProcess(s *session.Session, msg *message.Message, n
 			ID:        msg.ID,
 			UID:       s.UID(),
 			Route:     msg.Route,
+			DataType:  msg.DataType,
 			Data:      data,
 			RemoteAddr: &clusterpb.NetAddr{
 				Network: s.RemoteAddr().Network(),
@@ -475,6 +476,7 @@ func (h *LocalHandler) remoteProcess(s *session.Session, msg *message.Message, n
 			ID:        msg.ID,
 			UID:       s.UID(),
 			Route:     msg.Route,
+			DataType:  msg.DataType,
 			Data:      data,
 			RemoteAddr: &clusterpb.NetAddr{
 				Network: s.RemoteAddr().Network(),
@@ -527,7 +529,6 @@ func (h *LocalHandler) localProcess(handler *component.Handler, lastMid uint64, 
 	} else {
 		data = reflect.New(handler.Type.Elem()).Interface()
 
-		
 		err := env.Serializer.Unmarshal(payload, data)
 		if err != nil {
 			log.Errorf("Deserialize to %T failed: %+v (%v)", data, err, payload)

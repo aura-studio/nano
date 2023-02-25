@@ -43,6 +43,7 @@ func (a *acceptor) Push(route string, v interface{}) error {
 		SessionID: a.sid,
 		ShortVer:  a.session.ShortVer(),
 		Route:     route,
+		DataType: uint32(serializer.ToType(env.Serializer)),
 		Data:      data,
 	}
 	_, err = a.gateClient.HandlePush(context.Background(), request)
@@ -104,6 +105,7 @@ func (a *acceptor) Response(mid uint64, route string, v interface{}) error {
 		ShortVer:  a.session.ShortVer(),
 		ID:        mid,
 		Route:     route,
+		DataType: uint32(serializer.ToType(env.Serializer)),
 		Data:      data,
 	}
 	_, err = a.gateClient.HandleResponse(context.Background(), request)
