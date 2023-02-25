@@ -25,8 +25,6 @@ package env
 import (
 	"time"
 
-	"github.com/aura-studio/nano/serializer"
-	"github.com/aura-studio/nano/serializer/auto"
 	"github.com/aura-studio/snowflake"
 	"google.golang.org/grpc"
 )
@@ -50,9 +48,6 @@ var (
 	// TimerPrecision indicates the precision of timer, default is time.Second
 	TimerPrecision = time.Second
 
-	// Serializer is message serializer, json or protobuf
-	Serializer serializer.Serializer
-
 	// GrpcOptions is options for grpc
 	GrpcOptions = []grpc.DialOption{grpc.WithInsecure()}
 
@@ -74,5 +69,4 @@ func init() {
 	ConnDie = make(chan bool)
 	Debug = false
 	Safe = true
-	Serializer = auto.Serializer
 }

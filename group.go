@@ -26,7 +26,6 @@ import (
 
 	"github.com/aura-studio/nano/env"
 	"github.com/aura-studio/nano/log"
-	"github.com/aura-studio/nano/message"
 	"github.com/aura-studio/nano/session"
 )
 
@@ -90,11 +89,6 @@ func (c *Group) Multicast(route string, v interface{}, filter SessionFilter) err
 		return ErrClosedGroup
 	}
 
-	data, err := message.Serialize(v)
-	if err != nil {
-		return err
-	}
-
 	log.Infof("Multicast %s, Data=%+v", route, v)
 
 	c.mu.RLock()
@@ -103,6 +97,10 @@ func (c *Group) Multicast(route string, v interface{}, filter SessionFilter) err
 	for _, s := range c.sessions {
 		if !filter(s) {
 			continue
+		}
+		data, err := s.Serialize(v)
+		if err != nil {
+			return err
 		}
 		if err = s.Push(route, data); err != nil {
 			log.Errorln(err.Error())
@@ -118,24 +116,24 @@ func (c *Group) Broadcast(route string, v interface{}) error {
 		return ErrClosedGroup
 	}
 
-	data, err := message.Serialize(v)
-	if err != nil {
-		return err
-	}
-
 	// log.Infof("Broadcast %s, Data=%+v", route, v)
 
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
 	for _, s := range c.sessions {
+		data, err := s.Serialize(v)
+		if err != nil {
+			return err
+		}
+
 		if err = s.Push(route, data); err != nil {
 			log.Errorf("Session push message error, NID=%d, SID=%d, UID=%d, Error=%s",
 				s.NID(), s.SID(), s.UID(), err.Error())
 		}
 	}
 
-	return err
+	return nil
 }
 
 // Contains check whether a UID is contained in current group or not

@@ -34,7 +34,6 @@ import (
 	"github.com/aura-studio/nano/message"
 	"github.com/aura-studio/nano/packet"
 	"github.com/aura-studio/nano/pipeline"
-	"github.com/aura-studio/nano/serializer"
 	"github.com/aura-studio/nano/service"
 	"github.com/aura-studio/nano/session"
 )
@@ -157,16 +156,19 @@ func (a *agent) RPC(mid uint64, route string, v interface{}) error {
 		}
 	}
 
+	data, err := a.session.Serialize(v)
+	if err != nil {
+		return err
+	}
+
 	msg := &message.Message{
 		Type:     message.Notify,
 		Branch:   a.session.Branch(),
 		ShortVer: a.session.ShortVer(),
 		ID:       mid,
 		Route:    route,
-		DataType: uint32(serializer.ToType(env.Serializer)),
-	}
-	if err := msg.Serialize(v); err != nil {
-		return err
+		DataType: a.session.DataType.Load(),
+		Data:     data,
 	}
 	a.rpcHandler(a.session, msg, true)
 	return nil
@@ -265,21 +267,24 @@ func (a *agent) write() {
 				return
 			}
 
-		case data := <-a.chSend:
-			// construct message and encode
-			msg := &message.Message{
-				Type:      data.typ,
-				Branch:    a.session.Branch(),
-				ShortVer:  a.session.ShortVer(),
-				ID:        data.mid,
-				UnixTime:  uint32(time.Now().Unix()),
-				SessionID: a.session.ID(),
-				Route:     data.route,
-				DataType:  uint32(serializer.ToType(env.Serializer)),
-			}
-			if err := msg.Serialize(data.payload); err != nil {
+		case pendingMsg := <-a.chSend:
+			data, err := a.session.Serialize(pendingMsg.payload)
+			if err != nil {
 				log.Errorln(err.Error())
 				break
+			}
+
+			// construct message and encode
+			msg := &message.Message{
+				Type:      pendingMsg.typ,
+				Branch:    a.session.Branch(),
+				ShortVer:  a.session.ShortVer(),
+				ID:        pendingMsg.mid,
+				UnixTime:  uint32(time.Now().Unix()),
+				SessionID: a.session.ID(),
+				Route:     pendingMsg.route,
+				DataType:  a.session.DataType.Load(),
+				Data:      data,
 			}
 
 			if pipe := a.pipeline; pipe != nil {

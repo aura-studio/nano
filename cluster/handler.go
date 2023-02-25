@@ -354,6 +354,8 @@ func (h *LocalHandler) processPacket(agent *agent, p *packet.Packet) error {
 		session.Inited(agent.session)
 	}
 
+	agent.session.DataType.Store(msg.DataType)
+
 	// Check message id
 	maxMid := agent.session.MaxMid.Load()
 	if msg.ID != maxMid+1 {
@@ -529,7 +531,7 @@ func (h *LocalHandler) localProcess(handler *component.Handler, lastMid uint64, 
 	} else {
 		data = reflect.New(handler.Type.Elem()).Interface()
 
-		err := env.Serializer.Unmarshal(payload, data)
+		err := s.Deserialize(payload, data)
 		if err != nil {
 			log.Errorf("Deserialize to %T failed: %+v (%v)", data, err, payload)
 			return

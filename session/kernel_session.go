@@ -24,6 +24,8 @@ import (
 	"net"
 	"sync"
 	"sync/atomic"
+
+	"github.com/aura-studio/nano/serializer"
 )
 
 // NetworkEntity represent low-level network instance
@@ -56,6 +58,7 @@ type KernelSession struct {
 	onEvents           map[interface{}][]EventCallback // call EventCallback after event trigged
 	remoteSessionAddrs sync.Map                        // rpc addr
 	MaxMid             atomic.Uint64
+	DataType           atomic.Uint32
 }
 
 // New returns a new session instance
@@ -106,4 +109,19 @@ func (s *KernelSession) RemoteSessionAddrs() []string {
 		return true
 	})
 	return addrs
+}
+
+func (s *KernelSession) Serialize(v interface{}) ([]byte, error) {
+	if data, ok := v.([]byte); ok {
+		return data, nil
+	}
+	data, err := serializer.FromType(s.DataType.Load()).Marshal(v)
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
+}
+
+func (s *KernelSession) Deserialize(data []byte, v interface{}) error {
+	return serializer.FromType(s.DataType.Load()).Unmarshal(data, v)
 }

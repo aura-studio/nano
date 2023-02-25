@@ -23,7 +23,6 @@ package message
 import (
 	"fmt"
 
-	"github.com/aura-studio/nano/env"
 	"github.com/aura-studio/nano/serializer"
 )
 
@@ -78,32 +77,4 @@ func (m *Message) TypeValid() bool {
 
 func (m *Message) Serializer() serializer.Serializer {
 	return serializer.FromType(m.DataType)
-}
-
-func (m *Message) Serialize(v interface{}) error {
-	if data, ok := v.([]byte); ok {
-		m.Data = data
-		return nil
-	}
-	data, err := m.Serializer().Marshal(v)
-	if err != nil {
-		return err
-	}
-	m.Data = data
-	return nil
-}
-
-func (m *Message) Deserialize(v interface{}) error {
-	return m.Serializer().Unmarshal(m.Data, v)
-}
-
-func Serialize(v interface{}) ([]byte, error) {
-	if data, ok := v.([]byte); ok {
-		return data, nil
-	}
-	data, err := env.Serializer.Marshal(v)
-	if err != nil {
-		return nil, err
-	}
-	return data, nil
 }

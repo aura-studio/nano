@@ -8,7 +8,6 @@ import (
 	"github.com/aura-studio/nano/env"
 	"github.com/aura-studio/nano/log"
 	"github.com/aura-studio/nano/message"
-	"github.com/aura-studio/nano/serializer"
 	"github.com/aura-studio/nano/session"
 )
 
@@ -23,7 +22,7 @@ type acceptor struct {
 
 // Push implements the session.NetworkEntity interface
 func (a *acceptor) Push(route string, v interface{}) error {
-	data, err := message.Serialize(v)
+	data, err := a.session.Serialize(v)
 	if err != nil {
 		return err
 	}
@@ -43,7 +42,7 @@ func (a *acceptor) Push(route string, v interface{}) error {
 		SessionID: a.sid,
 		ShortVer:  a.session.ShortVer(),
 		Route:     route,
-		DataType: uint32(serializer.ToType(env.Serializer)),
+		DataType:  a.session.DataType.Load(),
 		Data:      data,
 	}
 	_, err = a.gateClient.HandlePush(context.Background(), request)
@@ -52,7 +51,7 @@ func (a *acceptor) Push(route string, v interface{}) error {
 
 // RPC implements the session.NetworkEntity interface
 func (a *acceptor) RPC(mid uint64, route string, v interface{}) error {
-	data, err := message.Serialize(v)
+	data, err := a.session.Serialize(v)
 	if err != nil {
 		return err
 	}
@@ -74,7 +73,7 @@ func (a *acceptor) RPC(mid uint64, route string, v interface{}) error {
 		ShortVer: a.session.ShortVer(),
 		ID:       mid,
 		Route:    route,
-		DataType: uint32(serializer.ToType(env.Serializer)),
+		DataType: a.session.DataType.Load(),
 		Data:     data,
 	}
 
@@ -84,7 +83,7 @@ func (a *acceptor) RPC(mid uint64, route string, v interface{}) error {
 
 // Response implements the session.NetworkEntity interface
 func (a *acceptor) Response(mid uint64, route string, v interface{}) error {
-	data, err := message.Serialize(v)
+	data, err := a.session.Serialize(v)
 	if err != nil {
 		return err
 	}
@@ -105,7 +104,7 @@ func (a *acceptor) Response(mid uint64, route string, v interface{}) error {
 		ShortVer:  a.session.ShortVer(),
 		ID:        mid,
 		Route:     route,
-		DataType: uint32(serializer.ToType(env.Serializer)),
+		DataType:  a.session.DataType.Load(),
 		Data:      data,
 	}
 	_, err = a.gateClient.HandleResponse(context.Background(), request)
