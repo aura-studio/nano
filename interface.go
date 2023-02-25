@@ -34,6 +34,7 @@ import (
 	"github.com/aura-studio/nano/component"
 	"github.com/aura-studio/nano/env"
 	"github.com/aura-studio/nano/log"
+	"github.com/aura-studio/nano/options"
 	"github.com/aura-studio/nano/scheduler"
 )
 
@@ -77,12 +78,11 @@ func Serve(opts ...Option) {
 	} else {
 		env.Wd, _ = filepath.Abs(wd)
 	}
+	opt := options.Default
 
-	opt := cluster.Options{
-		Components: &component.Components{},
-	}
+	opt.Components = &component.Components{}
 	for _, option := range opts {
-		option(&opt)
+		option(opt)
 	}
 
 	log.Use(opt.Logger)

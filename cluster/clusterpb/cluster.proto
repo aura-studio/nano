@@ -118,16 +118,6 @@ message SessionCreatedRequest {
 message SessionCreatedResponse {
 }
 
-message PerformConventionRequest {
-  int64 sig = 1;
-  bytes data = 2;
-}
-
-message PerformConventionResponse {
-  string label = 1;
-  bytes data = 2;
-}
-
 
 service Member {
   rpc HandleRequest(RequestMessage) returns (MemberHandleResponse) {}
@@ -140,7 +130,4 @@ service Member {
   rpc SessionClosed(SessionClosedRequest) returns (SessionClosedResponse) {}
   rpc CloseSession(CloseSessionRequest) returns (CloseSessionResponse) {}
   rpc SessionCreated(SessionCreatedRequest) returns (SessionCreatedResponse) {}
-
-  rpc PerformConvention(PerformConventionRequest)
-      returns (PerformConventionResponse) {}
 }

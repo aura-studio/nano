@@ -32,7 +32,7 @@ type Options struct {
 	EnableUnexpected     bool
 }
 
-// Option defines a type for option, an option is a func operate cluster.Options
+// Option defines a type for option, an option is a func operate options.NodeOptions
 type Option func(*Options)
 
 var (

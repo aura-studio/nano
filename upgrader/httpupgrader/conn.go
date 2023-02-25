@@ -12,9 +12,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/aura-studio/nano/codec/plaincodec"
 	"github.com/aura-studio/nano/log"
 	"github.com/aura-studio/nano/message"
+	"github.com/aura-studio/nano/options"
 	"github.com/aura-studio/nano/packet"
 	"github.com/aura-studio/nano/serializer"
 
@@ -45,7 +45,7 @@ func NewConn(w http.ResponseWriter, r *http.Request, conn net.Conn, brw *bufio.R
 		conn:        conn,
 		brw:         brw,
 		params:      params,
-		codecEntity: plaincodec.NewCodec().Entity(nil),
+		codecEntity: options.Default.Codec.Entity(nil),
 		readBuf:     nil,
 		startTime:   time.Now(),
 	}

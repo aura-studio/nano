@@ -33,13 +33,10 @@ import (
 	"time"
 
 	"github.com/aura-studio/nano/cluster/clusterpb"
-	"github.com/aura-studio/nano/codec"
-	"github.com/aura-studio/nano/component"
 	"github.com/aura-studio/nano/env"
 	"github.com/aura-studio/nano/log"
 	"github.com/aura-studio/nano/message"
-	"github.com/aura-studio/nano/persist"
-	"github.com/aura-studio/nano/pipeline"
+	"github.com/aura-studio/nano/options"
 	"github.com/aura-studio/nano/session"
 	"github.com/aura-studio/nano/upgrader/httpupgrader"
 	"github.com/aura-studio/nano/upgrader/wsupgrader"
@@ -55,39 +52,17 @@ import (
 	_ "net/http/pprof"
 )
 
-// Options contains some configurations for current node
-type Options struct {
-	Pipeline       pipeline.Pipeline
-	Convention     Convention
-	MasterPersist  persist.Persist
-	IsMaster       bool
-	AdvertiseAddr  string
-	RetryInterval  time.Duration
-	TCPAddr        string
-	DebugAddr      string
-	MemberAddr     string
-	Components     *component.Components
-	Label          string
-	HttpAddr       string
-	TSLCertificate string
-	TSLKey         string
-	Logger         log.Logger
-	Codec          codec.Codec
-	Etcd           bool
-}
-
 // Node represents a node in nano cluster, which will contains a group of services.
 // All services will register to cluster and messages will be forwarded to the node
 // which provides respective service
 type Node struct {
-	Options        // current node options
-	NodeID  uint32 // current node ID
+	*options.Options        // current node options
+	NodeID           uint32 // current node ID
 
-	cluster     *cluster
-	handler     *LocalHandler
-	server      *grpc.Server
-	rpcClient   *rpcClient
-	transmitter *transmitter
+	cluster   *cluster
+	handler   *LocalHandler
+	server    *grpc.Server
+	rpcClient *rpcClient
 
 	etcdClient   *clientv3.Client
 	etcdManagers map[string]endpoints.Manager
@@ -106,7 +81,6 @@ func (n *Node) Startup() error {
 	n.sessions = map[uint64]*session.Session{}
 	n.cluster = newCluster(n)
 	n.handler = newHandler(n)
-	n.transmitter = newTransmitter(n)
 	components := n.Components.List()
 	for _, c := range components {
 		err := n.handler.Register(c.Comp, c.Opts)
@@ -664,16 +638,4 @@ func (n *Node) SessionCreated(_ context.Context, req *clusterpb.SessionCreatedRe
 		}()
 	}
 	return &clusterpb.SessionCreatedResponse{}, nil
-}
-
-// PerformConvention implements the MemberServer interface
-func (n *Node) PerformConvention(_ context.Context, req *clusterpb.PerformConventionRequest) (*clusterpb.PerformConventionResponse, error) {
-	if n.transmitter == nil {
-		return &clusterpb.PerformConventionResponse{}, nil
-	}
-	data, err := n.transmitter.React(req.Sig, req.Data)
-	if err != nil {
-		return &clusterpb.PerformConventionResponse{}, fmt.Errorf("member %s react error %s", n.Label, err.Error())
-	}
-	return &clusterpb.PerformConventionResponse{Label: n.Label, Data: data}, nil
 }

@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/aura-studio/nano/message"
+	"github.com/aura-studio/nano/options"
 	"github.com/aura-studio/nano/serializer/protobuf"
 
 	"github.com/aura-studio/nano/benchmark/testdata"
@@ -57,7 +58,7 @@ func (s *nodeSuite) TestNodeStartup(c *C) {
 	masterComps := &component.Components{}
 	masterComps.Register(&MasterComponent{})
 	masterNode := &cluster.Node{
-		Options: cluster.Options{
+		Options: &options.Options{
 			IsMaster:   true,
 			Components: masterComps,
 			MemberAddr: "127.0.0.1:4450",
@@ -71,7 +72,7 @@ func (s *nodeSuite) TestNodeStartup(c *C) {
 	member1Comps := &component.Components{}
 	member1Comps.Register(&GateComponent{})
 	memberNode1 := &cluster.Node{
-		Options: cluster.Options{
+		Options: &options.Options{
 			AdvertiseAddr: "127.0.0.1:4450",
 			TCPAddr:       "127.0.0.1:14452",
 			MemberAddr:    "127.0.0.1:14451",
@@ -89,7 +90,7 @@ func (s *nodeSuite) TestNodeStartup(c *C) {
 	member2Comps := &component.Components{}
 	member2Comps.Register(&GameComponent{})
 	memberNode2 := &cluster.Node{
-		Options: cluster.Options{
+		Options: &options.Options{
 			AdvertiseAddr: "127.0.0.1:4450",
 			MemberAddr:    "127.0.0.1:24451",
 			Components:    member2Comps,
