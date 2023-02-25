@@ -24,25 +24,23 @@ import (
 	"encoding/json"
 )
 
-// Serializer implements the serializer.Serializer interface
-type Serializer struct{}
+// serializer implements the serializer.serializer interface
+type serializer struct{}
 
 // NewSerializer returns a new Serializer.
-func NewSerializer() *Serializer {
-	return &Serializer{}
+func NewSerializer() *serializer {
+	return &serializer{}
 }
 
+var Serializer = NewSerializer()
+
 // Marshal returns the JSON encoding of v.
-func (s *Serializer) Marshal(v interface{}) ([]byte, error) {
+func (s *serializer) Marshal(v interface{}) ([]byte, error) {
 	return json.Marshal(v)
 }
 
 // Unmarshal parses the JSON-encoded data and stores the result
 // in the value pointed to by v.
-func (s *Serializer) Unmarshal(data []byte, v interface{}) error {
+func (s *serializer) Unmarshal(data []byte, v interface{}) error {
 	return json.Unmarshal(data, v)
-}
-
-func (s *Serializer) String() string {
-	return "json"
 }

@@ -303,13 +303,9 @@ func clearHistory() error {
 	return nil
 }
 
-// setSerializer 设置序列化方法 JSON或是Protobuf
-func setSerializer(serializerName string) error {
-	serializerType, err := serializer.ParseSerializerType(serializerName)
-	if err != nil {
-		return err
-	}
-	options.SerializerType = serializerType
+// setSerializerStr 设置序列化方法 JSON或是Protobuf
+func setSerializer(serializerStr string) error {
+	options.Serializer = serializer.FromString(serializerStr)
 
 	return nil
 }

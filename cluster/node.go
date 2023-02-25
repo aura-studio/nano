@@ -491,12 +491,11 @@ func (n *Node) findOrCreateSession(sid uint64, gateAddr string, uid int64, short
 			return nil, err
 		}
 		ac := &acceptor{
-			sid:               sid,
-			gateClient:        clusterpb.NewMemberClient(conns.Get()),
-			rpcHandler:        n.handler.processMessage,
-			gateAddr:          gateAddr,
-			serializerTypeMap: message.DuplicateSerializerTypeMap(),
-			remoteAddr:        remoteAddr,
+			sid:        sid,
+			gateClient: clusterpb.NewMemberClient(conns.Get()),
+			rpcHandler: n.handler.processMessage,
+			gateAddr:   gateAddr,
+			remoteAddr: remoteAddr,
 		}
 		s = session.New(ac, sid)
 
@@ -550,6 +549,7 @@ func (n *Node) HandleRequest(_ context.Context, req *clusterpb.RequestMessage) (
 		ShortVer: s.ShortVer(),
 		ID:       req.ID,
 		Route:    req.Route,
+		DataType: req.DataType,
 		Data:     req.Data,
 	}
 	n.handler.localProcess(handler, req.ID, s, msg)
@@ -573,6 +573,7 @@ func (n *Node) HandleNotify(_ context.Context, req *clusterpb.NotifyMessage) (*c
 		ShortVer: s.ShortVer(),
 		ID:       req.ID,
 		Route:    req.Route,
+		DataType: req.DataType,
 		Data:     req.Data,
 	}
 	n.handler.localProcess(handler, req.ID, s, msg)

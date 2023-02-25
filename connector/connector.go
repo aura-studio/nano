@@ -14,7 +14,7 @@ import (
 	"github.com/aura-studio/nano/codec"
 	"github.com/aura-studio/nano/codec/plaincodec"
 	"github.com/aura-studio/nano/log"
-	"github.com/aura-studio/nano/serializer"
+	"github.com/aura-studio/nano/serializer/auto"
 	"github.com/gorilla/websocket"
 
 	"github.com/aura-studio/nano/message"
@@ -57,7 +57,7 @@ type (
 func NewConnector(opts ...Option) *Connector {
 	c := &Connector{
 		Options: Options{
-			SerializerType: serializer.Protobuf,
+			Serializer: auto.Serializer,
 		},
 		die:             make(chan struct{}),
 		chSend:          make(chan []byte, 256),
@@ -246,7 +246,7 @@ func (c *Connector) Serialize(v interface{}) ([]byte, error) {
 		return data, nil
 	}
 
-	data, err := c.SerializerType.Serializer().Marshal(v)
+	data, err := c.Serializer.Marshal(v)
 	if err != nil {
 		return nil, err
 	}
@@ -257,7 +257,7 @@ func (c *Connector) Serialize(v interface{}) ([]byte, error) {
 // Deserialize Unmarshals byte slice into customized data
 func (c *Connector) Deserialize(data []byte, v interface{}) error {
 	var err error
-	if err = c.SerializerType.Serializer().Unmarshal(data, v); err != nil {
+	if err = c.Serializer.Unmarshal(data, v); err != nil {
 		return err
 	}
 

@@ -2,9 +2,14 @@ package message
 
 import (
 	"errors"
+	"sync"
 
 	"github.com/aura-studio/nano/cluster/clusterpb"
 	lua "github.com/yuin/gopher-lua"
+)
+
+var (
+	rw sync.RWMutex
 )
 
 type Dictionary interface {

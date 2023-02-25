@@ -6,13 +6,15 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-type Serializer struct{}
+type serializer struct{}
 
-func NewSerializer() *Serializer {
-	return &Serializer{}
+func NewSerializer() *serializer {
+	return &serializer{}
 }
 
-func (s *Serializer) Marshal(v interface{}) ([]byte, error) {
+var Serializer = NewSerializer()
+
+func (s *serializer) Marshal(v interface{}) ([]byte, error) {
 	switch v := v.(type) {
 	case *string:
 		return []byte(*v), nil
@@ -23,7 +25,7 @@ func (s *Serializer) Marshal(v interface{}) ([]byte, error) {
 	}
 }
 
-func (s *Serializer) Unmarshal(data []byte, v interface{}) error {
+func (s *serializer) Unmarshal(data []byte, v interface{}) error {
 	switch v := v.(type) {
 	case *string:
 		*v = string(data)

@@ -7,7 +7,6 @@ message DictionaryItem {
   string route = 1;
   uint32 code = 2;
   string type = 3;
-  uint32 serializer = 4;
 };
 
 message MemberInfo {
@@ -49,9 +48,10 @@ message RequestMessage {
   uint64 ID = 4;
   int64 UID = 5;
   string route = 6;
-  bytes data = 7;
-  NetAddr remoteAddr = 8;
-  uint32 branch = 9;
+  uint32 dataType = 7;
+  bytes data = 8;
+  NetAddr remoteAddr = 9;
+  uint32 branch = 10;
 }
 
 message NotifyMessage {
@@ -61,9 +61,10 @@ message NotifyMessage {
   uint64 ID = 4;
   int64 UID = 5;
   string route = 6;
-  bytes data = 7;
-  NetAddr remoteAddr = 8;
-  uint32 branch = 9;
+  uint32 dataType = 7;
+  bytes data = 8;
+  NetAddr remoteAddr = 9;
+  uint32 branch = 10;
 }
 
 message ResponseMessage {
@@ -71,14 +72,16 @@ message ResponseMessage {
   uint32 shortVer = 2;
   uint64 ID = 3;
   string route = 4;
-  bytes data = 5;
+  uint32 dataType = 5;
+  bytes data = 6;
 }
 
 message PushMessage {
   uint64 sessionID = 1;
   uint32 shortVer = 2;
   string route = 3;
-  bytes data = 4;
+  uint32 dataType = 4;
+  bytes data = 5;
 }
 
 message MemberHandleResponse {}

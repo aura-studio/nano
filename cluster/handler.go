@@ -101,7 +101,6 @@ func (h *LocalHandler) Register(comp component.Component, opts []component.Optio
 		route := fmt.Sprintf("%s.%s", s.Name, name)
 		h.localHandlers[route] = handler
 		message.WriteDictionaryItem(route, handler.Code)
-		message.WriteSerializerItem(route, env.SerializerType)
 	}
 
 	return nil
@@ -133,7 +132,6 @@ func (h *LocalHandler) addMember(member *clusterpb.MemberInfo) {
 	}
 
 	message.WriteDictionary(member.Dictionary)
-	message.WriteSerializers(member.Dictionary)
 }
 
 func (h *LocalHandler) delMember(addr string) {
@@ -239,10 +237,9 @@ func (h *LocalHandler) LocalDictionary() []*clusterpb.DictionaryItem {
 	var result []*clusterpb.DictionaryItem
 	for name, handler := range h.localHandlers {
 		result = append(result, &clusterpb.DictionaryItem{
-			Route:      name,
-			Code:       uint32(handler.Code),
-			Type:       handler.Type.String(),
-			Serializer: uint32(env.SerializerType),
+			Route: name,
+			Code:  uint32(handler.Code),
+			Type:  handler.Type.String(),
 		})
 	}
 	return result
@@ -529,7 +526,9 @@ func (h *LocalHandler) localProcess(handler *component.Handler, lastMid uint64, 
 		data = payload
 	} else {
 		data = reflect.New(handler.Type.Elem()).Interface()
-		err := env.SerializerType.Serializer().Unmarshal(payload, data)
+
+		
+		err := env.Serializer.Unmarshal(payload, data)
 		if err != nil {
 			log.Errorf("Deserialize to %T failed: %+v (%v)", data, err, payload)
 			return

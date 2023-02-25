@@ -63,9 +63,8 @@ type (
 		lastAt   int64               // last heartbeat unix time stamp
 		pipeline pipeline.Pipeline
 
-		rpcHandler        rpcHandler
-		srv               reflect.Value                        // cached session reflect.Value
-		serializerTypeMap map[string]serializer.SerializerType // copy system serializers for agent
+		rpcHandler rpcHandler
+		srv        reflect.Value // cached session reflect.Value
 
 		codecEntity   codec.CodecEntity
 		payloadLength int
@@ -83,15 +82,14 @@ type (
 func newAgent(conn net.Conn, pipeline pipeline.Pipeline, rpcHandler rpcHandler,
 	codec codec.Codec, nodeID uint32) *agent {
 	a := &agent{
-		conn:              conn,
-		state:             statusStart,
-		chDie:             make(chan struct{}),
-		lastAt:            time.Now().Unix(),
-		chSend:            make(chan pendingMessage, agentWriteBacklog),
-		pipeline:          pipeline,
-		rpcHandler:        rpcHandler,
-		serializerTypeMap: message.DuplicateSerializerTypeMap(),
-		codecEntity:       codec.Entity(message.DuplicateDictionary()),
+		conn:        conn,
+		state:       statusStart,
+		chDie:       make(chan struct{}),
+		lastAt:      time.Now().Unix(),
+		chSend:      make(chan pendingMessage, agentWriteBacklog),
+		pipeline:    pipeline,
+		rpcHandler:  rpcHandler,
+		codecEntity: codec.Entity(message.DuplicateDictionary()),
 	}
 
 	// binding session
@@ -148,11 +146,6 @@ func (a *agent) RPC(mid uint64, route string, v interface{}) error {
 		return ErrBrokenPipe
 	}
 
-	data, err := message.RouteSerialize(a.serializerTypeMap, route, v)
-	if err != nil {
-		return err
-	}
-
 	if env.Debug {
 		switch d := v.(type) {
 		case []byte:
@@ -170,7 +163,10 @@ func (a *agent) RPC(mid uint64, route string, v interface{}) error {
 		ShortVer: a.session.ShortVer(),
 		ID:       mid,
 		Route:    route,
-		Data:     data,
+		DataType: uint32(serializer.ToType(env.Serializer)),
+	}
+	if err := msg.Serialize(v); err != nil {
+		return err
 	}
 	a.rpcHandler(a.session, msg, true)
 	return nil
@@ -270,19 +266,6 @@ func (a *agent) write() {
 			}
 
 		case data := <-a.chSend:
-			payload, err := message.Serialize(data.payload)
-			if err != nil {
-				switch data.typ {
-				case message.Push:
-					log.Errorf("Push: %s error: %s", data.route, err.Error())
-				case message.Response:
-					log.Errorf("Response message(id: %d) error: %s", data.mid, err.Error())
-				default:
-					// expect
-				}
-				break
-			}
-
 			// construct message and encode
 			m := &message.Message{
 				Type:      data.typ,
@@ -292,8 +275,13 @@ func (a *agent) write() {
 				UnixTime:  uint32(time.Now().Unix()),
 				SessionID: a.session.ID(),
 				Route:     data.route,
-				Data:      payload,
+				DataType:  uint32(serializer.ToType(env.Serializer)),
 			}
+			if err := m.Serialize(data.payload); err != nil {
+				log.Errorln(err.Error())
+				break
+			}
+
 			if pipe := a.pipeline; pipe != nil {
 				err := pipe.Outbound().Process(a.session, m)
 				if err != nil {

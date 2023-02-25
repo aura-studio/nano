@@ -7,6 +7,7 @@ import (
 	"github.com/aura-studio/nano/env"
 	"github.com/aura-studio/nano/message"
 	"github.com/aura-studio/nano/serializer"
+	"github.com/aura-studio/nano/serializer/protobuf"
 	"github.com/go-redis/redis"
 )
 
@@ -20,7 +21,7 @@ type Options struct {
 	WebSocketPath        string
 	WebSocketCompression bool
 	PrettyJSON           bool
-	SerializerType       serializer.SerializerType // serializer for connector
+	Serializer           serializer.Serializer // serializer for connector
 	ErrorReader          ErrorReader
 	ReasonReader         ReasonReader
 	Components           *component.Components
@@ -36,8 +37,8 @@ type Option func(*Options)
 
 var (
 	options = &Options{
-		SerializerType: serializer.Protobuf,
-		Codec:          plaincodec.NewCodec(),
+		Serializer: protobuf.Serializer,
+		Codec:      plaincodec.NewCodec(),
 	}
 )
 
@@ -64,9 +65,9 @@ func WithPrettyJSON(prettyJSON bool) Option {
 
 // WithSerializerType customizes application serializer, which automatically Marshal
 // and UnMarshal handler payload
-func WithSerializerType(serializer serializer.SerializerType) Option {
+func WithSerializer(serializer serializer.Serializer) Option {
 	return func(o *Options) {
-		o.SerializerType = serializer
+		o.Serializer = serializer
 	}
 }
 

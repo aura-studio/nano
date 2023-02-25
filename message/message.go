@@ -22,6 +22,9 @@ package message
 
 import (
 	"fmt"
+
+	"github.com/aura-studio/nano/env"
+	"github.com/aura-studio/nano/serializer"
 )
 
 // Type represents the type of message, which could be Request/Notify/Response/Push
@@ -55,6 +58,7 @@ type Message struct {
 	UnixTime  uint32 // unix time in seconds
 	SessionID uint64 // server session id int64
 	Route     string // route for locating service
+	DataType  uint32 // data type
 	Data      []byte // payload
 }
 
@@ -70,4 +74,36 @@ func (m *Message) String() string {
 
 func (m *Message) TypeValid() bool {
 	return m.Type >= Request && m.Type <= Push
+}
+
+func (m *Message) Serializer() serializer.Serializer {
+	return serializer.FromType(m.DataType)
+}
+
+func (m *Message) Serialize(v interface{}) error {
+	if data, ok := v.([]byte); ok {
+		m.Data = data
+		return nil
+	}
+	data, err := m.Serializer().Marshal(v)
+	if err != nil {
+		return err
+	}
+	m.Data = data
+	return nil
+}
+
+func (m *Message) Deserialize(v interface{}) error {
+	return m.Serializer().Unmarshal(m.Data, v)
+}
+
+func Serialize(v interface{}) ([]byte, error) {
+	if data, ok := v.([]byte); ok {
+		return data, nil
+	}
+	data, err := env.Serializer.Marshal(v)
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
 }

@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/aura-studio/nano/message"
-	"github.com/aura-studio/nano/serializer"
+	"github.com/aura-studio/nano/serializer/protobuf"
 
 	"github.com/aura-studio/nano/benchmark/testdata"
 	"github.com/aura-studio/nano/cluster"
@@ -106,7 +106,7 @@ func (s *nodeSuite) TestNodeStartup(c *C) {
 	c.Assert(member2Handler.RemoteService(), DeepEquals, []string{"GateComponent", "MasterComponent"})
 
 	connector := connector.NewConnector(
-		connector.WithSerializerType(serializer.Protobuf),
+		connector.WithSerializer(protobuf.Serializer),
 	)
 
 	chWait := make(chan struct{})

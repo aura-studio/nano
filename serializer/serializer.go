@@ -48,56 +48,102 @@ type (
 	}
 )
 
-type SerializerType uint32
+type Type = uint32
 
 const (
-	Auto SerializerType = iota
-	JSON
-	Protobuf
-	RawString
+	AutoType Type = iota
+	JSONType
+	ProtobufType
+	RawStringType
 )
 
-var serializerTypeStrMap = map[SerializerType]string{
-	Auto:      "Auto",
-	JSON:      "JSON",
-	Protobuf:  "Protobuf",
-	RawString: "RawString",
-}
+const (
+	AutoString      = "Auto"
+	JSONString      = "JSON"
+	ProtobufString  = "Protobuf"
+	RawStringString = "RawString"
+)
 
-var serializerTypeSerializerMap = map[SerializerType]Serializer{
-	Auto:      auto.NewSerializer(),
-	JSON:      json.NewSerializer(),
-	Protobuf:  protobuf.NewSerializer(),
-	RawString: rawstring.NewSerializer(),
-}
-
-func (t SerializerType) String() string {
-	if s, ok := serializerTypeStrMap[t]; ok {
-		return s
+func FromString(s string) Serializer {
+	switch s {
+	case AutoString:
+		return auto.Serializer
+	case JSONString:
+		return json.Serializer
+	case ProtobufString:
+		return protobuf.Serializer
+	case RawStringString:
+		return rawstring.Serializer
 	}
-	return "Unknown"
+	panic(fmt.Errorf("serializer: unknown serializer %s", s))
 }
 
-func (t SerializerType) Serializer() Serializer {
-	if s, ok := serializerTypeSerializerMap[t]; ok {
-		return s
+func ToString(s Serializer) string {
+	switch s {
+	case auto.Serializer:
+		return AutoString
+	case json.Serializer:
+		return JSONString
+	case protobuf.Serializer:
+		return ProtobufString
+	case rawstring.Serializer:
+		return RawStringString
 	}
-	panic(fmt.Errorf("serializer type %v not found", t))
+	panic(fmt.Errorf("serializer: unknown serializer %v", s))
 }
 
-func ParseSerializerType(s string) (SerializerType, error) {
-	for k, v := range serializerTypeStrMap {
-		if v == s {
-			return k, nil
-		}
+func FromType(t Type) Serializer {
+	switch t {
+	case AutoType:
+		return auto.Serializer
+	case JSONType:
+		return json.Serializer
+	case ProtobufType:
+		return protobuf.Serializer
+	case RawStringType:
+		return rawstring.Serializer
 	}
-	return 0, fmt.Errorf("serializer type %v not found", s)
+	panic(fmt.Errorf("serializer: unknown serializer %d", t))
 }
 
-func MustSerializerType(s string) SerializerType {
-	t, err := ParseSerializerType(s)
-	if err != nil {
-		panic(err)
+func ToType(s Serializer) Type {
+	switch s {
+	case auto.Serializer:
+		return AutoType
+	case json.Serializer:
+		return JSONType
+	case protobuf.Serializer:
+		return ProtobufType
+	case rawstring.Serializer:
+		return RawStringType
 	}
-	return t
+	panic(fmt.Errorf("serializer: unknown serializer %v", s))
+}
+
+func StrToType(s string) Type {
+	switch s {
+	case AutoString:
+		return AutoType
+	case JSONString:
+		return JSONType
+	case ProtobufString:
+		return ProtobufType
+	case RawStringString:
+		return RawStringType
+	}
+	panic(fmt.Errorf("serializer: unknown serializer %s", s))
+}
+
+func TypeToStr(t Type) string {
+	switch t {
+	case AutoType:
+		return AutoString
+	case JSONType:
+		return JSONString
+	case ProtobufType:
+		return ProtobufString
+	case RawStringType:
+		return RawStringString
+	}
+	panic(fmt.Errorf("serializer: unknown serializer %d", t))
 }

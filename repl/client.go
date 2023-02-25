@@ -21,10 +21,8 @@
 package repl
 
 import (
-	"encoding/json"
-
 	"github.com/aura-studio/nano/log"
-	"github.com/aura-studio/nano/serializer"
+	"github.com/aura-studio/nano/serializer/json"
 
 	"github.com/aura-studio/nano/connector"
 	"github.com/aura-studio/nano/message"
@@ -55,7 +53,7 @@ func newClient() *Client {
 			connector.WithWebSocketCompression(options.WebSocketCompression),
 			connector.WithCodec(options.Codec),
 			connector.WithDictionary(options.Dictionary),
-			connector.WithSerializerType(options.SerializerType),
+			connector.WithSerializer(options.Serializer),
 			connector.WithLogger(logger),
 			connector.WithBranch(options.Branch),
 		),
@@ -73,13 +71,13 @@ func UnexpectedEventCb(pc *Client) func(data interface{}) {
 			return
 		}
 
-		err = options.SerializerType.Serializer().Unmarshal(push.Data, pushStruct)
+		err = options.Serializer.Unmarshal(push.Data, pushStruct)
 		if err != nil {
 			log.Printf("unmarshal error data:%v ", push.Data)
 			return
 		}
 
-		jsonData, err := json.Marshal(pushStruct)
+		jsonData, err := json.Serializer.Marshal(pushStruct)
 		if err != nil {
 			log.Printf("JSON marshal error data:%v", pushStruct)
 			return
@@ -116,7 +114,7 @@ func (pc *Client) Disconnect() {
 // SendRequest sends a request to the server
 func (pc *Client) SendRequest(route string, data []byte) (uint, error) {
 	var request interface{}
-	if options.SerializerType != serializer.JSON {
+	if options.Serializer != json.Serializer {
 		v, err := routeMessage(route)
 		if err != nil {
 			return 0, err
@@ -125,7 +123,7 @@ func (pc *Client) SendRequest(route string, data []byte) (uint, error) {
 		case []byte:
 			request = data
 		default:
-			err = json.Unmarshal(data, v)
+			err = json.Serializer.Unmarshal(data, v)
 			if err != nil {
 				return 0, err
 			}
@@ -137,7 +135,7 @@ func (pc *Client) SendRequest(route string, data []byte) (uint, error) {
 
 	err := pc.Connector.Request(route, request, func(data interface{}) {
 		response := data.(*message.Message)
-		if options.SerializerType != serializer.JSON {
+		if options.Serializer != json.Serializer {
 			v, err := routeMessage(response.Route)
 			if err != nil {
 				log.Println(err.Error())
@@ -146,12 +144,12 @@ func (pc *Client) SendRequest(route string, data []byte) (uint, error) {
 			switch v.(type) {
 			case []byte:
 			default:
-				err = options.SerializerType.Serializer().Unmarshal(response.Data, v)
+				err = options.Serializer.Unmarshal(response.Data, v)
 				if err != nil {
 					log.Printf("unmarshal error data:%v", response.Data)
 					return
 				}
-				response.Data, err = json.Marshal(v)
+				response.Data, err = json.Serializer.Marshal(v)
 				if err != nil {
 					log.Printf("JSON marshal error data:%v", v)
 					return
@@ -169,7 +167,7 @@ func (pc *Client) SendRequest(route string, data []byte) (uint, error) {
 // SendNotify sends a notify to the server
 func (pc *Client) SendNotify(route string, data []byte) error {
 	var notify interface{}
-	if options.SerializerType != serializer.JSON {
+	if options.Serializer != json.Serializer {
 		v, err := routeMessage(route)
 		if err != nil {
 			return err
@@ -178,7 +176,7 @@ func (pc *Client) SendNotify(route string, data []byte) error {
 		case []byte:
 			notify = data
 		default:
-			err = json.Unmarshal(data, v)
+			err = json.Serializer.Unmarshal(data, v)
 			if err != nil {
 				return err
 			}

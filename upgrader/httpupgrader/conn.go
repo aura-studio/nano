@@ -16,6 +16,7 @@ import (
 	"github.com/aura-studio/nano/log"
 	"github.com/aura-studio/nano/message"
 	"github.com/aura-studio/nano/packet"
+	"github.com/aura-studio/nano/serializer"
 
 	"github.com/aura-studio/nano/codec"
 	"github.com/aura-studio/nano/env"
@@ -65,10 +66,11 @@ func (c *Conn) Read(b []byte) (int, error) {
 
 	if c.readBuf == nil {
 		var (
-			err     error
-			data    []byte
-			route   string
-			dataMap = make(map[string]interface{})
+			err      error
+			data     []byte
+			route    string
+			dataMap  = make(map[string]interface{})
+			dataType uint32
 		)
 
 		route = c.params["route"]
@@ -111,10 +113,16 @@ func (c *Conn) Read(b []byte) (int, error) {
 
 			if len(bodyData) > 0 { // binary
 				data = bodyData
+				dataType = serializer.JSONType
 			} else { // json
 				data, err = json.Marshal(dataMap)
 				if err != nil {
 					return 0, err
+				}
+				if xDataType := c.r.Header.Get("X-Data-Type"); xDataType != "" {
+					dataType = serializer.StrToType(xDataType)
+				} else {
+					dataType = serializer.AutoType
 				}
 			}
 		}
@@ -129,6 +137,7 @@ func (c *Conn) Read(b []byte) (int, error) {
 			ID:        1,
 			UnixTime:  uint32(time.Now().Unix()),
 			SessionID: 0, // 0 is ok for pure http
+			DataType:  dataType,
 			Data:      data,
 		}
 		m, err := c.codecEntity.EncodeMessage(msg)
