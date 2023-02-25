@@ -267,7 +267,7 @@ func (a *agent) write() {
 
 		case data := <-a.chSend:
 			// construct message and encode
-			m := &message.Message{
+			msg := &message.Message{
 				Type:      data.typ,
 				Branch:    a.session.Branch(),
 				ShortVer:  a.session.ShortVer(),
@@ -277,20 +277,20 @@ func (a *agent) write() {
 				Route:     data.route,
 				DataType:  uint32(serializer.ToType(env.Serializer)),
 			}
-			if err := m.Serialize(data.payload); err != nil {
+			if err := msg.Serialize(data.payload); err != nil {
 				log.Errorln(err.Error())
 				break
 			}
 
 			if pipe := a.pipeline; pipe != nil {
-				err := pipe.Outbound().Process(a.session, m)
+				err := pipe.Outbound().Process(a.session, msg)
 				if err != nil {
 					log.Errorln("broken pipeline", err.Error())
 					break
 				}
 			}
 
-			em, err := a.codecEntity.EncodeMessage(m)
+			em, err := a.codecEntity.EncodeMessage(msg)
 			if err != nil {
 				log.Errorln(err.Error())
 				break
