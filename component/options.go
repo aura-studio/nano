@@ -28,7 +28,7 @@ type (
 	options struct {
 		name          string                 // component name
 		renameHandler func(string) string    // rename handler name
-		schedule      scheduler.SchedFunc    // schedule service task
+		scheduler     scheduler.Scheduler    // schedule service task
 		dictionary    map[uint32]interface{} // Dictionary info slice
 	}
 
@@ -52,9 +52,9 @@ func WithRenameHandlerFunc(fn func(string) string) Option {
 }
 
 // WithScheduleFunc set the func of the service schedule
-func WithScheduleFunc(fn scheduler.SchedFunc) Option {
+func WithScheduler(sched scheduler.Scheduler) Option {
 	return func(opt *options) {
-		opt.schedule = fn
+		opt.scheduler = sched
 	}
 }
 

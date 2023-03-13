@@ -36,30 +36,46 @@ type (
 	// Task is the unit to be scheduled
 	Task func()
 
-	// SchedFunc is the Func type of schedule
-	SchedFunc func(session *session.Session, v interface{}, task Task)
+	sheduler struct {
+		TimerManager
+		timerPrecision time.Duration // timer precision
+		chDie          chan struct{}
+		chExit         chan struct{}
+		chTasks        chan Task
+		started        int32
+		closed         int32
+	}
 
-	Scheduler struct {
-		*TimerManager
-		chDie   chan struct{}
-		chExit  chan struct{}
-		chTasks chan Task
-		started int32
-		closed  int32
+	Scheduler interface {
+		TimerManager
+		Schedule(session *session.Session, v interface{}, task Task)
+		Digest()
+		Close()
 	}
 )
 
-var globalScheduler = NewScheduler()
+var (
+	global Scheduler
+	once   sync.Once
+)
 
-// NewTimerScheduler creates a new TimerScheduler
-func NewScheduler() *Scheduler {
-	s := &Scheduler{
-		TimerManager: NewTimerManager(),
-		chDie:        make(chan struct{}),
-		chExit:       make(chan struct{}),
-		chTasks:      make(chan Task, 1<<8),
-		started:      0,
-		closed:       0,
+func Global() Scheduler {
+	once.Do(func() {
+		global = NewScheduler(env.TimerPrecision)
+	})
+	return global
+}
+
+// NewScheduler creates a new TimerScheduler
+func NewScheduler(timerPrecision time.Duration) *sheduler {
+	s := &sheduler{
+		TimerManager:   NewTimerManager(),
+		timerPrecision: timerPrecision,
+		chDie:          make(chan struct{}),
+		chExit:         make(chan struct{}),
+		chTasks:        make(chan Task, 1<<8),
+		started:        0,
+		closed:         0,
 	}
 
 	go func() {
@@ -80,15 +96,15 @@ func NewScheduler() *Scheduler {
 }
 
 func Digest() {
-	globalScheduler.Digest()
+	global.Digest()
 }
 
-func (s *Scheduler) Digest() {
+func (s *sheduler) Digest() {
 	if atomic.AddInt32(&s.started, 1) != 1 {
 		return
 	}
 
-	ticker := time.NewTicker(env.TimerPrecision)
+	ticker := time.NewTicker(s.timerPrecision)
 	defer func() {
 		ticker.Stop()
 		close(s.chExit)
@@ -117,11 +133,11 @@ func (s *Scheduler) Digest() {
 }
 
 func Close() {
-	globalScheduler.Close()
+	global.Close()
 }
 
 // Close closes scheduler
-func (s *Scheduler) Close() {
+func (s *sheduler) Close() {
 	if atomic.AddInt32(&s.closed, 1) != 1 {
 		return
 	}
@@ -130,19 +146,11 @@ func (s *Scheduler) Close() {
 }
 
 func Schedule(_ *session.Session, _ interface{}, task Task) {
-	globalScheduler.Schedule(nil, nil, task)
+	global.Schedule(nil, nil, task)
 }
 
 // Schedule implements scheduler.Schedule
-func (s *Scheduler) Schedule(_ *session.Session, _ interface{}, task Task) {
-	s.PushTask(task)
-}
-
-func PushTask(task Task) {
-	globalScheduler.PushTask(task)
-}
-
-func (s *Scheduler) PushTask(task Task) {
+func (s *sheduler) Schedule(_ *session.Session, _ interface{}, task Task) {
 	s.chTasks <- task
 }
 
@@ -188,7 +196,15 @@ func (t *Timer) Stop() {
 	t.counter = 0
 }
 
-type TimerManager struct {
+type TimerManager interface {
+	NewCountTimer(interval time.Duration, count int, fn TimerFunc) *Timer
+	NewAfterTimer(duration time.Duration, fn TimerFunc) *Timer
+	NewCondTimer(condition TimerCondition, fn TimerFunc) *Timer
+	NewTimer(interval time.Duration, fn TimerFunc) *Timer
+	Cron()
+}
+
+type timerManager struct {
 	incrementID int64            // auto increment id
 	timers      map[int64]*Timer // all timers
 
@@ -198,14 +214,14 @@ type TimerManager struct {
 	createdTimer   []*Timer
 }
 
-func NewTimerManager() *TimerManager {
-	return &TimerManager{
+func NewTimerManager() TimerManager {
+	return &timerManager{
 		timers: make(map[int64]*Timer),
 	}
 }
 
 // execute job function with protection
-func (tm *TimerManager) safecall(id int64, fn TimerFunc) {
+func (tm *timerManager) safecall(id int64, fn TimerFunc) {
 	defer func() {
 		if err := recover(); err != nil {
 			log.Errorf("Handle timer %d panic: %+v\n%s", id, err, debug.Stack())
@@ -215,11 +231,7 @@ func (tm *TimerManager) safecall(id int64, fn TimerFunc) {
 	fn()
 }
 
-func Cron() {
-	globalScheduler.Cron()
-}
-
-func (tm *TimerManager) Cron() {
+func (tm *timerManager) Cron() {
 	if len(tm.createdTimer) > 0 {
 		tm.muCreatedTimer.Lock()
 		for _, t := range tm.createdTimer {
@@ -276,7 +288,7 @@ func (tm *TimerManager) Cron() {
 }
 
 func NewCountTimer(interval time.Duration, count int, fn TimerFunc) *Timer {
-	return globalScheduler.NewCountTimer(interval, count, fn)
+	return global.NewCountTimer(interval, count, fn)
 }
 
 // NewCountTimer returns a new Timer containing a function that will be called
@@ -284,7 +296,7 @@ func NewCountTimer(interval time.Duration, count int, fn TimerFunc) *Timer {
 // will be stopped automatically, It adjusts the intervals for slow receivers.
 // The duration d must be greater than zero; if not, NewCountTimer will panic.
 // Stop the timer to release associated resources.
-func (tm *TimerManager) NewCountTimer(interval time.Duration, count int, fn TimerFunc) *Timer {
+func (tm *timerManager) NewCountTimer(interval time.Duration, count int, fn TimerFunc) *Timer {
 	if fn == nil {
 		panic("nano/timer: nil timer function")
 	}
@@ -308,26 +320,26 @@ func (tm *TimerManager) NewCountTimer(interval time.Duration, count int, fn Time
 }
 
 func NewAfterTimer(duration time.Duration, fn TimerFunc) *Timer {
-	return globalScheduler.NewAfterTimer(duration, fn)
+	return global.NewAfterTimer(duration, fn)
 }
 
 // NewAfterTimer returns a new Timer containing a function that will be called
 // after duration that specified by the duration argument.
 // The duration d must be greater than zero; if not, NewAfterTimer will panic.
 // Stop the timer to release associated resources.
-func (tm *TimerManager) NewAfterTimer(duration time.Duration, fn TimerFunc) *Timer {
+func (tm *timerManager) NewAfterTimer(duration time.Duration, fn TimerFunc) *Timer {
 	return tm.NewCountTimer(duration, 1, fn)
 }
 
 func NewCondTimer(condition TimerCondition, fn TimerFunc) *Timer {
-	return globalScheduler.NewCondTimer(condition, fn)
+	return global.NewCondTimer(condition, fn)
 }
 
 // NewCondTimer returns a new Timer containing a function that will be called
 // when condition satisfied that specified by the condition argument.
 // The duration d must be greater than zero; if not, NewCondTimer will panic.
 // Stop the timer to release associated resources.
-func (tm *TimerManager) NewCondTimer(condition TimerCondition, fn TimerFunc) *Timer {
+func (tm *timerManager) NewCondTimer(condition TimerCondition, fn TimerFunc) *Timer {
 	if condition == nil {
 		panic("nano/timer: nil condition")
 	}
@@ -339,7 +351,7 @@ func (tm *TimerManager) NewCondTimer(condition TimerCondition, fn TimerFunc) *Ti
 }
 
 func NewTimer(interval time.Duration, fn TimerFunc) *Timer {
-	return globalScheduler.NewTimer(interval, fn)
+	return global.NewTimer(interval, fn)
 }
 
 // NewTimer returns a new Timer containing a function that will be called
@@ -347,6 +359,6 @@ func NewTimer(interval time.Duration, fn TimerFunc) *Timer {
 // for slow receivers.
 // The duration d must be greater than zero; if not, NewTimer will panic.
 // Stop the timer to release associated resources.
-func (tm *TimerManager) NewTimer(interval time.Duration, fn TimerFunc) *Timer {
+func (tm *timerManager) NewTimer(interval time.Duration, fn TimerFunc) *Timer {
 	return tm.NewCountTimer(interval, Infinite, fn)
 }
