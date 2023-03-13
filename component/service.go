@@ -40,12 +40,12 @@ type (
 	// Service implements a specific service, some of it's methods will be
 	// called when the correspond events is occurred.
 	Service struct {
-		Name      string              // name of service
-		Type      reflect.Type        // type of the receiver
-		Receiver  reflect.Value       // receiver of methods for the service
-		Handlers  map[string]*Handler // registered methods
-		Scheduler scheduler.Scheduler // tasks are pushed in and wait to be handled
-		Options   options             // options
+		Name         string                 // name of service
+		Type         reflect.Type           // type of the receiver
+		Receiver     reflect.Value          // receiver of methods for the service
+		Handlers     map[string]*Handler    // registered methods
+		ScheduleFunc scheduler.ScheduleFunc // tasks are pushed in and wait to be handled
+		Options      options                // options
 	}
 )
 
@@ -66,10 +66,10 @@ func NewService(comp Component, opts []Option) *Service {
 	} else {
 		s.Name = reflect.Indirect(s.Receiver).Type().Name()
 	}
-	if s.Options.scheduler != nil {
-		s.Scheduler = s.Options.scheduler
+	if s.Options.scheduleFunc != nil {
+		s.ScheduleFunc = s.Options.scheduleFunc
 	} else {
-		s.Scheduler = scheduler.Global()
+		s.ScheduleFunc = scheduler.Global().Schedule
 	}
 
 	return s
