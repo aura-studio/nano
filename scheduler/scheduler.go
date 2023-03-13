@@ -29,6 +29,7 @@ import (
 
 	"github.com/aura-studio/nano/env"
 	"github.com/aura-studio/nano/log"
+	"github.com/aura-studio/nano/session"
 )
 
 type (
@@ -44,9 +45,12 @@ type (
 		closed  int32
 	}
 
+	ScheduleFunc func(_ *session.Session, _ interface{}, task Task)
+
 	Scheduler interface {
 		TimerManager
-		Schedule(task Task)
+		Schedule(_ *session.Session, _ interface{}, task Task)
+		PushTask(task Task)
 		Digest()
 		Close()
 	}
@@ -142,12 +146,20 @@ func (s *sheduler) Close() {
 	<-s.chExit
 }
 
-func Schedule(task Task) {
-	global.Schedule(task)
+func Schedule(_ *session.Session, _ interface{}, task Task) {
+	global.PushTask(task)
+}
+
+func (s *sheduler) Schedule(_ *session.Session, _ interface{}, task Task) {
+	s.PushTask(task)
+}
+
+func PushTask(task Task) {
+	global.PushTask(task)
 }
 
 // Schedule implements scheduler.Schedule
-func (s *sheduler) Schedule(task Task) {
+func (s *sheduler) PushTask(task Task) {
 	s.chTasks <- task
 }
 
