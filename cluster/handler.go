@@ -573,5 +573,5 @@ func (h *LocalHandler) localProcess(handler *component.Handler, lastMid uint64, 
 		log.Errorf("Service not found: %+v", serviceName)
 	}
 
-	service.Scheduler.PushTask(s, data, task)
+	service.Scheduler.Schedule(s, data, task)
 }
