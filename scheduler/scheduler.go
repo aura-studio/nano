@@ -38,12 +38,11 @@ type (
 
 	sheduler struct {
 		TimerManager
-		timerPrecision time.Duration // timer precision
-		chDie          chan struct{}
-		chExit         chan struct{}
-		chTasks        chan Task
-		started        int32
-		closed         int32
+		chDie   chan struct{}
+		chExit  chan struct{}
+		chTasks chan Task
+		started int32
+		closed  int32
 	}
 
 	Scheduler interface {
@@ -61,21 +60,20 @@ var (
 
 func Global() Scheduler {
 	once.Do(func() {
-		global = NewScheduler(env.TimerPrecision)
+		global = NewScheduler()
 	})
 	return global
 }
 
 // NewScheduler creates a new TimerScheduler
-func NewScheduler(timerPrecision time.Duration) *sheduler {
+func NewScheduler() *sheduler {
 	s := &sheduler{
-		TimerManager:   NewTimerManager(),
-		timerPrecision: timerPrecision,
-		chDie:          make(chan struct{}),
-		chExit:         make(chan struct{}),
-		chTasks:        make(chan Task, 1<<8),
-		started:        0,
-		closed:         0,
+		TimerManager: NewTimerManager(),
+		chDie:        make(chan struct{}),
+		chExit:       make(chan struct{}),
+		chTasks:      make(chan Task, 1<<8),
+		started:      0,
+		closed:       0,
 	}
 
 	go func() {
@@ -104,7 +102,7 @@ func (s *sheduler) Digest() {
 		return
 	}
 
-	ticker := time.NewTicker(s.timerPrecision)
+	ticker := time.NewTicker(env.TimerPrecision)
 	defer func() {
 		ticker.Stop()
 		close(s.chExit)
