@@ -114,7 +114,7 @@ func Serve(opts ...Option) {
 		log.Fatalf("Nano server startup failed: %v", err)
 	}
 
-	if node.TCPAddr != "" {
+	if node.TCPAddr != "" || node.HttpAddr != "" {
 		app.typ = Frontend
 	} else {
 		app.typ = Backend
