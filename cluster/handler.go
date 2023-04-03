@@ -370,8 +370,10 @@ func (h *LocalHandler) processPacket(agent *agent, p *packet.Packet) error {
 	// }
 
 	// Check message session id
-	if msg.ID > 1 && msg.SessionID != agent.session.ID() {
-		return fmt.Errorf("invalid message session id: remote: %d, local: %d", msg.SessionID, agent.session.ID())
+	if !env.Debug {
+		if msg.ID > 1 && msg.SessionID != agent.session.ID() {
+			return fmt.Errorf("invalid message session id: remote: %d, local: %d", msg.SessionID, agent.session.ID())
+		}
 	}
 
 	h.processMessage(agent.session, msg, false)
