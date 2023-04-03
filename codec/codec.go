@@ -21,12 +21,15 @@
 package codec
 
 import (
+	"fmt"
+
 	"github.com/aura-studio/nano/message"
 	"github.com/aura-studio/nano/packet"
 )
 
 type (
 	CodecEntity interface {
+		fmt.Stringer
 		EncodePacket([]*packet.Packet) ([]byte, error)
 		DecodePacket(data []byte) ([]*packet.Packet, error)
 		EncodeMessage(*message.Message) ([]byte, error)

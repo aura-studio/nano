@@ -370,7 +370,7 @@ func (h *LocalHandler) processPacket(agent *agent, p *packet.Packet) error {
 	// }
 
 	// Check message session id
-	if !env.Debug {
+	if agent.codecEntity.String() == "cryptocodec" {
 		if msg.ID > 1 && msg.SessionID != agent.session.ID() {
 			return fmt.Errorf("invalid message session id: remote: %d, local: %d", msg.SessionID, agent.session.ID())
 		}

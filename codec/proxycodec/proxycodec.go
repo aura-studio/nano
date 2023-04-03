@@ -45,6 +45,10 @@ func NewCodecEntity() *CodecEntity {
 	}
 }
 
+func (c *CodecEntity) String() string {
+	return "proxycodec"
+}
+
 func (c *CodecEntity) EncodePacket(packets []*packet.Packet) ([]byte, error) {
 	var length int
 	for _, p := range packets {

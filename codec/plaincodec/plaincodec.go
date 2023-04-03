@@ -51,6 +51,10 @@ func NewCodecEntity(dictionary message.Dictionary) *CodecEntity {
 	}
 }
 
+func (c *CodecEntity) String() string {
+	return "plaincodec"
+}
+
 func (c *CodecEntity) EncodePacket(packets []*packet.Packet) ([]byte, error) {
 	var length int
 	for _, p := range packets {

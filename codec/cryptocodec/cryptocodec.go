@@ -59,6 +59,10 @@ func NewCodecEntity(dictionary message.Dictionary, method Method, key []byte) *C
 	}
 }
 
+func (c *CodecEntity) String() string {
+	return "cryptocodec"
+}
+
 func (c *CodecEntity) EncodePacket(packets []*packet.Packet) ([]byte, error) {
 	var length int
 	for _, p := range packets {
