@@ -424,7 +424,7 @@ func (n *Node) routerHandler(params map[string]string, w http.ResponseWriter, r 
 	}
 
 	if atomic.LoadUint32(&n.state) != 0 {
-		log.Errorln("Server is closing, connection will be dropped.")
+		log.Info("Server is closing, connection will be dropped.")
 		if conn != nil {
 			conn.Close()
 		}
