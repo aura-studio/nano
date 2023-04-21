@@ -38,6 +38,7 @@ import (
 	"github.com/aura-studio/nano/message"
 	"github.com/aura-studio/nano/options"
 	"github.com/aura-studio/nano/session"
+	"github.com/aura-studio/nano/style"
 	"github.com/aura-studio/nano/upgrader/httpupgrader"
 	"github.com/aura-studio/nano/upgrader/wsupgrader"
 	"github.com/aura-studio/snowflake"
@@ -375,35 +376,17 @@ func (n *Node) listenAndServeTCP() {
 
 func (n *Node) listenAndServeHttp() {
 	router := mux.NewRouter()
-	router.HandleFunc("/{route:[A-Za-z\\.]*}", func(w http.ResponseWriter, r *http.Request) {
-		var (
-			conn net.Conn
-			err  error
-		)
+	router.HandleFunc("/{service:[A-Za-z0-9\\-]*}/{handler:[A-Za-z0-9\\-]*}", func(w http.ResponseWriter, r *http.Request) {
 		params := mux.Vars(r)
-		if route, ok := params["route"]; ok && route == "websocket" {
-			conn, err = wsupgrader.NewUpgrader().Upgrade(w, r, params)
-		} else {
-			conn, err = httpupgrader.NewUpgrader().Upgrade(w, r, params)
-		}
-
-		if err != nil {
-			log.Errorf("Upgrade failure, connection will be dropped. URI=%s, Error=%s", r.RequestURI, err.Error())
-			if conn != nil {
-				conn.Close()
-			}
-			return
-		}
-
-		if atomic.LoadUint32(&n.state) != 0 {
-			log.Errorln("Server is closing, connection will be dropped.")
-			if conn != nil {
-				conn.Close()
-			}
-			return
-		}
-
-		go n.handler.handle(conn)
+		service := strings.Join(style.GoogleChain(params["service"]), "")
+		handler := strings.Join(style.GoogleChain(params["handler"]), "")
+		route := fmt.Sprintf("%s.%s", service, handler)
+		params["route"] = route
+		n.routerHandler(params, w, r)
+	})
+	router.HandleFunc("/{route:[A-Za-z0-9\\.]*}", func(w http.ResponseWriter, r *http.Request) {
+		params := mux.Vars(r)
+		n.routerHandler(params, w, r)
 	})
 	http.Handle("/", router)
 
@@ -418,6 +401,37 @@ func (n *Node) listenAndServeHttp() {
 			log.Fatal(err.Error())
 		}
 	}
+}
+
+func (n *Node) routerHandler(params map[string]string, w http.ResponseWriter, r *http.Request) {
+	var (
+		conn net.Conn
+		err  error
+	)
+
+	if route, ok := params["route"]; ok && route == "websocket" {
+		conn, err = wsupgrader.NewUpgrader().Upgrade(w, r, params)
+	} else {
+		conn, err = httpupgrader.NewUpgrader().Upgrade(w, r, params)
+	}
+
+	if err != nil {
+		log.Errorf("Upgrade failure, connection will be dropped. URI=%s, Error=%s", r.RequestURI, err.Error())
+		if conn != nil {
+			conn.Close()
+		}
+		return
+	}
+
+	if atomic.LoadUint32(&n.state) != 0 {
+		log.Errorln("Server is closing, connection will be dropped.")
+		if conn != nil {
+			conn.Close()
+		}
+		return
+	}
+
+	go n.handler.handle(conn)
 }
 
 func (n *Node) ListenAndServeDebug() {
