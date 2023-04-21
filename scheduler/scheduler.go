@@ -58,13 +58,13 @@ type (
 
 var (
 	global Scheduler
-	once   sync.Once
 )
 
+func init() {
+	global = NewScheduler()
+}
+
 func Global() Scheduler {
-	once.Do(func() {
-		global = NewScheduler()
-	})
 	return global
 }
 
