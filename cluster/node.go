@@ -388,6 +388,9 @@ func (n *Node) listenAndServeHttp() {
 		params := mux.Vars(r)
 		n.routerHandler(params, w, r)
 	})
+	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("OK"))
+	})
 	http.Handle("/", router)
 
 	addr := n.WholeInterface(n.HttpAddr)
