@@ -10,6 +10,8 @@ import (
 
 // Repl start a shell for user
 func Repl(opts ...Option) {
+	initRepl()
+
 	for _, option := range opts {
 		option(options)
 	}

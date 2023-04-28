@@ -108,7 +108,7 @@ var (
 	usernamePath string
 )
 
-func init() {
+func initRepl() {
 	initLogger()
 	home, err := homedir.Dir()
 	if err != nil {
