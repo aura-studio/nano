@@ -376,6 +376,13 @@ func (n *Node) listenAndServeTCP() {
 
 func (n *Node) listenAndServeHttp() {
 	router := mux.NewRouter()
+	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("OK"))
+	})
+	router.HandleFunc("/{route:[A-Za-z0-9\\.]*}", func(w http.ResponseWriter, r *http.Request) {
+		params := mux.Vars(r)
+		n.routerHandler(params, w, r)
+	})
 	router.HandleFunc("/{service:[A-Za-z0-9\\-]*}/{handler:[A-Za-z0-9\\-]*}", func(w http.ResponseWriter, r *http.Request) {
 		params := mux.Vars(r)
 		service := strings.Join(style.GoogleChain(params["service"]), "")
@@ -384,13 +391,7 @@ func (n *Node) listenAndServeHttp() {
 		params["route"] = route
 		n.routerHandler(params, w, r)
 	})
-	router.HandleFunc("/{route:[A-Za-z0-9\\.]*}", func(w http.ResponseWriter, r *http.Request) {
-		params := mux.Vars(r)
-		n.routerHandler(params, w, r)
-	})
-	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("OK"))
-	})
+
 	http.Handle("/", router)
 
 	addr := n.WholeInterface(n.HttpAddr)
