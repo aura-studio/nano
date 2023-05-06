@@ -314,11 +314,13 @@ CLOSE:
 	for i := length - 1; i >= 0; i-- {
 		components[i].Comp.BeforeClose()
 	}
+	log.Infof("Hooks before closed are done!")
 
 	// reverse call `Close` hooks
 	for i := length - 1; i >= 0; i-- {
 		components[i].Comp.Close()
 	}
+	log.Infof("Hooks on closed are done!")
 
 	// etcd mode
 	if n.Etcd {
@@ -345,10 +347,14 @@ CLOSE:
 		}
 	}
 
+	log.Infof("Cluster unregistered")
+
 EXIT:
 	if n.server != nil {
 		n.server.GracefulStop()
 	}
+
+	log.Infof("Cluster disconnected")
 }
 
 // Enable current server accept connection
