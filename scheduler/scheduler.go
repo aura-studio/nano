@@ -105,16 +105,23 @@ func (s *sheduler) Digest() {
 		return
 	}
 
-	ticker := time.NewTicker(env.TimerPrecision)
 	defer func() {
-		ticker.Stop()
 		close(s.chExit)
+		s.TimerManager.CloseTimer()
 	}()
 
 	for {
 		select {
-		case <-ticker.C:
-			s.TimerManager.Cron()
+		case f := <-s.TimerManager.TaskChan():
+			func() {
+				defer func() {
+					if err := recover(); err != nil {
+						log.Errorf("panic: %v\n%s", err.(error), string(debug.Stack()))
+					}
+				}()
+
+				f()
+			}()
 
 		case f := <-s.chTasks:
 			func() {
@@ -210,10 +217,20 @@ type TimerManager interface {
 	NewAfterTimer(duration time.Duration, fn TimerFunc) *Timer
 	NewCondTimer(condition TimerCondition, fn TimerFunc) *Timer
 	NewTimer(interval time.Duration, fn TimerFunc) *Timer
-	Cron()
+	TaskChan() <-chan Task
+	CloseTimer()
 }
 
 type timerManager struct {
+	chDie   chan struct{}
+	chExit  chan struct{}
+	chTask  chan Task
+	started int32
+	closed  int32
+
+	muLazyInited sync.RWMutex
+	inited       bool
+
 	incrementID int64            // auto increment id
 	timers      map[int64]*Timer // all timers
 
@@ -225,8 +242,75 @@ type timerManager struct {
 
 func NewTimerManager() TimerManager {
 	return &timerManager{
+		chDie:   make(chan struct{}),
+		chExit:  make(chan struct{}),
+		chTask:  make(chan Task, 1<<8),
+		started: 0,
+		closed:  0,
+
 		timers: make(map[int64]*Timer),
 	}
+}
+
+func (tm *timerManager) CloseTimer() {
+	if atomic.AddInt32(&tm.closed, 1) != 1 {
+		return
+	}
+	close(tm.chDie)
+	<-tm.chExit
+}
+
+func (tm *timerManager) lazy() {
+	tm.muLazyInited.Lock()
+	defer tm.muLazyInited.Unlock()
+	if tm.inited {
+		return
+	}
+
+	tm.init()
+	tm.inited = true
+}
+
+func (tm *timerManager) init() {
+	go func() {
+		defer func() {
+			if v := recover(); v != nil {
+				if err, ok := v.(error); ok {
+					log.Errorf("panic: %v\n%s", err, string(debug.Stack()))
+				} else {
+					log.Errorf("panic: %v\n%s", v, string(debug.Stack()))
+				}
+			}
+		}()
+
+		tm.digest()
+	}()
+}
+
+func (tm *timerManager) digest() {
+	if atomic.AddInt32(&tm.started, 1) != 1 {
+		return
+	}
+
+	ticker := time.NewTicker(env.TimerPrecision)
+	defer func() {
+		ticker.Stop()
+		close(tm.chExit)
+	}()
+
+	ticker = time.NewTicker(env.TimerPrecision)
+	for {
+		select {
+		case <-ticker.C:
+			tm.chTask <- tm.cron
+		case <-tm.chDie:
+			return
+		}
+	}
+}
+
+func (tm *timerManager) TaskChan() <-chan Task {
+	return tm.chTask
 }
 
 // execute job function with protection
@@ -240,7 +324,7 @@ func (tm *timerManager) safecall(id int64, fn TimerFunc) {
 	fn()
 }
 
-func (tm *timerManager) Cron() {
+func (tm *timerManager) cron() {
 	if len(tm.createdTimer) > 0 {
 		tm.muCreatedTimer.Lock()
 		for _, t := range tm.createdTimer {
@@ -306,6 +390,7 @@ func NewCountTimer(interval time.Duration, count int, fn TimerFunc) *Timer {
 // The duration d must be greater than zero; if not, NewCountTimer will panic.
 // Stop the timer to release associated resources.
 func (tm *timerManager) NewCountTimer(interval time.Duration, count int, fn TimerFunc) *Timer {
+	tm.lazy()
 	if fn == nil {
 		panic("nano/timer: nil timer function")
 	}
