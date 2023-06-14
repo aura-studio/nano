@@ -13,7 +13,7 @@ import (
 
 const (
 	HeadLength    = 2
-	MaxPacketSize = 64 * 1024
+	MaxPacketSize = 64 * 1024 * 1024
 )
 
 const (
