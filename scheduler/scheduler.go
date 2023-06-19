@@ -36,7 +36,7 @@ type (
 	// Task is the unit to be scheduled
 	Task func()
 
-	sheduler struct {
+	scheduler struct {
 		TimerManager
 		chDie   chan struct{}
 		chExit  chan struct{}
@@ -69,8 +69,8 @@ func Global() Scheduler {
 }
 
 // NewScheduler creates a new TimerScheduler
-func NewScheduler() *sheduler {
-	s := &sheduler{
+func NewScheduler() *scheduler {
+	s := &scheduler{
 		TimerManager: NewTimerManager(),
 		chDie:        make(chan struct{}),
 		chExit:       make(chan struct{}),
@@ -100,7 +100,7 @@ func Digest() {
 	global.Digest()
 }
 
-func (s *sheduler) Digest() {
+func (s *scheduler) Digest() {
 	if atomic.AddInt32(&s.started, 1) != 1 {
 		return
 	}
@@ -145,7 +145,7 @@ func Close() {
 }
 
 // Close closes scheduler
-func (s *sheduler) Close() {
+func (s *scheduler) Close() {
 	if atomic.AddInt32(&s.closed, 1) != 1 {
 		return
 	}
@@ -157,7 +157,7 @@ func Schedule(_ *session.Session, _ interface{}, task Task) {
 	global.PushTask(task)
 }
 
-func (s *sheduler) Schedule(_ *session.Session, _ interface{}, task Task) {
+func (s *scheduler) Schedule(_ *session.Session, _ interface{}, task Task) {
 	s.PushTask(task)
 }
 
@@ -166,7 +166,7 @@ func PushTask(task Task) {
 }
 
 // Schedule implements scheduler.Schedule
-func (s *sheduler) PushTask(task Task) {
+func (s *scheduler) PushTask(task Task) {
 	s.chTasks <- task
 }
 
