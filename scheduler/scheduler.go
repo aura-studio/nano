@@ -106,8 +106,8 @@ func (s *sheduler) Digest() {
 	}
 
 	defer func() {
-		close(s.chExit)
 		s.TimerManager.CloseTimer()
+		close(s.chExit)
 	}()
 
 	for {
@@ -253,6 +253,7 @@ func NewTimerManager() TimerManager {
 }
 
 func (tm *timerManager) CloseTimer() {
+	tm.lazy()
 	if atomic.AddInt32(&tm.closed, 1) != 1 {
 		return
 	}
