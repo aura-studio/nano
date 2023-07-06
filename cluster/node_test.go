@@ -64,7 +64,7 @@ func (s *nodeSuite) TestNodeStartup(c *C) {
 			MemberAddr: "127.0.0.1:4450",
 		},
 	}
-	err := masterNode.Startup()
+	err := masterNode.Startup(nil)
 	c.Assert(err, IsNil)
 	masterHandler := masterNode.Handler()
 	c.Assert(masterHandler.LocalService(), DeepEquals, []string{"MasterComponent"})
@@ -79,7 +79,7 @@ func (s *nodeSuite) TestNodeStartup(c *C) {
 			Components:    member1Comps,
 		},
 	}
-	err = memberNode1.Startup()
+	err = memberNode1.Startup(nil)
 	c.Assert(err, IsNil)
 	member1Handler := memberNode1.Handler()
 	c.Assert(masterHandler.LocalService(), DeepEquals, []string{"MasterComponent"})
@@ -96,7 +96,7 @@ func (s *nodeSuite) TestNodeStartup(c *C) {
 			Components:    member2Comps,
 		},
 	}
-	err = memberNode2.Startup()
+	err = memberNode2.Startup(nil)
 	c.Assert(err, IsNil)
 	member2Handler := memberNode2.Handler()
 	c.Assert(masterHandler.LocalService(), DeepEquals, []string{"MasterComponent"})

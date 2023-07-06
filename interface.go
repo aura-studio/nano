@@ -105,11 +105,8 @@ func Serve(opts ...Option) {
 		opt.Codec = plaincodec.NewCodec()
 	}
 
-	node := &cluster.Node{
-		Options: opt,
-	}
-
-	err := node.Startup()
+	node := cluster.DefaultNode()
+	err := node.Startup(opt)
 	if err != nil {
 		log.Fatalf("Nano server startup failed: %v", err)
 	}

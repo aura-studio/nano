@@ -74,8 +74,15 @@ type Node struct {
 	state    uint32
 }
 
+var defaultNode = &Node{}
+
+func DefaultNode() *Node {
+	return defaultNode
+}
+
 // Startup bootstraps a start up.
-func (n *Node) Startup() error {
+func (n *Node) Startup(opt *options.Options) error {
+	n.Options = opt
 	n.setServerID()
 
 	n.etcdManagers = map[string]endpoints.Manager{}
