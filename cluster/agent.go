@@ -141,9 +141,9 @@ func (a *agent) Push(route string, v interface{}) error {
 }
 
 func (a *agent) RPC(mid uint64, route string, v interface{}) error {
-	if a.status() == statusClosed {
-		return ErrBrokenPipe
-	}
+	// if a.status() == statusClosed {
+	// 	return ErrBrokenPipe
+	// }
 
 	if env.Debug {
 		switch d := v.(type) {
