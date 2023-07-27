@@ -1,5 +1,11 @@
 package session
 
+import (
+	"runtime/debug"
+
+	"github.com/aura-studio/nano/log"
+)
+
 var (
 	onInited     []func(s *Session) // call func in slice when session is inited
 	afterInited  []func(s *Session) // call func in slice after session is inited
@@ -30,19 +36,41 @@ func OnClosed(f func(*Session)) {
 // Inited call all funcs that was registered by OnInited
 func Inited(s *Session) {
 	for _, f := range onInited {
-		f(s)
+		SafeCall(func() {
+			f(s)
+		})
 	}
 	for _, f := range afterInited {
-		f(s)
+		SafeCall(func() {
+			f(s)
+		})
 	}
 }
 
 // Closed call all funcs that was registered by OnClosed
 func Closed(s *Session) {
 	for _, f := range beforeClosed {
-		f(s)
+		SafeCall(func() {
+			f(s)
+		})
 	}
 	for _, f := range onClosed {
-		f(s)
+		SafeCall(func() {
+			f(s)
+		})
 	}
+}
+
+func SafeCall(f func()) {
+	defer func() {
+		if v := recover(); v != nil {
+			if err, ok := v.(error); ok {
+				log.Errorf("panic: %v\n%s", err, string(debug.Stack()))
+			} else {
+				log.Errorf("panic: %v\n%s", v, string(debug.Stack()))
+			}
+		}
+	}()
+
+	f()
 }
