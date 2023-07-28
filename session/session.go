@@ -14,6 +14,12 @@ type Session struct {
 	lastMid uint64
 }
 
+func NewSession(s *KernelSession) *Session {
+	return &Session{
+		KernelSession: s,
+	}
+}
+
 func (s *Session) LastMid() uint64 {
 	return s.lastMid
 }
