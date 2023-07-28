@@ -36,15 +36,15 @@ const (
 
 // SessionFilter represents a filter which was used to filter session when Multicast,
 // the session will receive the message while filter returns true.
-type SessionFilter func(*session.Session) bool
+type SessionFilter func(*session.KernelSession) bool
 
 // Group represents a session group which used to manage a number of
 // sessions, data send to the group will send to all session in it.
 type Group struct {
 	mu       sync.RWMutex
-	status   int32                       // channel current status
-	name     string                      // channel name
-	sessions map[uint64]*session.Session // session id map to session instance
+	status   int32                             // channel current status
+	name     string                            // channel name
+	sessions map[uint64]*session.KernelSession // session id map to session instance
 }
 
 // NewGroup returns a new group instance
@@ -52,12 +52,12 @@ func NewGroup(n string) *Group {
 	return &Group{
 		status:   groupStatusWorking,
 		name:     n,
-		sessions: make(map[uint64]*session.Session),
+		sessions: make(map[uint64]*session.KernelSession),
 	}
 }
 
 // Member returns specified UID's session
-func (c *Group) Member(uid int64) (*session.Session, error) {
+func (c *Group) Member(uid int64) (*session.KernelSession, error) {
 	c.mu.RLock()
 	defer c.mu.RUnlock()
 
@@ -128,8 +128,8 @@ func (c *Group) Broadcast(route string, v interface{}) error {
 		}
 
 		if err = s.Push(route, data); err != nil {
-			log.Errorf("Session push message error, NID=%d, SID=%d, UID=%d, Error=%s",
-				s.NID(), s.SID(), s.UID(), err.Error())
+			log.Errorf("Session push message error, UID=%d, Error=%s",
+				s.UID(), err.Error())
 		}
 	}
 
@@ -143,14 +143,13 @@ func (c *Group) Contains(uid int64) bool {
 }
 
 // Add add session to group
-func (c *Group) Add(session *session.Session) error {
+func (c *Group) Add(session *session.KernelSession) error {
 	if c.isClosed() {
 		return ErrClosedGroup
 	}
 
 	if env.Debug {
-		log.Infof("Add session to group %s, NID=%d, SID=%d, UID=%d", c.name,
-			session.NID(), session.SID(), session.UID())
+		log.Infof("Add session to group %s, UID=%d", c.name, session.UID())
 	}
 
 	c.mu.Lock()
@@ -167,14 +166,13 @@ func (c *Group) Add(session *session.Session) error {
 }
 
 // Leave remove specified UID related session from group
-func (c *Group) Leave(s *session.Session) error {
+func (c *Group) Leave(s *session.KernelSession) error {
 	if c.isClosed() {
 		return ErrClosedGroup
 	}
 
 	if env.Debug {
-		log.Infof("Remove session from group %s, UID=%d",
-			c.name, s.UID())
+		log.Infof("Remove session from group %s, UID=%d", c.name, s.UID())
 	}
 
 	c.mu.Lock()
@@ -193,7 +191,7 @@ func (c *Group) LeaveAll() error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	c.sessions = make(map[uint64]*session.Session)
+	c.sessions = make(map[uint64]*session.KernelSession)
 	return nil
 }
 
@@ -221,6 +219,6 @@ func (c *Group) Close() error {
 	atomic.StoreInt32(&c.status, groupStatusClosed)
 
 	// release all reference
-	c.sessions = make(map[uint64]*session.Session)
+	c.sessions = make(map[uint64]*session.KernelSession)
 	return nil
 }

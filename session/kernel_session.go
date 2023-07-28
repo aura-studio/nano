@@ -125,3 +125,13 @@ func (s *KernelSession) Serialize(v interface{}) ([]byte, error) {
 func (s *KernelSession) Deserialize(data []byte, v interface{}) error {
 	return serializer.FromType(s.DataType.Load()).Unmarshal(data, v)
 }
+
+// ID returns the session id
+func (s *KernelSession) ID() uint64 {
+	return s.id
+}
+
+// UID returns uid that bind to current session
+func (s *KernelSession) UID() int64 {
+	return atomic.LoadInt64(&s.uid)
+}
