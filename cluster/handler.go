@@ -40,6 +40,7 @@ import (
 	"github.com/aura-studio/nano/message"
 	"github.com/aura-studio/nano/packet"
 	"github.com/aura-studio/nano/pipeline"
+	"github.com/aura-studio/nano/scheduler"
 	"github.com/aura-studio/nano/session"
 )
 
@@ -570,10 +571,17 @@ func (h *LocalHandler) localProcess(handler *component.Handler, lastMid uint64, 
 
 	// A message can be dispatch to global thread or a user customized thread
 	serviceName := msg.Route[:index]
+	handlerName := msg.Route[index+1:]
 	service, found := h.localServices[serviceName]
 	if !found {
 		log.Errorf("Service not found: %+v", serviceName)
 	}
 
-	service.ScheduleFunc(s, data, task)
+	context := &scheduler.Context{
+		ServiceName: serviceName,
+		HandlerName: handlerName,
+		Data:        data,
+	}
+
+	service.ScheduleFunc(s, context, task)
 }

@@ -45,11 +45,17 @@ type (
 		closed  int32
 	}
 
-	ScheduleFunc func(_ *session.Session, _ interface{}, task Task)
+	Context struct {
+		ServiceName string
+		HandlerName string
+		Data        interface{}
+	}
+
+	ScheduleFunc func(*session.Session, *Context, Task)
 
 	Scheduler interface {
 		TimerManager
-		Schedule(_ *session.Session, _ interface{}, task Task)
+		Schedule(*session.Session, *Context, Task)
 		PushTask(task Task)
 		Digest()
 		Close()
@@ -157,7 +163,7 @@ func Schedule(_ *session.Session, _ interface{}, task Task) {
 	global.PushTask(task)
 }
 
-func (s *scheduler) Schedule(_ *session.Session, _ interface{}, task Task) {
+func (s *scheduler) Schedule(_ *session.Session, _ *Context, task Task) {
 	s.PushTask(task)
 }
 
