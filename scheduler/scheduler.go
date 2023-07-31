@@ -299,7 +299,6 @@ func (tm *timerManager) digest() {
 		close(tm.chExit)
 	}()
 
-	ticker = time.NewTicker(env.TimerPrecision)
 	for {
 		select {
 		case <-ticker.C:
