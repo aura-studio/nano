@@ -143,26 +143,30 @@ func (c *Group) Contains(uid int64) bool {
 }
 
 // Add add session to group
-func (c *Group) Add(session *session.Session) error {
+func (c *Group) Add(s *session.Session) error {
 	if c.isClosed() {
 		return ErrClosedGroup
 	}
 
+	if s == nil {
+		return ErrNilSession
+	}
+
 	if env.Debug {
 		log.Infof("Add session to group %s, NID=%d, SID=%d, UID=%d", c.name,
-			session.NID(), session.SID(), session.UID())
+			s.NID(), s.SID(), s.UID())
 	}
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	id := session.ID()
-	_, ok := c.sessions[session.ID()]
+	id := s.ID()
+	_, ok := c.sessions[s.ID()]
 	if ok {
 		return ErrSessionDuplication
 	}
 
-	c.sessions[id] = session
+	c.sessions[id] = s
 	return nil
 }
 
@@ -170,6 +174,10 @@ func (c *Group) Add(session *session.Session) error {
 func (c *Group) Leave(s *session.Session) error {
 	if c.isClosed() {
 		return ErrClosedGroup
+	}
+
+	if s == nil {
+		return ErrNilSession
 	}
 
 	if env.Debug {

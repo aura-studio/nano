@@ -28,4 +28,5 @@ var (
 	ErrClosedGroup        = errors.New("group closed")
 	ErrMemberNotFound     = errors.New("member not found in the group")
 	ErrSessionDuplication = errors.New("session is already in the current group")
+	ErrNilSession         = errors.New("nil session")
 )
