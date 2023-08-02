@@ -4,7 +4,7 @@ import (
 	"runtime/debug"
 	"sort"
 
-	"log"
+	"github.com/aura-studio/nano/log"
 )
 
 var (
