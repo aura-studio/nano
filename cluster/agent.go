@@ -67,6 +67,9 @@ type (
 
 		codecEntity   codec.CodecEntity
 		payloadLength int
+
+		packetSpeedLimitTimestamp int64
+		packetSpeedLimitCount     int32
 	}
 
 	pendingMessage struct {
