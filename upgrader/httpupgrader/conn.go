@@ -34,7 +34,6 @@ type Conn struct {
 	readBuf     io.Reader
 	readDone    atomic.Bool
 	writeDone   atomic.Bool
-	startTime   time.Time
 }
 
 // NewConn return an initialized *WSConn
@@ -47,7 +46,6 @@ func NewConn(w http.ResponseWriter, r *http.Request, conn net.Conn, brw *bufio.R
 		params:      params,
 		codecEntity: options.Default.Codec.Entity(nil),
 		readBuf:     nil,
-		startTime:   time.Now(),
 	}
 }
 
@@ -58,10 +56,9 @@ func (c *Conn) Read(b []byte) (int, error) {
 	if c.readDone.Load() {
 		if c.writeDone.Load() {
 			return 0, io.EOF
-		} else if time.Now().UnixMilli()-c.startTime.UnixMilli() > 10*1000 {
-			return 0, io.EOF
 		}
-		return 0, nil
+		time.Sleep(time.Second * 10)
+		return 0, io.EOF
 	}
 
 	if c.readBuf == nil {
@@ -174,6 +171,8 @@ func (c *Conn) Read(b []byte) (int, error) {
 // Write can be made to time out and return an Error with Timeout() == true
 // after a fixed time limit; see SetDeadline and SetWriteDeadline.
 func (c *Conn) Write(b []byte) (int, error) {
+	defer c.writeDone.Store(true)
+
 	packets, err := c.codecEntity.DecodePacket(b)
 	if err != nil {
 		return 0, err
@@ -204,8 +203,6 @@ func (c *Conn) Write(b []byte) (int, error) {
 		return 0, err
 	}
 	n := nHeader + nBody
-
-	c.writeDone.Store(true)
 
 	return n, nil
 }
