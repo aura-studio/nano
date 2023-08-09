@@ -503,6 +503,7 @@ func (n *Node) findOrCreateSession(sid uint64, gateAddr string, uid int64, short
 			remoteAddr: remoteAddr,
 		}
 		s = session.New(ac, sid)
+		session.Created(s)
 
 		n.handler.mu.RLock()
 		version := n.handler.versionDict[shortVer]
