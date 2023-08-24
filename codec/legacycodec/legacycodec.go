@@ -60,6 +60,9 @@ func (c *CodecEntity) EncodePacket(packets []*packet.Packet) ([]byte, error) {
 	}
 	data := c.writeBuf.Next(length)
 
+	copyData := make([]byte, len(data))
+	copy(copyData, data)
+
 	return data, nil
 }
 
