@@ -134,7 +134,6 @@ func Serve(opts ...Option) {
 
 	log.Infof("Nano server is serving...")
 
-	go scheduler.Digest()
 	sg := make(chan os.Signal, 1)
 	signal.Notify(sg, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)
 

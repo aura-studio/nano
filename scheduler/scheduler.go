@@ -102,10 +102,6 @@ func NewScheduler() *scheduler {
 	return s
 }
 
-func Digest() {
-	global.Digest()
-}
-
 func (s *scheduler) Digest() {
 	defer func() {
 		s.TimerManager.CloseTimer()

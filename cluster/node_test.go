@@ -52,7 +52,6 @@ func TestNode(t *testing.T) {
 }
 
 func (s *nodeSuite) TestNodeStartup(c *C) {
-	go scheduler.Digest()
 	defer scheduler.Close()
 
 	masterComps := &component.Components{}
