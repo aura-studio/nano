@@ -109,6 +109,7 @@ func (s *scheduler) Digest() {
 	s.digestOnce.Do(func() {
 		defer func() {
 			s.TimerManager.CloseTimer()
+			close(s.chTasks)
 			close(s.chExit)
 		}()
 
@@ -299,6 +300,7 @@ func (tm *timerManager) digest() {
 		ticker := time.NewTicker(env.TimerPrecision)
 		defer func() {
 			ticker.Stop()
+			close(tm.chTask)
 			close(tm.chExit)
 		}()
 
