@@ -63,7 +63,7 @@ func (c *CodecEntity) EncodePacket(packets []*packet.Packet) ([]byte, error) {
 	copyData := make([]byte, len(data))
 	copy(copyData, data)
 
-	return data, nil
+	return copyData, nil
 }
 
 func (c *CodecEntity) DecodePacket(data []byte) ([]*packet.Packet, error) {
