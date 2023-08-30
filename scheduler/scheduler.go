@@ -235,10 +235,8 @@ type timerManager struct {
 	chTask     chan Task
 	digestOnce sync.Once
 	closeOnce  sync.Once
+	initOnce   sync.Once
 	running    atomic.Bool
-
-	muLazyInited sync.RWMutex
-	inited       bool
 
 	incrementID int64            // auto increment id
 	timers      map[int64]*Timer // all timers
@@ -269,14 +267,9 @@ func (tm *timerManager) CloseTimer() {
 }
 
 func (tm *timerManager) lazy() {
-	tm.muLazyInited.Lock()
-	defer tm.muLazyInited.Unlock()
-	if tm.inited {
-		return
-	}
-
-	tm.init()
-	tm.inited = true
+	tm.initOnce.Do(func() {
+		tm.init()
+	})
 }
 
 func (tm *timerManager) init() {
