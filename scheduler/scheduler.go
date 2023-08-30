@@ -38,12 +38,11 @@ type (
 
 	scheduler struct {
 		TimerManager
-		chDie      chan struct{}
-		chExit     chan struct{}
-		chTasks    chan Task
-		digestOnce sync.Once
-		closeOnce  sync.Once
-		running    atomic.Bool
+		chDie     chan struct{}
+		chExit    chan struct{}
+		chTasks   chan Task
+		closeOnce sync.Once
+		running   atomic.Bool
 	}
 
 	Context struct {
@@ -106,45 +105,43 @@ func Digest() {
 }
 
 func (s *scheduler) Digest() {
-	s.digestOnce.Do(func() {
-		defer func() {
-			s.TimerManager.CloseTimer()
-			close(s.chTasks)
-			close(s.chExit)
-		}()
+	defer func() {
+		s.TimerManager.CloseTimer()
+		close(s.chTasks)
+		close(s.chExit)
+	}()
 
-		s.running.Store(true)
+	s.running.Store(true)
 
-		for {
-			select {
-			case f := <-s.TimerManager.TaskChan():
-				func() {
-					defer func() {
-						if err := recover(); err != nil {
-							log.Errorf("panic: %v\n%s", err.(error), string(debug.Stack()))
-						}
-					}()
-
-					f()
+	for {
+		select {
+		case f := <-s.TimerManager.TaskChan():
+			func() {
+				defer func() {
+					if err := recover(); err != nil {
+						log.Errorf("panic: %v\n%s", err.(error), string(debug.Stack()))
+					}
 				}()
 
-			case f := <-s.chTasks:
-				func() {
-					defer func() {
-						if err := recover(); err != nil {
-							log.Errorf("panic: %v\n%s", err.(error), string(debug.Stack()))
-						}
-					}()
+				f()
+			}()
 
-					f()
+		case f := <-s.chTasks:
+			func() {
+				defer func() {
+					if err := recover(); err != nil {
+						log.Errorf("panic: %v\n%s", err.(error), string(debug.Stack()))
+					}
 				}()
 
-			case <-s.chDie:
-				s.running.Store(false)
-				return
-			}
+				f()
+			}()
+
+		case <-s.chDie:
+			s.running.Store(false)
+			return
 		}
-	})
+	}
 }
 
 func Close() {
@@ -230,13 +227,12 @@ type TimerManager interface {
 }
 
 type timerManager struct {
-	chDie      chan struct{}
-	chExit     chan struct{}
-	chTask     chan Task
-	digestOnce sync.Once
-	closeOnce  sync.Once
-	initOnce   sync.Once
-	running    atomic.Bool
+	chDie     chan struct{}
+	chExit    chan struct{}
+	chTask    chan Task
+	closeOnce sync.Once
+	initOnce  sync.Once
+	running   atomic.Bool
 
 	incrementID int64            // auto increment id
 	timers      map[int64]*Timer // all timers
@@ -289,27 +285,25 @@ func (tm *timerManager) init() {
 }
 
 func (tm *timerManager) digest() {
-	tm.digestOnce.Do(func() {
-		ticker := time.NewTicker(env.TimerPrecision)
-		defer func() {
-			ticker.Stop()
-			close(tm.chTask)
-			close(tm.chExit)
-		}()
+	ticker := time.NewTicker(env.TimerPrecision)
+	defer func() {
+		ticker.Stop()
+		close(tm.chTask)
+		close(tm.chExit)
+	}()
 
-		tm.running.Store(true)
-		for {
-			select {
-			case <-ticker.C:
-				if tm.running.Load() {
-					tm.chTask <- tm.cron
-				}
-			case <-tm.chDie:
-				tm.running.Store(false)
-				return
+	tm.running.Store(true)
+	for {
+		select {
+		case <-ticker.C:
+			if tm.running.Load() {
+				tm.chTask <- tm.cron
 			}
+		case <-tm.chDie:
+			tm.running.Store(false)
+			return
 		}
-	})
+	}
 }
 
 func (tm *timerManager) TaskChan() <-chan Task {
