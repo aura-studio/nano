@@ -97,6 +97,8 @@ func NewScheduler() *scheduler {
 		s.Digest()
 	}()
 
+	s.running.Store(true)
+
 	return s
 }
 
@@ -110,8 +112,6 @@ func (s *scheduler) Digest() {
 		close(s.chTasks)
 		close(s.chExit)
 	}()
-
-	s.running.Store(true)
 
 	for {
 		select {
@@ -282,6 +282,8 @@ func (tm *timerManager) init() {
 
 		tm.digest()
 	}()
+
+	tm.running.Store(true)
 }
 
 func (tm *timerManager) digest() {
@@ -292,7 +294,6 @@ func (tm *timerManager) digest() {
 		close(tm.chExit)
 	}()
 
-	tm.running.Store(true)
 	for {
 		select {
 		case <-ticker.C:
