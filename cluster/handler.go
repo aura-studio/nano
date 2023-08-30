@@ -339,16 +339,16 @@ func (h *LocalHandler) handle(conn net.Conn) {
 
 func (h *LocalHandler) processPacket(agent *agent, p *packet.Packet) error {
 	if !env.Debug {
-		now := time.Now().Unix()
-		if agent.packetSpeedLimitTimestamp == now {
-			agent.packetSpeedLimitCount++
-			if agent.packetSpeedLimitCount > 10 {
-				return fmt.Errorf("Too many packets received in a second")
-			}
-		} else {
-			agent.packetSpeedLimitTimestamp = now
-			agent.packetSpeedLimitCount = 1
-		}
+		// now := time.Now().Unix()
+		// if agent.packetSpeedLimitTimestamp == now {
+		// 	agent.packetSpeedLimitCount++
+		// 	if agent.packetSpeedLimitCount > 10 {
+		// 		return fmt.Errorf("Too many packets received in a second")
+		// 	}
+		// } else {
+		// 	agent.packetSpeedLimitTimestamp = now
+		// 	agent.packetSpeedLimitCount = 1
+		// }
 	}
 
 	msg, err := agent.codecEntity.DecodeMessage(p.Data)
