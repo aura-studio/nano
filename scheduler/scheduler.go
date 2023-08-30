@@ -43,6 +43,7 @@ type (
 		chTasks    chan Task
 		digestOnce sync.Once
 		closeOnce  sync.Once
+		running    atomic.Bool
 	}
 
 	Context struct {
@@ -111,6 +112,8 @@ func (s *scheduler) Digest() {
 			close(s.chExit)
 		}()
 
+		s.running.Store(true)
+
 		for {
 			select {
 			case f := <-s.TimerManager.TaskChan():
@@ -136,6 +139,7 @@ func (s *scheduler) Digest() {
 				}()
 
 			case <-s.chDie:
+				s.running.Store(false)
 				return
 			}
 		}
@@ -168,7 +172,9 @@ func PushTask(task Task) {
 
 // Schedule implements scheduler.Schedule
 func (s *scheduler) PushTask(task Task) {
-	s.chTasks <- task
+	if s.running.Load() {
+		s.chTasks <- task
+	}
 }
 
 const (
@@ -228,6 +234,7 @@ type timerManager struct {
 	chTask     chan Task
 	digestOnce sync.Once
 	closeOnce  sync.Once
+	running    atomic.Bool
 
 	muLazyInited sync.RWMutex
 	inited       bool
@@ -295,11 +302,15 @@ func (tm *timerManager) digest() {
 			close(tm.chExit)
 		}()
 
+		tm.running.Store(true)
 		for {
 			select {
 			case <-ticker.C:
-				tm.chTask <- tm.cron
+				if tm.running.Load() {
+					tm.chTask <- tm.cron
+				}
 			case <-tm.chDie:
+				tm.running.Store(false)
 				return
 			}
 		}
