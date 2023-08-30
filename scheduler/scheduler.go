@@ -38,11 +38,11 @@ type (
 
 	scheduler struct {
 		TimerManager
-		chDie   chan struct{}
-		chExit  chan struct{}
-		chTasks chan Task
-		started int32
-		closed  int32
+		chDie      chan struct{}
+		chExit     chan struct{}
+		chTasks    chan Task
+		digestOnce sync.Once
+		closeOnce  sync.Once
 	}
 
 	Context struct {
@@ -81,8 +81,6 @@ func NewScheduler() *scheduler {
 		chDie:        make(chan struct{}),
 		chExit:       make(chan struct{}),
 		chTasks:      make(chan Task, 1<<8),
-		started:      0,
-		closed:       0,
 	}
 
 	go func() {
@@ -107,43 +105,41 @@ func Digest() {
 }
 
 func (s *scheduler) Digest() {
-	if atomic.AddInt32(&s.started, 1) != 1 {
-		return
-	}
+	s.digestOnce.Do(func() {
+		defer func() {
+			s.TimerManager.CloseTimer()
+			close(s.chExit)
+		}()
 
-	defer func() {
-		s.TimerManager.CloseTimer()
-		close(s.chExit)
-	}()
+		for {
+			select {
+			case f := <-s.TimerManager.TaskChan():
+				func() {
+					defer func() {
+						if err := recover(); err != nil {
+							log.Errorf("panic: %v\n%s", err.(error), string(debug.Stack()))
+						}
+					}()
 
-	for {
-		select {
-		case f := <-s.TimerManager.TaskChan():
-			func() {
-				defer func() {
-					if err := recover(); err != nil {
-						log.Errorf("panic: %v\n%s", err.(error), string(debug.Stack()))
-					}
+					f()
 				}()
 
-				f()
-			}()
+			case f := <-s.chTasks:
+				func() {
+					defer func() {
+						if err := recover(); err != nil {
+							log.Errorf("panic: %v\n%s", err.(error), string(debug.Stack()))
+						}
+					}()
 
-		case f := <-s.chTasks:
-			func() {
-				defer func() {
-					if err := recover(); err != nil {
-						log.Errorf("panic: %v\n%s", err.(error), string(debug.Stack()))
-					}
+					f()
 				}()
 
-				f()
-			}()
-
-		case <-s.chDie:
-			return
+			case <-s.chDie:
+				return
+			}
 		}
-	}
+	})
 }
 
 func Close() {
@@ -152,11 +148,10 @@ func Close() {
 
 // Close closes scheduler
 func (s *scheduler) Close() {
-	if atomic.AddInt32(&s.closed, 1) != 1 {
-		return
-	}
-	close(s.chDie)
-	<-s.chExit
+	s.closeOnce.Do(func() {
+		close(s.chDie)
+		<-s.chExit
+	})
 }
 
 func Schedule(_ *session.Session, _ interface{}, task Task) {
@@ -228,11 +223,11 @@ type TimerManager interface {
 }
 
 type timerManager struct {
-	chDie   chan struct{}
-	chExit  chan struct{}
-	chTask  chan Task
-	started int32
-	closed  int32
+	chDie      chan struct{}
+	chExit     chan struct{}
+	chTask     chan Task
+	digestOnce sync.Once
+	closeOnce  sync.Once
 
 	muLazyInited sync.RWMutex
 	inited       bool
@@ -248,11 +243,9 @@ type timerManager struct {
 
 func NewTimerManager() TimerManager {
 	return &timerManager{
-		chDie:   make(chan struct{}),
-		chExit:  make(chan struct{}),
-		chTask:  make(chan Task, 1<<8),
-		started: 0,
-		closed:  0,
+		chDie:  make(chan struct{}),
+		chExit: make(chan struct{}),
+		chTask: make(chan Task, 1<<8),
 
 		timers: make(map[int64]*Timer),
 	}
@@ -260,11 +253,11 @@ func NewTimerManager() TimerManager {
 
 func (tm *timerManager) CloseTimer() {
 	tm.lazy()
-	if atomic.AddInt32(&tm.closed, 1) != 1 {
-		return
-	}
-	close(tm.chDie)
-	<-tm.chExit
+
+	tm.closeOnce.Do(func() {
+		close(tm.chDie)
+		<-tm.chExit
+	})
 }
 
 func (tm *timerManager) lazy() {
@@ -295,24 +288,22 @@ func (tm *timerManager) init() {
 }
 
 func (tm *timerManager) digest() {
-	if atomic.AddInt32(&tm.started, 1) != 1 {
-		return
-	}
+	tm.digestOnce.Do(func() {
+		ticker := time.NewTicker(env.TimerPrecision)
+		defer func() {
+			ticker.Stop()
+			close(tm.chExit)
+		}()
 
-	ticker := time.NewTicker(env.TimerPrecision)
-	defer func() {
-		ticker.Stop()
-		close(tm.chExit)
-	}()
-
-	for {
-		select {
-		case <-ticker.C:
-			tm.chTask <- tm.cron
-		case <-tm.chDie:
-			return
+		for {
+			select {
+			case <-ticker.C:
+				tm.chTask <- tm.cron
+			case <-tm.chDie:
+				return
+			}
 		}
-	}
+	})
 }
 
 func (tm *timerManager) TaskChan() <-chan Task {
