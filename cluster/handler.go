@@ -260,6 +260,8 @@ func (h *LocalHandler) handle(conn net.Conn) {
 	agent := newAgent(conn, h.pipeline, h.processMessage, h.currentNode.Codec, h.currentNode.NodeID)
 	h.currentNode.storeSession(agent.session)
 
+	session.Created(agent.session)
+
 	// startup write goroutine
 	go agent.write()
 
@@ -296,6 +298,8 @@ func (h *LocalHandler) handle(conn net.Conn) {
 		}
 
 		agent.Close()
+
+		session.Closed(agent.session)
 
 		if env.Debug {
 			log.Infof("Session read goroutine exit, NID=%d, SID=%d, UID=%d", agent.session.NID(), agent.session.SID(), agent.session.UID())

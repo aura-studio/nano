@@ -103,7 +103,6 @@ func newAgent(conn net.Conn, pipeline pipeline.Pipeline, rpcHandler rpcHandler,
 	}
 
 	s := session.New(a, sid)
-	session.Created(s)
 
 	a.session = s
 	a.srv = reflect.ValueOf(s)
@@ -226,7 +225,6 @@ func (a *agent) Close() error {
 		// expect
 	default:
 		close(a.chDie)
-		session.Closed(a.session)
 	}
 
 	return a.conn.Close()

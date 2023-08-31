@@ -134,7 +134,6 @@ func Created(s *Session) {
 	}
 }
 
-// Inited call all funcs that was registered by OnInited
 func Inited(s *Session) {
 	for _, priority := range onInitedPriorities {
 		for _, f := range onInited[priority] {
@@ -152,7 +151,6 @@ func Inited(s *Session) {
 	}
 }
 
-// Closed call all funcs that was registered by OnClosed
 func Closed(s *Session) {
 	for _, priority := range beforeClosedPriorities {
 		for _, f := range beforeClosed[priority] {
