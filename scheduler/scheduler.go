@@ -80,7 +80,7 @@ func NewScheduler() *scheduler {
 		TimerManager: NewTimerManager(),
 		chDie:        make(chan struct{}),
 		chExit:       make(chan struct{}),
-		chTasks:      make(chan Task, 1<<8),
+		chTasks:      make(chan Task, 1<<14),
 	}
 
 	go func() {
