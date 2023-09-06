@@ -57,7 +57,6 @@ type (
 		TimerManager
 		Schedule(*session.Session, *Context, Task)
 		PushTask(task Task)
-		Digest()
 		Close()
 	}
 )
@@ -80,7 +79,7 @@ func NewScheduler() *scheduler {
 		TimerManager: NewTimerManager(),
 		chDie:        make(chan struct{}),
 		chExit:       make(chan struct{}),
-		chTasks:      make(chan Task, 4096),
+		chTasks:      make(chan Task, 1<<12),
 	}
 
 	go func() {
@@ -94,7 +93,7 @@ func NewScheduler() *scheduler {
 			}
 		}()
 
-		s.Digest()
+		s.digest()
 	}()
 
 	s.running.Store(true)
@@ -102,7 +101,7 @@ func NewScheduler() *scheduler {
 	return s
 }
 
-func (s *scheduler) Digest() {
+func (s *scheduler) digest() {
 	defer func() {
 		s.TimerManager.CloseTimer()
 		close(s.chTasks)
@@ -227,7 +226,6 @@ type timerManager struct {
 	chExit    chan struct{}
 	chTask    chan Task
 	closeOnce sync.Once
-	initOnce  sync.Once
 	running   atomic.Bool
 
 	incrementID int64            // auto increment id
@@ -240,31 +238,14 @@ type timerManager struct {
 }
 
 func NewTimerManager() TimerManager {
-	return &timerManager{
+	tm := &timerManager{
 		chDie:  make(chan struct{}),
 		chExit: make(chan struct{}),
-		chTask: make(chan Task, 1<<8),
+		chTask: make(chan Task, 1<<12),
 
 		timers: make(map[int64]*Timer),
 	}
-}
 
-func (tm *timerManager) CloseTimer() {
-	tm.lazy()
-
-	tm.closeOnce.Do(func() {
-		close(tm.chDie)
-		<-tm.chExit
-	})
-}
-
-func (tm *timerManager) lazy() {
-	tm.initOnce.Do(func() {
-		tm.init()
-	})
-}
-
-func (tm *timerManager) init() {
 	go func() {
 		defer func() {
 			if v := recover(); v != nil {
@@ -280,6 +261,15 @@ func (tm *timerManager) init() {
 	}()
 
 	tm.running.Store(true)
+
+	return tm
+}
+
+func (tm *timerManager) CloseTimer() {
+	tm.closeOnce.Do(func() {
+		close(tm.chDie)
+		<-tm.chExit
+	})
 }
 
 func (tm *timerManager) digest() {
@@ -384,7 +374,6 @@ func NewCountTimer(interval time.Duration, count int, fn TimerFunc) *Timer {
 // The duration d must be greater than zero; if not, NewCountTimer will panic.
 // Stop the timer to release associated resources.
 func (tm *timerManager) NewCountTimer(interval time.Duration, count int, fn TimerFunc) *Timer {
-	tm.lazy()
 	if fn == nil {
 		panic("nano/timer: nil timer function")
 	}
