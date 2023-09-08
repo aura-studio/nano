@@ -57,7 +57,7 @@ func (c *Conn) Read(b []byte) (int, error) {
 		if c.writeDone.Load() {
 			return 0, io.EOF
 		}
-		time.Sleep(time.Second * 10)
+		time.Sleep(time.Minute)
 		return 0, io.EOF
 	}
 
