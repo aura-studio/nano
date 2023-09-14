@@ -5,7 +5,7 @@ go 1.12
 require (
 	github.com/abiosoft/ishell v2.0.0+incompatible // indirect
 	github.com/abiosoft/readline v0.0.0-20180607040430-155bce2042db // indirect
-	github.com/aura-studio/redimo v1.4.2 // indirect
+	github.com/aura-studio/redimo v1.4.2
 	github.com/aura-studio/snowflake v1.1.3
 	github.com/coreos/go-systemd/v22 v22.5.0 // indirect
 	github.com/fatih/color v1.13.0 // indirect
