@@ -2,7 +2,6 @@ package filepersist
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"os"
 )
 
@@ -20,18 +19,18 @@ func (fp *FilePersist) Set(v interface{}) error {
 	if b, err := json.Marshal(v); err != nil {
 		return err
 	} else {
-		return ioutil.WriteFile(fp.path, b, 0644)
+		return os.WriteFile(fp.path, b, 0644)
 	}
 }
 
 func (fp *FilePersist) Get(v interface{}) error {
 	if !existsFile(fp.path) {
-		if err := ioutil.WriteFile(fp.path, []byte("null"), 0644); err != nil {
+		if err := os.WriteFile(fp.path, []byte("null"), 0644); err != nil {
 			return err
 		}
 	}
 
-	if b, err := ioutil.ReadFile(fp.path); err != nil {
+	if b, err := os.ReadFile(fp.path); err != nil {
 		return err
 	} else {
 		return json.Unmarshal(b, v)
