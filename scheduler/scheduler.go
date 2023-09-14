@@ -34,7 +34,7 @@ import (
 
 type (
 	// Task is the unit to be scheduled
-	Task func()
+	Task = func()
 
 	scheduler struct {
 		TimerManager
