@@ -389,6 +389,10 @@ func (n *Node) listenAndServeTCP() {
 
 func (n *Node) listenAndServeHttp() {
 	router := mux.NewRouter()
+	router.HandleFunc("/{instance:[0-9]*}/*", func(w http.ResponseWriter, r *http.Request) {
+		r.URL.Path = strings.TrimPrefix(r.URL.Path, "/"+mux.Vars(r)["instance"])
+		router.ServeHTTP(w, r)
+	})
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("OK"))
 	})
