@@ -389,11 +389,18 @@ func (n *Node) listenAndServeTCP() {
 
 func (n *Node) listenAndServeHttp() {
 	router := mux.NewRouter()
-	router.HandleFunc("/{instance:[0-9]*}", func(w http.ResponseWriter, r *http.Request) {
+	router.HandleFunc("/{cluster:[0-9]*}-{instance:[0-9]*}", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("OK"))
 	})
-	router.PathPrefix("/{instance:[0-9]*}/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		r.URL.Path = strings.TrimPrefix(r.URL.Path, "/"+mux.Vars(r)["instance"])
+	router.PathPrefix("/{cluster:[0-9]*}-{instance:[0-9]*}/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.URL.Path = strings.TrimPrefix(r.URL.Path, fmt.Sprintf("/%s-%s", mux.Vars(r)["cluster"], mux.Vars(r)["instance"]))
+		router.ServeHTTP(w, r)
+	})
+	router.HandleFunc("/{cluster:[0-9]*}", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("OK"))
+	})
+	router.PathPrefix("/{cluster:[0-9]*}/").HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		r.URL.Path = strings.TrimPrefix(r.URL.Path, fmt.Sprintf("/%s", mux.Vars(r)["cluster"]))
 		router.ServeHTTP(w, r)
 	})
 	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
