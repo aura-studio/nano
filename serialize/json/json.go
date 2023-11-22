@@ -40,5 +40,8 @@ func (s *Serializer) Marshal(v interface{}) ([]byte, error) {
 // Unmarshal parses the JSON-encoded data and stores the result
 // in the value pointed to by v.
 func (s *Serializer) Unmarshal(data []byte, v interface{}) error {
+	if len(data) == 0 {
+		data = []byte("{}")
+	}
 	return json.Unmarshal(data, v)
 }
