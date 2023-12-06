@@ -95,11 +95,11 @@ func (s *Session) BindUID(uid int64) {
 }
 
 func (s *Session) BindBranch(branch uint32) {
-	s.branch = branch
+	s.branch.Store(branch)
 }
 
 func (s *Session) Branch() uint32 {
-	return s.branch
+	return s.branch.Load()
 }
 
 // Close terminate current session, session related data will not be released,

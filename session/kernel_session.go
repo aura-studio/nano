@@ -47,7 +47,7 @@ type EventCallback func(*Session, ...interface{})
 type KernelSession struct {
 	sync.RWMutex                                       // protect data
 	id                 uint64                          // session global unique id
-	branch             uint32                          // logic branch
+	branch             atomic.Uint32                   // logic branch
 	VersionBound       bool                            // session version bound
 	shortVer           uint32                          // session short version
 	version            string                          // session version
