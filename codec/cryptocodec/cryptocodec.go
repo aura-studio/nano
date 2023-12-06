@@ -21,8 +21,9 @@ const (
 )
 
 const (
+	msgTypeMask             = 0x03 // 0000 0011
+	msgExtensionMask        = 0x04 // 0000 0100
 	msgRouteNotCompressMask = 0x08 // 0000 1000
-	msgTypeMask             = 0x07 // 0000 0111
 	msgBranchMask           = 0x30 // 0011 0000
 	msgDataTypeMask         = 0xC0 // 1100 0000
 	msgHeadLength           = 0x02
@@ -42,6 +43,7 @@ type CodecEntity struct {
 	readBuf    *bytes.Buffer
 	size       int          // last packet length
 	compressed *atomic.Bool // whether to use compressed msg to client
+	extension  *atomic.Bool // whether to use extension
 }
 
 func NewCodecEntity(dictionary message.Dictionary, method Method, key []byte) *CodecEntity {
@@ -56,6 +58,7 @@ func NewCodecEntity(dictionary message.Dictionary, method Method, key []byte) *C
 		size:       -1,
 		dictionary: dictionary,
 		compressed: &atomic.Bool{},
+		extension:  &atomic.Bool{},
 	}
 }
 
@@ -145,6 +148,11 @@ func (c *CodecEntity) EncodeMessage(m *message.Message) ([]byte, error) {
 	if !compressed {
 		flag |= msgRouteNotCompressMask
 	}
+
+	if c.extension.Load() {
+		flag |= msgExtensionMask
+	}
+
 	flag |= byte(m.Branch) << 4
 	flag |= byte(m.DataType) << 6
 
@@ -181,6 +189,18 @@ func (c *CodecEntity) EncodeMessage(m *message.Message) ([]byte, error) {
 		buf = append(buf, []byte(m.Route)...)
 	}
 
+	if c.extension.Load() {
+		var extBuf = make([]byte, 32)
+		var extOffset uint64 = 0
+
+		binary.BigEndian.PutUint32(extBuf[extOffset:], m.Branch)
+		extOffset += 4
+
+		binary.BigEndian.PutUint32(extBuf[extOffset:], m.DataType)
+
+		buf = append(buf, extBuf...)
+	}
+
 	buf = append(buf, m.Data...)
 
 	return c.crypto.Encode(buf)
@@ -202,12 +222,11 @@ func (c *CodecEntity) DecodeMessage(data []byte) (*message.Message, error) {
 	flag := data[offset]
 	offset++
 	m.Type = message.Type(flag & msgTypeMask)
+
+	c.extension.Store(flag&msgExtensionMask != 0)
 	c.compressed.Store(flag&msgRouteNotCompressMask == 0)
 	m.Branch = uint32((flag & msgBranchMask) >> 4)
 	m.DataType = uint32((flag & msgDataTypeMask) >> 6)
-	if !m.TypeValid() {
-		return nil, ErrWrongMessageType
-	}
 
 	// decode version ID
 	m.ShortVer = binary.BigEndian.Uint32(data[offset:])
@@ -247,6 +266,18 @@ func (c *CodecEntity) DecodeMessage(data []byte) (*message.Message, error) {
 		// decode route string
 		m.Route = string(data[offset:(offset + uint64(rl))])
 		offset += uint64(rl)
+	}
+
+	if c.extension.Load() {
+		// Read long branch
+		m.Branch = binary.BigEndian.Uint32(data[offset:])
+		offset += 4
+
+		// Read long data type
+		m.DataType = binary.BigEndian.Uint32(data[offset:])
+		offset += 4
+
+		offset += 24
 	}
 
 	m.Data = data[offset:]
