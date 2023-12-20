@@ -25,20 +25,12 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-
-	"github.com/aura-studio/nano/upgrader"
 )
 
 type Upgrader struct{}
 
 func NewUpgrader() *Upgrader {
 	return &Upgrader{}
-}
-
-var defaultUpgrader = NewUpgrader()
-
-func Default() upgrader.Upgrader {
-	return defaultUpgrader
 }
 
 func (u *Upgrader) Upgrade(w http.ResponseWriter, r *http.Request, params map[string]string) (net.Conn, error) {
