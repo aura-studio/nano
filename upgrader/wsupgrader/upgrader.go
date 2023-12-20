@@ -24,6 +24,8 @@ func NewUpgrader() *Upgrader {
 }
 
 func (u *Upgrader) Upgrade(w http.ResponseWriter, r *http.Request, params map[string]string) (net.Conn, error) {
+	r.Header.Set("Connection", "Upgrade")
+	r.Header.Set("Upgrade", "websocket")
 	conn, err := u.Upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		return nil, err
