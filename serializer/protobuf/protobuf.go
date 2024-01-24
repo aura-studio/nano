@@ -31,8 +31,8 @@ var ErrWrongValueType = errors.New("protobuf: convert on wrong type value")
 
 // serializer implements the serializer.serializer interface
 type serializer struct {
-	MarshalPatch   func(proto.Message) proto.Message
-	UnmarshalPatch func(proto.Message) proto.Message
+	MarshalPatch   func(proto.Message) error
+	UnmarshalPatch func(proto.Message) error
 }
 
 // NewSerializer returns a new Serializer.
@@ -50,7 +50,9 @@ func (s *serializer) Marshal(v interface{}) ([]byte, error) {
 	}
 
 	if s.MarshalPatch != nil {
-		pb = s.MarshalPatch(pb)
+		if err := s.MarshalPatch(pb); err != nil {
+			return nil, err
+		}
 	}
 
 	return proto.Marshal(pb)
@@ -64,9 +66,15 @@ func (s *serializer) Unmarshal(data []byte, v interface{}) error {
 		return ErrWrongValueType
 	}
 
-	if s.UnmarshalPatch != nil {
-		pb = s.UnmarshalPatch(pb)
+	if err := proto.Unmarshal(data, pb); err != nil {
+		return err
 	}
 
-	return proto.Unmarshal(data, pb)
+	if s.UnmarshalPatch != nil {
+		if err := s.UnmarshalPatch(pb); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
