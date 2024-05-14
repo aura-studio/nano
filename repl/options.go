@@ -8,7 +8,7 @@ import (
 	"github.com/aura-studio/nano/message"
 	"github.com/aura-studio/nano/serializer"
 	"github.com/aura-studio/nano/serializer/protobuf"
-	"github.com/go-redis/redis"
+	"github.com/redis/go-redis/v9"
 )
 
 // ErrorReader is the type for ErrorReader

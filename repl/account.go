@@ -1,10 +1,11 @@
 package repl
 
 import (
+	"context"
 	"encoding/json"
 
 	"github.com/aura-studio/nano/log"
-	"github.com/go-redis/redis"
+	"github.com/redis/go-redis/v9"
 )
 
 // Account is cli's account
@@ -23,7 +24,7 @@ func (a *Account) Load() (bool, error) {
 	if err != nil {
 		return isNew, err
 	}
-	data, err := client.HGet(cliAccountKey, a.Username).Result()
+	data, err := client.HGet(context.Background(), cliAccountKey, a.Username).Result()
 	if err != redis.Nil && err != nil {
 		return isNew, err
 	}
@@ -34,7 +35,7 @@ func (a *Account) Load() (bool, error) {
 		if err != nil {
 			return isNew, err
 		}
-		_, err = client.HSet(cliAccountKey, a.Username, string(JSONData)).Result()
+		_, err = client.HSet(context.Background(), cliAccountKey, a.Username, string(JSONData)).Result()
 		if err != nil {
 			return isNew, err
 		}
@@ -64,7 +65,7 @@ func (a *Account) Save() error {
 	if err != nil {
 		return err
 	}
-	_, err = client.HSet(cliAccountKey, a.Username, string(JSONData)).Result()
+	_, err = client.HSet(context.Background(), cliAccountKey, a.Username, string(JSONData)).Result()
 	if err != nil {
 		return err
 	}

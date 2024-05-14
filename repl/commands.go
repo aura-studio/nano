@@ -23,6 +23,7 @@ package repl
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -37,7 +38,7 @@ import (
 
 	"github.com/aura-studio/nano/log"
 	"github.com/aura-studio/nano/serializer"
-	"github.com/go-redis/redis"
+	"github.com/redis/go-redis/v9"
 
 	"gopkg.in/abiosoft/ishell.v2"
 )
@@ -452,7 +453,7 @@ func upload(localName, remoteName string) error {
 	} else if err != nil {
 		return err
 	}
-	_, err = getRedisClient.HSet(cliHashKey, remoteName, string(srcData[:length])).Result()
+	_, err = getRedisClient.HSet(context.Background(), cliHashKey, remoteName, string(srcData[:length])).Result()
 	if err != nil {
 		return err
 	}
@@ -514,7 +515,7 @@ func listRemote() error {
 	if err != nil {
 		return fmt.Errorf("connect to redis error: %v", err)
 	}
-	result, err := getRedisClient.HGetAll(cliHashKey).Result()
+	result, err := getRedisClient.HGetAll(context.Background(), cliHashKey).Result()
 	if err != nil {
 		return err
 	}
@@ -552,7 +553,7 @@ func download(remoteName, localName string) error {
 		return fmt.Errorf("connect to redis error: %v", err)
 	}
 
-	exists, err := getRedisClient.HExists(cliHashKey, remoteName).Result()
+	exists, err := getRedisClient.HExists(context.Background(), cliHashKey, remoteName).Result()
 	if err != nil {
 		return err
 	}
@@ -560,7 +561,7 @@ func download(remoteName, localName string) error {
 		return errors.New(remoteName + " does not exist in remote")
 	}
 
-	result, err := getRedisClient.HGet(cliHashKey, remoteName).Result()
+	result, err := getRedisClient.HGet(context.Background(), cliHashKey, remoteName).Result()
 	if err != nil {
 		return err
 	}
@@ -598,14 +599,14 @@ func removeRemote(name string) error {
 	if err != nil {
 		return fmt.Errorf("connect to redis error: %v", err)
 	}
-	exists, err := getRedisClient.HExists(cliHashKey, name).Result()
+	exists, err := getRedisClient.HExists(context.Background(), cliHashKey, name).Result()
 	if err != nil {
 		return err
 	}
 	if !exists {
 		return fmt.Errorf("%s does not exist in remote", name)
 	}
-	_, err = getRedisClient.HDel(cliHashKey, name).Result()
+	_, err = getRedisClient.HDel(context.Background(), cliHashKey, name).Result()
 	if err != nil {
 		return err
 	}
@@ -804,7 +805,7 @@ func sync(_ *ishell.Shell, src, srcCmd, dst, dstCmd string) error {
 			if err != nil {
 				return fmt.Errorf("connect to redis error: %v", err)
 			}
-			_, err = getRedisClient.HSet(cliHashKey, dstCmd, cmdStrBuf.String()).Result()
+			_, err = getRedisClient.HSet(context.Background(), cliHashKey, dstCmd, cmdStrBuf.String()).Result()
 			if err != nil {
 				return err
 			}
@@ -839,7 +840,7 @@ func sync(_ *ishell.Shell, src, srcCmd, dst, dstCmd string) error {
 			if err != nil {
 				return fmt.Errorf("connect to redis error: %v", err)
 			}
-			_, err = getRedisClient.HSet(cliHashKey, dstCmd, cmdStrBuf.String()).Result()
+			_, err = getRedisClient.HSet(context.Background(), cliHashKey, dstCmd, cmdStrBuf.String()).Result()
 			if err != nil {
 				return err
 			}
@@ -849,7 +850,7 @@ func sync(_ *ishell.Shell, src, srcCmd, dst, dstCmd string) error {
 		if err != nil {
 			return fmt.Errorf("connect to redis error: %v", err)
 		}
-		cmdStr, err := getRedisClient.HGet(cliHashKey, srcCmd).Result()
+		cmdStr, err := getRedisClient.HGet(context.Background(), cliHashKey, srcCmd).Result()
 		if err == redis.Nil {
 			return fmt.Errorf("cmd set named:%s not exist in remote", srcCmd)
 		} else if err != nil {
