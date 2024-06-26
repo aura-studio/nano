@@ -66,26 +66,21 @@ func (c *Conn) Read(b []byte) (int, error) {
 			err      error
 			data     []byte
 			route    string
-			dataMap  = make(map[string]interface{})
 			dataType uint32
 		)
 
 		route = c.params["route"]
-		query := c.r.URL.Query()
-		if len(data) == 0 {
-			for k, v := range query {
-				dataMap[k] = v[0]
-			}
-		}
 
 		contentType := strings.Split(c.r.Header.Get("Content-Type"), ";")[0]
 		switch contentType {
 		case "multipart/form-data", "application/x-www-form-urlencoded":
+			var m = make(map[string]interface{})
 			_ = c.r.FormValue("")
 			for k, v := range c.r.Form {
-				dataMap[k] = v[0]
+				m[k] = v[0]
 			}
-			data, err = json.Marshal(dataMap)
+
+			data, err = json.Marshal(m)
 			if err != nil {
 				return 0, err
 			}
@@ -102,29 +97,32 @@ func (c *Conn) Read(b []byte) (int, error) {
 				return 0, err
 			}
 
-			bodyMap := make(map[string]interface{})
-			if err := json.Unmarshal(bodyData, &bodyMap); err == nil { // body is json
-				for k, v := range bodyMap {
-					dataMap[k] = v
-				}
-
-				data, err = json.Marshal(dataMap)
-				if err != nil {
-					return 0, err
-				}
-
-				dataType = serializer.JSONType
-			} else { // body is binary
+			if len(bodyData) > 0 {
 				data = bodyData
-
 				switch c.r.Header.Get("Content-Type") {
 				case "application/json":
 					dataType = serializer.JSONType
 				case "application/x-protobuf":
 					dataType = serializer.ProtobufType
 				default:
-					dataType = serializer.AutoType
+					bodyMap := make(map[string]interface{})
+					if err := json.Unmarshal(bodyData, &bodyMap); err == nil {
+						dataType = serializer.JSONType
+					} else {
+						dataType = serializer.AutoType
+					}
 				}
+			} else {
+				query := c.r.URL.Query()
+				var m = make(map[string]interface{})
+				for k, v := range query {
+					m[k] = v[0]
+				}
+				data, err = json.Marshal(m)
+				if err != nil {
+					return 0, err
+				}
+				dataType = serializer.JSONType
 			}
 		}
 
