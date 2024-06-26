@@ -89,6 +89,7 @@ func (c *Conn) Read(b []byte) (int, error) {
 			if err != nil {
 				return 0, err
 			}
+			dataType = serializer.JSONType
 		default:
 			var bodyData []byte
 			if c.r.ContentLength < 0 {
@@ -101,21 +102,21 @@ func (c *Conn) Read(b []byte) (int, error) {
 				return 0, err
 			}
 
-			jsonMap := make(map[string]interface{})
-			if err := json.Unmarshal(bodyData, &jsonMap); err == nil {
-				for k, v := range jsonMap {
+			bodyMap := make(map[string]interface{})
+			if err := json.Unmarshal(bodyData, &bodyMap); err == nil { // body is json
+				for k, v := range bodyMap {
 					dataMap[k] = v
 				}
-			}
 
-			if len(bodyData) > 0 { // binary
-				data = bodyData
-				dataType = serializer.JSONType
-			} else { // json
 				data, err = json.Marshal(dataMap)
 				if err != nil {
 					return 0, err
 				}
+
+				dataType = serializer.JSONType
+			} else { // body is binary
+				data = bodyData
+
 				switch c.r.Header.Get("Content-Type") {
 				case "application/json":
 					dataType = serializer.JSONType
