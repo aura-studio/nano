@@ -105,12 +105,7 @@ func (c *Conn) Read(b []byte) (int, error) {
 				case "application/x-protobuf":
 					dataType = serializer.ProtobufType
 				default:
-					bodyMap := make(map[string]interface{})
-					if err := json.Unmarshal(bodyData, &bodyMap); err == nil {
-						dataType = serializer.JSONType
-					} else {
-						dataType = serializer.AutoType
-					}
+					dataType = serializer.AutoType
 				}
 			} else {
 				query := c.r.URL.Query()
