@@ -211,13 +211,14 @@ func (c *CodecEntity) DecodeMessageWithDetection(data []byte) (*message.Message,
 		err error
 		m   *message.Message
 	)
-	c.cryptoType = XOR
+
+	c.cryptoType = AESGCM
 	m, err = c.DecodeMessageRaw(data)
 	if err == nil && CryptoType(m.CryptoType) == c.cryptoType {
 		return m, nil
 	}
-
-	c.cryptoType = AESGCM
+	
+	c.cryptoType = XOR
 	m, err = c.DecodeMessageRaw(data)
 	if err == nil && CryptoType(m.CryptoType) == c.cryptoType {
 		return m, nil
