@@ -373,6 +373,7 @@ func (h *LocalHandler) processPacket(agent *agent, p *packet.Packet) error {
 	}
 
 	agent.session.DataType.Store(msg.DataType)
+	agent.session.CryptoType.Store(msg.CryptoType)
 
 	// Check message id
 	maxMid := agent.session.MaxMid.Load()
@@ -487,7 +488,8 @@ func (h *LocalHandler) remoteProcess(s *session.Session, msg *message.Message, n
 				Network: s.RemoteAddr().Network(),
 				Addr:    s.RemoteAddr().String(),
 			},
-			Branch: s.Branch(),
+			Branch:     s.Branch(),
+			CryptoType: msg.CryptoType,
 		}
 		_, err = client.HandleRequest(context.Background(), request)
 	case message.Notify:
@@ -504,7 +506,8 @@ func (h *LocalHandler) remoteProcess(s *session.Session, msg *message.Message, n
 				Network: s.RemoteAddr().Network(),
 				Addr:    s.RemoteAddr().String(),
 			},
-			Branch: s.Branch(),
+			Branch:     s.Branch(),
+			CryptoType: msg.CryptoType,
 		}
 		_, err = client.HandleNotify(context.Background(), request)
 	}

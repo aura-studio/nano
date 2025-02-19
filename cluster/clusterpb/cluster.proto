@@ -52,6 +52,7 @@ message RequestMessage {
   bytes data = 8;
   NetAddr remoteAddr = 9;
   uint32 branch = 10;
+  uint32 cryptoType = 11;
 }
 
 message NotifyMessage {
@@ -65,6 +66,7 @@ message NotifyMessage {
   bytes data = 8;
   NetAddr remoteAddr = 9;
   uint32 branch = 10;
+  uint32 cryptoType = 11;
 }
 
 message ResponseMessage {
@@ -74,6 +76,7 @@ message ResponseMessage {
   string route = 4;
   uint32 dataType = 5;
   bytes data = 6;
+  uint32 cryptoType = 7;
 }
 
 message PushMessage {
@@ -82,6 +85,7 @@ message PushMessage {
   string route = 3;
   uint32 dataType = 4;
   bytes data = 5;
+  uint32 cryptoType = 6;
 }
 
 message MemberHandleResponse {}

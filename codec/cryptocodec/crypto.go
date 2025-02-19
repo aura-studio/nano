@@ -7,62 +7,131 @@ import (
 	"fmt"
 )
 
-type Method int
+type CryptoType uint32
 
 const (
-	AES128GCM Method = iota
-	AES256GCM
+	AESGCM CryptoType = iota
+	XOR
+	Plain
+	Unknown
 )
 
-var methodNameMap = map[Method]string{
-	AES128GCM: "aes-128-gcm",
-	AES256GCM: "aes-256-gcm",
+var cryptoTypeNameMap = map[CryptoType]string{
+	Unknown: "",
+	Plain:   "plain",
+	XOR:     "xor",
+	AESGCM:  "aesgcm",
 }
 
-func (m Method) String() string {
-	if name, ok := methodNameMap[m]; ok {
+func (c CryptoType) String() string {
+	if name, ok := cryptoTypeNameMap[c]; ok {
 		return name
 	}
-	return fmt.Sprintf("unknown method: %d", m)
+	return fmt.Sprintf("unknown crypto type: %d", c)
 }
 
-type Crypto struct {
-	Method Method
+var cryptoMap = map[CryptoType]Crypto{
+	Plain:  plainCrypto,
+	XOR:    xorCrypto,
+	AESGCM: aesgcmCrypto,
+}
+
+func (c CryptoType) Crypto() Crypto {
+	if crypto, ok := cryptoMap[c]; ok {
+		return crypto
+	}
+	return nil
+}
+
+func (c CryptoType) Encrypt(plaintext, key []byte) ([]byte, error) {
+	if crypto := c.Crypto(); crypto != nil {
+		return crypto.Encrypt(plaintext, key)
+	}
+	return nil, fmt.Errorf("unknown crypto type: %d", c)
+}
+
+func (c CryptoType) Decrypt(ciphertext, key []byte) ([]byte, error) {
+	if crypto := c.Crypto(); crypto != nil {
+		return crypto.Decrypt(ciphertext, key)
+	}
+	return nil, fmt.Errorf("unknown crypto type: %d", c)
+}
+
+type Crypto interface {
+	fmt.Stringer
+	Encrypt(plaintext, key []byte) ([]byte, error)
+	Decrypt(ciphertext, key []byte) ([]byte, error)
+}
+
+type CryptoEntity struct {
 	Key    []byte
+	Crypto Crypto
 }
 
-func NewCrypto(method Method, key []byte) (*Crypto, error) {
-	c := &Crypto{
-		Method: method,
+func NewCryptoEntity(key []byte, crypto Crypto) *CryptoEntity {
+	return &CryptoEntity{
 		Key:    key,
-	}
-
-	return c, nil
-}
-
-func (c *Crypto) Encode(data []byte) ([]byte, error) {
-	switch c.Method {
-	case AES128GCM, AES256GCM:
-		return aesgcm.Encrypt(data, c.Key)
-	default:
-		return nil, fmt.Errorf("unknown method: %s", c.Method)
+		Crypto: crypto,
 	}
 }
 
-func (c *Crypto) Decode(data []byte) ([]byte, error) {
-	switch c.Method {
-	case AES128GCM, AES256GCM:
-		return aesgcm.Decrypt(data, c.Key)
-	default:
-		return nil, fmt.Errorf("unknown method: %s", c.Method)
-	}
+func (c *CryptoEntity) Encrypt(data []byte) ([]byte, error) {
+	return c.Crypto.Encrypt(data, c.Key)
 }
 
-type AESGCM struct{}
+func (c *CryptoEntity) Decrypt(data []byte) ([]byte, error) {
+	return c.Crypto.Decrypt(data, c.Key)
+}
 
-var aesgcm = &AESGCM{}
+type PlainCrypto struct{}
 
-func (*AESGCM) Encrypt(plaintext, key []byte) ([]byte, error) {
+var plainCrypto = &PlainCrypto{}
+
+func (*PlainCrypto) String() string {
+	return Plain.String()
+}
+
+func (*PlainCrypto) Encrypt(plaintext, key []byte) ([]byte, error) {
+	return plaintext, nil
+}
+
+func (*PlainCrypto) Decrypt(ciphertext, key []byte) ([]byte, error) {
+	return ciphertext, nil
+}
+
+type XORCrypto struct{}
+
+var xorCrypto = &XORCrypto{}
+
+func (*XORCrypto) String() string {
+	return XOR.String()
+}
+
+func (*XORCrypto) Encrypt(plaintext, key []byte) ([]byte, error) {
+	ciphertext := make([]byte, len(plaintext))
+	for i := range plaintext {
+		ciphertext[i] = plaintext[i] ^ key[i%len(key)]
+	}
+	return ciphertext, nil
+}
+
+func (*XORCrypto) Decrypt(ciphertext, key []byte) ([]byte, error) {
+	plaintext := make([]byte, len(ciphertext))
+	for i := range ciphertext {
+		plaintext[i] = ciphertext[i] ^ key[i%len(key)]
+	}
+	return plaintext, nil
+}
+
+type AESGCMCrypto struct{}
+
+var aesgcmCrypto = &AESGCMCrypto{}
+
+func (*AESGCMCrypto) String() string {
+	return AESGCM.String()
+}
+
+func (aesgcm *AESGCMCrypto) Encrypt(plaintext, key []byte) ([]byte, error) {
 	nonce := make([]byte, 12)
 	if _, err := rand.Read(nonce); err != nil {
 		return nil, err
@@ -73,24 +142,24 @@ func (*AESGCM) Encrypt(plaintext, key []byte) ([]byte, error) {
 	return aesgcm.EncryptWithNonce(plaintext, key, nonce)
 }
 
-func (*AESGCM) EncryptWithNonce(plaintext, key []byte, nonce []byte) ([]byte, error) {
+func (*AESGCMCrypto) EncryptWithNonce(plaintext, key []byte, nonce []byte) ([]byte, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err
 	}
 
-	aesgcm, err := cipher.NewGCM(block)
+	aead, err := cipher.NewGCM(block)
 	if err != nil {
 		return nil, err
 	}
 
-	ad := aesgcm.Seal(nil, nonce, nonce, nonce)
-	ciphertext := aesgcm.Seal(nil, nonce, plaintext, ad)
+	ad := aead.Seal(nil, nonce, nonce, nonce)
+	ciphertext := aead.Seal(nil, nonce, plaintext, ad)
 
 	return append(nonce, ciphertext...), nil
 }
 
-func (*AESGCM) Decrypt(ciphertext, key []byte) ([]byte, error) {
+func (*AESGCMCrypto) Decrypt(ciphertext, key []byte) ([]byte, error) {
 	if len(ciphertext) < 12 {
 		return nil, fmt.Errorf("invalid ciphertext")
 	}
@@ -102,13 +171,13 @@ func (*AESGCM) Decrypt(ciphertext, key []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	aesgcm, err := cipher.NewGCM(block)
+	aead, err := cipher.NewGCM(block)
 	if err != nil {
 		return nil, err
 	}
 
-	ad := aesgcm.Seal(nil, nonce, nonce, nonce)
-	plaintext, err := aesgcm.Open(nil, nonce, ciphertext[12:], ad)
+	ad := aead.Seal(nil, nonce, nonce, nonce)
+	plaintext, err := aead.Open(nil, nonce, ciphertext[12:], ad)
 	if err != nil {
 		return nil, err
 	}

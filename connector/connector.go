@@ -168,15 +168,16 @@ func (c *Connector) Request(route string, v interface{}, callback Callback) erro
 	}
 
 	msg := &message.Message{
-		Type:      message.Request,
-		Branch:    c.Branch,
-		ShortVer:  c.ShortVersion,
-		Route:     route,
-		ID:        c.mid,
-		UnixTime:  uint32(time.Now().Unix()),
-		SessionID: atomic.LoadUint64(&c.sid),
-		DataType:  uint32(serializer.ToType(c.Serializer)),
-		Data:      data,
+		Type:       message.Request,
+		Branch:     c.Branch,
+		ShortVer:   c.ShortVersion,
+		Route:      route,
+		ID:         c.mid,
+		UnixTime:   uint32(time.Now().Unix()),
+		SessionID:  atomic.LoadUint64(&c.sid),
+		DataType:   uint32(serializer.ToType(c.Serializer)),
+		Data:       data,
+		CryptoType: c.CryptoType,
 	}
 
 	c.setResponseHandler(c.mid, callback)
@@ -203,15 +204,16 @@ func (c *Connector) Notify(route string, v interface{}) error {
 	}
 
 	msg := &message.Message{
-		Type:      message.Notify,
-		Branch:    c.Branch,
-		ShortVer:  c.ShortVersion,
-		Route:     route,
-		ID:        0,
-		UnixTime:  uint32(time.Now().Unix()),
-		SessionID: atomic.LoadUint64(&c.sid),
-		DataType:  uint32(serializer.ToType(c.Serializer)),
-		Data:      data,
+		Type:       message.Notify,
+		Branch:     c.Branch,
+		ShortVer:   c.ShortVersion,
+		Route:      route,
+		ID:         0,
+		UnixTime:   uint32(time.Now().Unix()),
+		SessionID:  atomic.LoadUint64(&c.sid),
+		DataType:   uint32(serializer.ToType(c.Serializer)),
+		Data:       data,
+		CryptoType: c.CryptoType,
 	}
 	return c.sendMessage(msg)
 }

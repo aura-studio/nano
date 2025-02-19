@@ -20,6 +20,7 @@ type (
 		Branch               uint32
 		ShortVersion         uint32
 		WebSocketCompression bool
+		CryptoType           uint32
 	}
 
 	// Option used to customize handler

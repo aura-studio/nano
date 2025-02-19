@@ -39,11 +39,12 @@ func (a *acceptor) Push(route string, v interface{}) error {
 	}
 
 	request := &clusterpb.PushMessage{
-		SessionID: a.sid,
-		ShortVer:  a.session.ShortVer(),
-		Route:     route,
-		DataType:  a.session.DataType.Load(),
-		Data:      data,
+		SessionID:  a.sid,
+		ShortVer:   a.session.ShortVer(),
+		Route:      route,
+		DataType:   a.session.DataType.Load(),
+		Data:       data,
+		CryptoType: a.session.CryptoType.Load(),
 	}
 	_, err = a.gateClient.HandlePush(context.Background(), request)
 	return err
@@ -68,13 +69,14 @@ func (a *acceptor) RPC(mid uint64, route string, v interface{}) error {
 	}
 
 	msg := &message.Message{
-		Type:     message.Notify,
-		Branch:   a.session.Branch(),
-		ShortVer: a.session.ShortVer(),
-		ID:       mid,
-		Route:    route,
-		DataType: a.session.DataType.Load(),
-		Data:     data,
+		Type:       message.Notify,
+		Branch:     a.session.Branch(),
+		ShortVer:   a.session.ShortVer(),
+		ID:         mid,
+		Route:      route,
+		DataType:   a.session.DataType.Load(),
+		Data:       data,
+		CryptoType: a.session.CryptoType.Load(),
 	}
 
 	a.rpcHandler(a.session, msg, true)
@@ -100,12 +102,13 @@ func (a *acceptor) Response(mid uint64, route string, v interface{}) error {
 	}
 
 	request := &clusterpb.ResponseMessage{
-		SessionID: a.sid,
-		ShortVer:  a.session.ShortVer(),
-		ID:        mid,
-		Route:     route,
-		DataType:  a.session.DataType.Load(),
-		Data:      data,
+		SessionID:  a.sid,
+		ShortVer:   a.session.ShortVer(),
+		ID:         mid,
+		Route:      route,
+		DataType:   a.session.DataType.Load(),
+		Data:       data,
+		CryptoType: a.session.CryptoType.Load(),
 	}
 	_, err = a.gateClient.HandleResponse(context.Background(), request)
 	return err

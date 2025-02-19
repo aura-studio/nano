@@ -21,7 +21,7 @@ func TestCrypto1(t *testing.T) {
 			t.Error(err)
 		}
 
-		var aesgcm = &cryptocodec.AESGCM{}
+		var aesgcm = &cryptocodec.AESGCMCrypto{}
 		data, err := aesgcm.Encrypt(plaintext, key)
 		if err != nil {
 			t.Error(err)
@@ -45,7 +45,7 @@ func TestCrypto2(t *testing.T) {
 	var key = []byte("12345678901234567890123456789012")
 	var plaintext = []byte("Hello World")
 
-	var aesgcm = &cryptocodec.AESGCM{}
+	var aesgcm = &cryptocodec.AESGCMCrypto{}
 	data, err := aesgcm.EncryptWithNonce(plaintext, key, nonce)
 	if err != nil {
 		t.Error(err)

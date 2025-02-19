@@ -59,6 +59,7 @@ type KernelSession struct {
 	remoteSessionAddrs sync.Map                        // rpc addr
 	MaxMid             atomic.Uint64
 	DataType           atomic.Uint32
+	CryptoType         atomic.Uint32
 }
 
 // New returns a new session instance

@@ -168,13 +168,14 @@ func (a *agent) RPC(mid uint64, route string, v interface{}) error {
 	}
 
 	msg := &message.Message{
-		Type:     message.Notify,
-		Branch:   a.session.Branch(),
-		ShortVer: a.session.ShortVer(),
-		ID:       mid,
-		Route:    route,
-		DataType: a.session.DataType.Load(),
-		Data:     data,
+		Type:       message.Notify,
+		Branch:     a.session.Branch(),
+		ShortVer:   a.session.ShortVer(),
+		ID:         mid,
+		Route:      route,
+		DataType:   a.session.DataType.Load(),
+		Data:       data,
+		CryptoType: a.session.CryptoType.Load(),
 	}
 	a.rpcHandler(a.session, msg, true)
 	return nil
@@ -281,15 +282,16 @@ func (a *agent) write() {
 
 			// construct message and encode
 			msg := &message.Message{
-				Type:      pendingMsg.typ,
-				Branch:    a.session.Branch(),
-				ShortVer:  a.session.ShortVer(),
-				ID:        pendingMsg.mid,
-				UnixTime:  uint32(time.Now().Unix()),
-				SessionID: a.session.ID(),
-				Route:     pendingMsg.route,
-				DataType:  a.session.DataType.Load(),
-				Data:      data,
+				Type:       pendingMsg.typ,
+				Branch:     a.session.Branch(),
+				ShortVer:   a.session.ShortVer(),
+				ID:         pendingMsg.mid,
+				UnixTime:   uint32(time.Now().Unix()),
+				SessionID:  a.session.ID(),
+				Route:      pendingMsg.route,
+				DataType:   a.session.DataType.Load(),
+				Data:       data,
+				CryptoType: a.session.CryptoType.Load(),
 			}
 
 			if pipe := a.pipeline; pipe != nil {

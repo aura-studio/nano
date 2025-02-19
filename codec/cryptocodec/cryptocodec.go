@@ -6,7 +6,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"log"
 	"sync/atomic"
 
 	"github.com/aura-studio/nano/codec"
@@ -37,7 +36,8 @@ var (
 )
 
 type CodecEntity struct {
-	crypto     *Crypto
+	cryptoKey  []byte
+	cryptoType CryptoType
 	dictionary message.Dictionary
 	writeBuf   *bytes.Buffer
 	readBuf    *bytes.Buffer
@@ -46,13 +46,10 @@ type CodecEntity struct {
 	extension  *atomic.Bool // whether to use extension
 }
 
-func NewCodecEntity(dictionary message.Dictionary, method Method, key []byte) *CodecEntity {
-	crypto, err := NewCrypto(method, key)
-	if err != nil {
-		log.Panic(err)
-	}
+func NewCodecEntity(dictionary message.Dictionary, cryptoKey []byte) *CodecEntity {
 	return &CodecEntity{
-		crypto:     crypto,
+		cryptoKey:  cryptoKey,
+		cryptoType: Unknown,
 		writeBuf:   bytes.NewBuffer(nil),
 		readBuf:    bytes.NewBuffer(nil),
 		size:       -1,
@@ -197,17 +194,54 @@ func (c *CodecEntity) EncodeMessage(m *message.Message) ([]byte, error) {
 		extOffset += 4
 
 		binary.BigEndian.PutUint32(extBuf[extOffset:], m.DataType)
+		extOffset += 4
+
+		binary.BigEndian.PutUint32(extBuf[extOffset:], m.CryptoType)
 
 		buf = append(buf, extBuf...)
 	}
 
 	buf = append(buf, m.Data...)
 
-	return c.crypto.Encode(buf)
+	return c.cryptoType.Encrypt(buf, c.cryptoKey)
+}
+
+func (c *CodecEntity) DecodeMessageWithDetection(data []byte) (*message.Message, error) {
+	var (
+		err error
+		m   *message.Message
+	)
+	c.cryptoType = XOR
+	m, err = c.DecodeMessageRaw(data)
+	if err == nil && CryptoType(m.CryptoType) == c.cryptoType {
+		return m, nil
+	}
+
+	c.cryptoType = AESGCM
+	m, err = c.DecodeMessageRaw(data)
+	if err == nil && CryptoType(m.CryptoType) == c.cryptoType {
+		return m, nil
+	}
+
+	c.cryptoType = Plain
+	m, err = c.DecodeMessageRaw(data)
+	if err == nil && CryptoType(m.CryptoType) == c.cryptoType {
+		return m, nil
+	}
+
+	return nil, err
 }
 
 func (c *CodecEntity) DecodeMessage(data []byte) (*message.Message, error) {
-	data, err := c.crypto.Decode(data)
+	if c.cryptoType == Unknown {
+		return c.DecodeMessageWithDetection(data)
+	}
+
+	return c.DecodeMessageRaw(data)
+}
+
+func (c *CodecEntity) DecodeMessageRaw(data []byte) (*message.Message, error) {
+	data, err := c.cryptoType.Decrypt(data, c.cryptoKey)
 	if err != nil {
 		return nil, err
 	}
@@ -277,7 +311,11 @@ func (c *CodecEntity) DecodeMessage(data []byte) (*message.Message, error) {
 		m.DataType = binary.BigEndian.Uint32(data[offset:])
 		offset += 4
 
-		offset += 24
+		// Read long crypto type
+		m.CryptoType = binary.BigEndian.Uint32(data[offset:])
+		offset += 4
+
+		offset += 20
 	}
 
 	m.Data = data[offset:]
@@ -286,13 +324,11 @@ func (c *CodecEntity) DecodeMessage(data []byte) (*message.Message, error) {
 }
 
 type Codec struct {
-	method    Method
 	base64Key string
 }
 
-func NewCodec(method Method, base64Key string) *Codec {
+func NewCodec(base64Key string) *Codec {
 	return &Codec{
-		method:    method,
 		base64Key: base64Key,
 	}
 }
@@ -307,5 +343,5 @@ func (c *Codec) Entity(dictionary message.Dictionary) codec.CodecEntity {
 		panic(err)
 	}
 
-	return NewCodecEntity(dictionary, c.method, key)
+	return NewCodecEntity(dictionary, key)
 }

@@ -500,7 +500,7 @@ func (n *Node) deleteSession(s *session.Session) {
 	n.mu.Unlock()
 }
 
-func (n *Node) findOrCreateSession(sid uint64, gateAddr string, uid int64, shortVer uint32, remoteAddr net.Addr, branch uint32, dataType uint32) (*session.Session, error) {
+func (n *Node) findOrCreateSession(sid uint64, gateAddr string, uid int64, shortVer uint32, remoteAddr net.Addr, branch uint32, dataType uint32, cryptoType uint32) (*session.Session, error) {
 	n.mu.RLock()
 	s, found := n.sessions[sid]
 	n.mu.RUnlock()
@@ -526,6 +526,7 @@ func (n *Node) findOrCreateSession(sid uint64, gateAddr string, uid int64, short
 		s.BindVersion(version)
 		s.BindBranch(branch)
 		s.DataType.Store(dataType)
+		s.CryptoType.Store(cryptoType)
 
 		s.VersionBound = true
 
@@ -560,18 +561,19 @@ func (n *Node) HandleRequest(_ context.Context, req *clusterpb.RequestMessage) (
 		return nil, fmt.Errorf("service not found in current node: %v", req.Route)
 	}
 	remoteAddr := &NetAddr{network: req.RemoteAddr.Network, addr: req.RemoteAddr.Addr}
-	s, err := n.findOrCreateSession(req.SessionID, req.GateAddr, req.UID, req.ShortVer, remoteAddr, req.Branch, req.DataType)
+	s, err := n.findOrCreateSession(req.SessionID, req.GateAddr, req.UID, req.ShortVer, remoteAddr, req.Branch, req.DataType, req.CryptoType)
 	if err != nil {
 		return nil, err
 	}
 	msg := &message.Message{
-		Type:     message.Request,
-		Branch:   s.Branch(),
-		ShortVer: s.ShortVer(),
-		ID:       req.ID,
-		Route:    req.Route,
-		DataType: req.DataType,
-		Data:     req.Data,
+		Type:       message.Request,
+		Branch:     s.Branch(),
+		ShortVer:   s.ShortVer(),
+		ID:         req.ID,
+		Route:      req.Route,
+		DataType:   req.DataType,
+		Data:       req.Data,
+		CryptoType: req.CryptoType,
 	}
 	n.handler.localProcess(handler, req.ID, s, msg)
 	return &clusterpb.MemberHandleResponse{}, nil
@@ -584,18 +586,19 @@ func (n *Node) HandleNotify(_ context.Context, req *clusterpb.NotifyMessage) (*c
 		return nil, fmt.Errorf("service not found in current node: %v", req.Route)
 	}
 	remoteAddr := &NetAddr{network: req.RemoteAddr.Network, addr: req.RemoteAddr.Addr}
-	s, err := n.findOrCreateSession(req.SessionID, req.GateAddr, req.UID, req.ShortVer, remoteAddr, req.Branch, req.DataType)
+	s, err := n.findOrCreateSession(req.SessionID, req.GateAddr, req.UID, req.ShortVer, remoteAddr, req.Branch, req.DataType, req.CryptoType)
 	if err != nil {
 		return nil, err
 	}
 	msg := &message.Message{
-		Type:     message.Notify,
-		Branch:   s.Branch(),
-		ShortVer: s.ShortVer(),
-		ID:       req.ID,
-		Route:    req.Route,
-		DataType: req.DataType,
-		Data:     req.Data,
+		Type:       message.Notify,
+		Branch:     s.Branch(),
+		ShortVer:   s.ShortVer(),
+		ID:         req.ID,
+		Route:      req.Route,
+		DataType:   req.DataType,
+		Data:       req.Data,
+		CryptoType: req.CryptoType,
 	}
 	n.handler.localProcess(handler, req.ID, s, msg)
 	return &clusterpb.MemberHandleResponse{}, nil
