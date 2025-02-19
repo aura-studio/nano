@@ -203,6 +203,10 @@ func (c *CodecEntity) EncodeMessage(m *message.Message) ([]byte, error) {
 
 	buf = append(buf, m.Data...)
 
+	if c.cryptoType == Unknown {
+		return CryptoType(m.CryptoType).Encrypt(buf, c.cryptoKey)
+	}
+
 	return c.cryptoType.Encrypt(buf, c.cryptoKey)
 }
 
@@ -217,7 +221,7 @@ func (c *CodecEntity) DecodeMessageWithDetection(data []byte) (*message.Message,
 	if err == nil && CryptoType(m.CryptoType) == c.cryptoType {
 		return m, nil
 	}
-	
+
 	c.cryptoType = XOR
 	m, err = c.DecodeMessageRaw(data)
 	if err == nil && CryptoType(m.CryptoType) == c.cryptoType {
