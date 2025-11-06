@@ -30,12 +30,12 @@ type Packet struct {
 	Data   []byte
 }
 
-//New create a Packet instance.
+// New create a Packet instance.
 func New() *Packet {
 	return &Packet{}
 }
 
-//String represents the Packet's in text mode.
+// String represents the Packet's in text mode.
 func (p *Packet) String() string {
 	return fmt.Sprintf("Length: %d, Data: %s", p.Length, string(p.Data))
 }

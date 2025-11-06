@@ -68,7 +68,6 @@ func (a *connPool) init(addr string) error {
 			return err
 		}
 		a.v[i] = conn
-
 	}
 	return nil
 }

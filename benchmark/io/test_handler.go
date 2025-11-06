@@ -11,7 +11,7 @@ import (
 	"github.com/aura-studio/nano/component"
 )
 
-//TestHandler is a component
+// TestHandler is a component
 type TestHandler struct {
 	component.Base
 	metrics int32

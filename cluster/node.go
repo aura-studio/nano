@@ -244,7 +244,6 @@ func (n *Node) initNode() error {
 			return err
 		}
 		env.GrpcOptions = append(env.GrpcOptions, grpc.WithResolvers(n.grpcResolver)) // load balancer
-
 	} else {
 		if n.IsMaster {
 			clusterpb.RegisterMasterServer(n.server, n.cluster)

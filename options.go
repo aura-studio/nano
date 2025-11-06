@@ -160,8 +160,8 @@ func WithEtcd() Option {
 	}
 }
 
-func WithWebSocketCompression() Option {
+func WithWebSocketCompression(compression bool) Option {
 	return func(opt *options.Options) {
-		env.WebSocketCompression = true
+		env.WebSocketCompression = compression
 	}
 }

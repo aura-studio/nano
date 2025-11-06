@@ -28,7 +28,7 @@ type (
 	options struct {
 		name          string                 // component name
 		renameHandler func(string) string    // rename handler name
-		scheduleFunc     scheduler.ScheduleFunc    // schedule service task
+		scheduleFunc  scheduler.ScheduleFunc // schedule service task
 		dictionary    map[uint32]interface{} // Dictionary info slice
 	}
 
