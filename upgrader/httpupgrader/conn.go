@@ -9,6 +9,7 @@ import (
 	"net"
 	"net/http"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -22,6 +23,13 @@ import (
 	"github.com/aura-studio/nano/env"
 )
 
+// httpResponseWaitTimeout caps how long the read loop waits for the (async)
+// response to be written before tearing down the HTTP connection. The wait
+// returns immediately once the response is written (via the done channel), so
+// this only bounds requests whose handler never responds. It must be larger
+// than the slowest legitimate handler.
+const httpResponseWaitTimeout = 65 * time.Second
+
 // Conn is an adapter to t.Conn, which implements all t.Conn
 // interface base on *websocket.Conn
 type Conn struct {
@@ -34,6 +42,8 @@ type Conn struct {
 	readBuf     io.Reader
 	readDone    atomic.Bool
 	writeDone   atomic.Bool
+	done        chan struct{} // closed once the response has been written
+	doneOnce    sync.Once
 }
 
 // NewConn return an initialized *WSConn
@@ -46,7 +56,14 @@ func NewConn(w http.ResponseWriter, r *http.Request, conn net.Conn, brw *bufio.R
 		params:      params,
 		codecEntity: options.Default.Codec.Entity(nil),
 		readBuf:     nil,
+		done:        make(chan struct{}),
 	}
+}
+
+// signalDone unblocks the read loop's wait for the response. Safe to call more
+// than once.
+func (c *Conn) signalDone() {
+	c.doneOnce.Do(func() { close(c.done) })
 }
 
 // Read reads data from the connection.
@@ -57,7 +74,15 @@ func (c *Conn) Read(b []byte) (int, error) {
 		if c.writeDone.Load() {
 			return 0, io.EOF
 		}
-		time.Sleep(time.Minute)
+		// The request has been fully read but the response is written
+		// asynchronously on another goroutine. Wait until it is written before
+		// closing the connection (closing earlier would truncate the response),
+		// but no longer than the cap so a handler that never responds cannot pin
+		// the connection (and its fd/memory) indefinitely.
+		select {
+		case <-c.done:
+		case <-time.After(httpResponseWaitTimeout):
+		}
 		return 0, io.EOF
 	}
 
@@ -165,7 +190,10 @@ func (c *Conn) Read(b []byte) (int, error) {
 // Write can be made to time out and return an Error with Timeout() == true
 // after a fixed time limit; see SetDeadline and SetWriteDeadline.
 func (c *Conn) Write(b []byte) (int, error) {
-	defer c.writeDone.Store(true)
+	defer func() {
+		c.writeDone.Store(true)
+		c.signalDone()
+	}()
 
 	packets, err := c.codecEntity.DecodePacket(b)
 	if err != nil {

@@ -197,6 +197,14 @@ func (n *Node) Handler() *LocalHandler {
 	return n.handler
 }
 
+// IsSingleton reports whether the node runs in singleton mode: not a master
+// and without a master address. In this mode the route dictionary is fully
+// populated at registration and never mutated afterward, so it can be shared
+// read-only across connections instead of deep-copied per connection.
+func (n *Node) IsSingleton() bool {
+	return !n.IsMaster && n.AdvertiseAddr == ""
+}
+
 func (n *Node) initNode() error {
 	// Current node is not master server and does not contains master
 	// address, so running in singleton mode

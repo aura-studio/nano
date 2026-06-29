@@ -105,6 +105,13 @@ func DuplicateDictionary() *MemberDictionary {
 	return memberDictionary.duplicate()
 }
 
+// SharedDictionary returns the global dictionary itself (no copy).
+// Safe for read-only use once route registration has completed, i.e. in
+// singleton mode where the dictionary is never mutated after startup.
+func SharedDictionary() *MemberDictionary {
+	return memberDictionary
+}
+
 // WriteDictionaryItem is to set dictionary item when server registers.
 func WriteDictionaryItem(route string, code uint32) {
 	memberDictionary.write(route, code)

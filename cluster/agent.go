@@ -82,7 +82,7 @@ type (
 
 // Create new agent instance
 func newAgent(conn net.Conn, pipeline pipeline.Pipeline, rpcHandler rpcHandler,
-	codec codec.Codec, nodeID uint32) *agent {
+	codec codec.Codec, nodeID uint32, dictionary message.Dictionary) *agent {
 	a := &agent{
 		conn:        conn,
 		state:       statusStart,
@@ -91,7 +91,7 @@ func newAgent(conn net.Conn, pipeline pipeline.Pipeline, rpcHandler rpcHandler,
 		chSend:      make(chan pendingMessage, agentWriteBacklog),
 		pipeline:    pipeline,
 		rpcHandler:  rpcHandler,
-		codecEntity: codec.Entity(message.DuplicateDictionary()),
+		codecEntity: codec.Entity(dictionary),
 	}
 
 	// binding session

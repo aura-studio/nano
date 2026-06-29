@@ -256,8 +256,18 @@ func (h *LocalHandler) RouteHandler(route string) (*component.Handler, error) {
 }
 
 func (h *LocalHandler) handle(conn net.Conn) {
+	// In singleton mode the route dictionary never changes after startup, so it
+	// can be shared read-only across connections instead of being deep-copied
+	// per connection (which is a full map copy + global RLock on every request).
+	var dictionary message.Dictionary
+	if h.currentNode.IsSingleton() {
+		dictionary = message.SharedDictionary()
+	} else {
+		dictionary = message.DuplicateDictionary()
+	}
+
 	// create a client agent and startup write gorontine
-	agent := newAgent(conn, h.pipeline, h.processMessage, h.currentNode.Codec, h.currentNode.NodeID)
+	agent := newAgent(conn, h.pipeline, h.processMessage, h.currentNode.Codec, h.currentNode.NodeID, dictionary)
 	h.currentNode.storeSession(agent.session)
 
 	session.Created(agent.session)
