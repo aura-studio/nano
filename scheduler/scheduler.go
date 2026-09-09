@@ -73,10 +73,18 @@ func Global() Scheduler {
 	return global
 }
 
-// NewScheduler creates a new TimerScheduler
+// NewScheduler creates a new TimerScheduler whose timers are sampled at
+// env.TimerPrecision.
 func NewScheduler() *scheduler {
+	return NewSchedulerWithPrecision(0)
+}
+
+// NewSchedulerWithPrecision creates a new TimerScheduler whose timers are
+// sampled at the given precision. A non-positive precision falls back to
+// env.TimerPrecision.
+func NewSchedulerWithPrecision(precision time.Duration) *scheduler {
 	s := &scheduler{
-		TimerManager: NewTimerManager(),
+		TimerManager: NewTimerManagerWithPrecision(precision),
 		chDie:        make(chan struct{}),
 		chExit:       make(chan struct{}),
 		chTasks:      make(chan Task, 1<<12),
@@ -227,6 +235,7 @@ type timerManager struct {
 	chTask    chan Task
 	closeOnce sync.Once
 	running   atomic.Bool
+	precision time.Duration // zero means env.TimerPrecision
 
 	incrementID int64            // auto increment id
 	timers      map[int64]*Timer // all timers
@@ -237,13 +246,26 @@ type timerManager struct {
 	createdTimer   []*Timer
 }
 
+// NewTimerManager creates a TimerManager whose timers are sampled at
+// env.TimerPrecision.
 func NewTimerManager() TimerManager {
+	return NewTimerManagerWithPrecision(0)
+}
+
+// NewTimerManagerWithPrecision creates a TimerManager whose timers are sampled
+// at the given precision. A non-positive precision falls back to
+// env.TimerPrecision.
+func NewTimerManagerWithPrecision(precision time.Duration) TimerManager {
 	tm := &timerManager{
 		chDie:  make(chan struct{}),
 		chExit: make(chan struct{}),
 		chTask: make(chan Task, 1<<12),
 
 		timers: make(map[int64]*Timer),
+	}
+
+	if precision > 0 {
+		tm.precision = precision
 	}
 
 	go func() {
@@ -273,7 +295,12 @@ func (tm *timerManager) CloseTimer() {
 }
 
 func (tm *timerManager) digest() {
-	ticker := time.NewTicker(env.TimerPrecision)
+	precision := tm.precision
+	if precision <= 0 {
+		precision = env.TimerPrecision
+	}
+
+	ticker := time.NewTicker(precision)
 	defer func() {
 		ticker.Stop()
 		close(tm.chTask)
